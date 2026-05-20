@@ -1111,7 +1111,7 @@ if st.session_state.screen == "welcome":
                 unsafe_allow_html=True)
     st.markdown(
         '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Hartnell College '
-        '&nbsp;·&nbsp; Culturally Responsive</p>',
+        '&nbsp;·&nbsp; Made for you</p>',
         unsafe_allow_html=True
     )
 
@@ -1288,6 +1288,10 @@ if st.session_state.screen == "welcome":
             ("Tutor chat",
              "Ask any Calculus 1 question. Get a step-by-step explanation with "
              "rendered math, in English or Spanish."),
+            ("Learn from mistakes",
+             "Every wrong answer is a learning moment. The tutor explains exactly "
+             "where your reasoning went, shows the full solution step by step, "
+             "and points out any algebra gaps before moving on."),
             ("Weekly limit",
              "Six hours per week keeps this free for every student in the class."),
         ]:
@@ -1403,7 +1407,7 @@ elif st.session_state.screen == "chat":
     )
     st.markdown(
         '<p class="app-sub" style="margin-bottom:0.8rem;">'
-        'Hartnell College &nbsp;·&nbsp; C-ID MATH 210</p>',
+        'Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Made for you</p>',
         unsafe_allow_html=True
     )
 

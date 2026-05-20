@@ -1111,7 +1111,7 @@ if st.session_state.screen == "welcome":
                 unsafe_allow_html=True)
     st.markdown(
         '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Hartnell College '
-        '&nbsp;·&nbsp; Made for you</p>',
+        '&nbsp;·&nbsp; Made for you by Profe Contreras</p>',
         unsafe_allow_html=True
     )
 
@@ -1277,34 +1277,76 @@ if st.session_state.screen == "welcome":
         st.markdown('<p class="section-label">What this tutor does</p>',
                     unsafe_allow_html=True)
 
-        for label, desc in [
-            ("Quiz mode",
-             "Original questions aligned to all 25 C-ID MATH 210 standards. "
-             "Each connects to a real career field: engineering, data science, "
-             "biology, health, business, or social justice."),
-            ("Photo answers",
-             "Snap a photo of your handwritten work and upload it. "
-             "Claude reads your writing and grades it on the same 0–3 rubric."),
-            ("Tutor chat",
-             "Ask any Calculus 1 question. Get a step-by-step explanation with "
-             "rendered math, in English or Spanish."),
-            ("Learn from mistakes",
-             "Every wrong answer is a learning moment. The tutor explains exactly "
-             "where your reasoning went, shows the full solution step by step, "
-             "and points out any algebra gaps before moving on."),
-            ("Weekly limit",
-             "Six hours per week keeps this free for every student in the class."),
-        ]:
-            st.markdown(
-                f'<div class="feature-block">'
-                f'<span class="feature-label">{label}.</span> {desc}'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        # ── Main feature descriptions ─────────────────────────────────────
+        st.markdown("""
+<div class="feature-block">
+<span class="feature-label">Quiz mode.</span>
+Generates original practice problems aligned to C-ID MATH 210 standards.
+Each question connects calculus to a real career field — engineering, data science,
+biology, health, business, or social justice.
+</div>
 
-        st.markdown('<p class="section-label" style="margin-top:0.9rem;">'
-                    'C-ID MATH 210 — 25 Standards</p>',
+<div class="feature-block">
+<span class="feature-label">Tutor chat.</span>
+Ask any Calculus 1 question in plain language and get a step-by-step explanation
+with rendered math notation, in English or Spanish.
+</div>
+
+<div class="feature-block" style="margin-bottom:0.5rem;">
+<span class="feature-label">What you can send:</span>
+<ul style="margin:0.3rem 0 0 1rem; padding:0; font-size:0.85rem; color:#374151; line-height:1.7;">
+  <li>A typed answer or question — in English or Spanish</li>
+  <li>A photo of your handwritten work</li>
+  <li>A request for a quiz on a specific topic</li>
+  <li>A follow-up question about any step you do not understand</li>
+</ul>
+</div>
+
+<div class="feature-block">
+<span class="feature-label">Weekly limit.</span>
+Six hours per week keeps this free for every student in the class.
+</div>
+""", unsafe_allow_html=True)
+
+        # ── Pitch textbox for mistakes-feedback loop ──────────────────────
+        st.markdown("""
+<div style="
+    margin: 1rem 0 1.1rem 0;
+    padding: 0.9rem 1.1rem;
+    background: #f0fdf9;
+    border-left: 3px solid #00796b;
+    border-radius: 6px;
+">
+  <p style="
+    margin: 0;
+    font-size: 0.95rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #065f46;
+    line-height: 1.65;
+    font-family: Georgia, serif;
+  ">
+    "Getting it wrong is part of getting it right.
+    Every incorrect answer comes with an explanation of where your reasoning went,
+    a full worked solution, and a check on the algebra underneath —
+    so the next attempt starts from a stronger place."
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+        # ── Standards section ─────────────────────────────────────────────
+        st.markdown('<p class="section-label" style="margin-top:0.2rem;">'
+                    'Your C-ID MATH 210 Checklist — 25 Standards</p>',
                     unsafe_allow_html=True)
+
+        st.markdown("""
+<p style="font-size:0.84rem; color:#4b5563; line-height:1.6; margin-bottom:0.75rem;">
+These 25 standards are the official California framework for Calculus 1.
+They are your checklist — work through them and you will know you are ready
+to step into Calculus 2, Differential Equations, Physics, and beyond.
+</p>
+""", unsafe_allow_html=True)
+
         for unit, name, codes in [
             ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
             ("Unit 2", "Derivatives",                 "S-06 – S-12"),
@@ -1315,7 +1357,7 @@ if st.session_state.screen == "welcome":
             st.markdown(
                 f'<div class="unit-row">'
                 f'<span class="unit-num">{unit}</span>'
-                f'<span>{name}</span>'
+                f'<span style="font-size:0.9rem;">{name}</span>'
                 f'<span class="unit-codes">{codes}</span>'
                 f'</div>',
                 unsafe_allow_html=True
@@ -1407,7 +1449,7 @@ elif st.session_state.screen == "chat":
     )
     st.markdown(
         '<p class="app-sub" style="margin-bottom:0.8rem;">'
-        'Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Made for you</p>',
+        'Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Made for you by Profe Contreras</p>',
         unsafe_allow_html=True
     )
 

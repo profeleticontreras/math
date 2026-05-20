@@ -21,7 +21,7 @@ from datetime import datetime
 # Configure the browser tab title, icon, and layout
 st.set_page_config(
     page_title="Calculus 1 Tutor | Bilingue",
-    page_icon="integral",
+    page_icon="📐",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -1024,44 +1024,122 @@ def init_session_state():
 
 init_session_state()
 
+
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Main header */
-    .tutor-header {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #00796b;
-        margin-bottom: 0.2rem;
+    /* Import a clean, readable font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    /* Global type base */
+    html, body, [class*="css"] {
+        font-family: 'Inter', system-ui, sans-serif;
     }
-    .tutor-sub {
-        font-size: 1rem;
-        color: #555;
-        margin-bottom: 1.5rem;
-    }
-    /* Score badge */
-    .score-3 { background: #d8f3dc; color: #1b4332; padding: 4px 12px;
-                border-radius: 12px; font-weight: 600; }
-    .score-2 { background: #fff3cd; color: #7d4e00; padding: 4px 12px;
-                border-radius: 12px; font-weight: 600; }
-    .score-1 { background: #ffe5d0; color: #7d3a00; padding: 4px 12px;
-                border-radius: 12px; font-weight: 600; }
-    .score-0 { background: #f8d7da; color: #842029; padding: 4px 12px;
-                border-radius: 12px; font-weight: 600; }
-    /* Connection label */
-    .connection-label {
-        font-size: 0.75rem;
-        font-weight: 700;
+
+    /* Page title */
+    .app-title {
+        font-size: 1.75rem;
+        font-weight: 600;
         color: #00796b;
-        letter-spacing: 0.05em;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.1rem;
+        line-height: 1.2;
+    }
+
+    /* Subtitle / tagline */
+    .app-sub {
+        font-size: 0.875rem;
+        font-weight: 400;
+        color: #6b7280;
+        letter-spacing: 0.01em;
+        margin-bottom: 1.8rem;
+    }
+
+    /* Section heading on welcome screen */
+    .section-head {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Feature description on welcome right column */
+    .feature-item {
+        margin-bottom: 0.9rem;
+        line-height: 1.55;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+    .feature-label {
+        font-weight: 500;
+        color: #00796b;
+    }
+
+    /* Unit coverage table */
+    .unit-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.3rem 0;
+        font-size: 0.82rem;
+        color: #4b5563;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .unit-num {
+        font-weight: 500;
+        color: #00796b;
+        min-width: 58px;
+    }
+    .unit-codes {
+        color: #9ca3af;
+        font-size: 0.78rem;
+    }
+
+    /* Score badges */
+    .score-3 { background: #ecfdf5; color: #065f46;
+                padding: 3px 10px; border-radius: 9px;
+                font-size: 0.82rem; font-weight: 500; }
+    .score-2 { background: #fffbeb; color: #92400e;
+                padding: 3px 10px; border-radius: 9px;
+                font-size: 0.82rem; font-weight: 500; }
+    .score-1 { background: #fff7ed; color: #9a3412;
+                padding: 3px 10px; border-radius: 9px;
+                font-size: 0.82rem; font-weight: 500; }
+    .score-0 { background: #fef2f2; color: #991b1b;
+                padding: 3px 10px; border-radius: 9px;
+                font-size: 0.82rem; font-weight: 500; }
+
+    /* Connection label in quiz questions */
+    .connection-tag {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #00796b;
+        background: #f0fdf9;
+        border: 1px solid #99f6e4;
+        border-radius: 4px;
+        padding: 2px 7px;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.4rem;
     }
-    /* Weekly progress bar label */
+
+    /* Time label in sidebar */
     .time-label {
-        font-size: 0.85rem;
-        color: #555;
+        font-size: 0.8rem;
+        color: #6b7280;
+        line-height: 1.4;
     }
+
+    /* Tone down Streamlit's default h3 in sidebar */
+    section[data-testid="stSidebar"] h3 {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Reduce default caption boldness */
+    .stCaption { color: #6b7280; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1071,87 +1149,104 @@ st.markdown("""
 # ════════════════════════════════════════════════════════════════════════════════
 if st.session_state.screen == "welcome":
 
-    # Title and subtitle
-    st.markdown('<div class="tutor-header">Calculus 1 Tutor | Bilingue</div>', unsafe_allow_html=True)
-    st.markdown('<div class="tutor-sub">C-ID MATH 210 | Salinas Valley Community College | Culturally Responsive</div>', unsafe_allow_html=True)
+    # Title
+    st.markdown('<p class="app-title">Calculus 1 Tutor &nbsp;|&nbsp; Bilingüe</p>',
+                unsafe_allow_html=True)
+    st.markdown(
+        '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Hartnell College '
+        '&nbsp;·&nbsp; Culturally Responsive</p>',
+        unsafe_allow_html=True
+    )
 
-    # Welcome form
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1], gap="large")
 
     with col1:
-        st.subheader("Welcome / Bienvenido")
+        st.markdown('<p class="section-head">Sign in / Iniciar sesión</p>',
+                    unsafe_allow_html=True)
 
-        # Student ID input
         student_id = st.text_input(
-            "Your name or student ID / Tu nombre o ID:",
-            placeholder="e.g. Maria G. or 12345"
+            "Name or student ID / Nombre o ID:",
+            placeholder="e.g. Maria G. or 12345",
+            label_visibility="visible"
         )
 
-        # Language preference
         lang_choice = st.selectbox(
             "Language / Idioma:",
-            ["Auto-detect / Auto-deteccion", "English only", "Spanish only / Solo espanol"]
+            ["Auto-detect / Auto-detección", "English", "Español"]
         )
 
-        # Difficulty
-        diff_choice = st.selectbox(
-            "Starting difficulty / Dificultad inicial:",
-            ["Easy / Facil", "Medium / Medio", "Hard / Dificil"],
-            index=1
+        col_diff, col_q = st.columns(2)
+        with col_diff:
+            diff_choice = st.selectbox(
+                "Difficulty / Dificultad:",
+                ["Easy", "Medium", "Hard"],
+                index=1
+            )
+        with col_q:
+            num_q = st.selectbox(
+                "Questions / Preguntas:",
+                [1, 2, 3, 4, 5],
+                index=2
+            )
+
+        st.write("")
+        start_clicked = st.button(
+            "Start session / Comenzar",
+            type="primary",
+            use_container_width=True
         )
-
-        # Number of questions per quiz
-        num_q = st.slider("Questions per quiz / Preguntas por quiz:", 1, 5, 3)
-
-        # Start button
-        start_clicked = st.button("Start Session / Comenzar", type="primary", use_container_width=True)
 
         if start_clicked:
-            # Validate student ID
             if not student_id.strip():
-                st.error("Please enter your name or student ID.")
+                st.warning("Please enter your name or student ID.")
             else:
-                # Check weekly limit
-                used, remaining, over_limit = get_time_status(student_id.strip())
+                sid = student_id.strip()
+                # Check weekly limit from session_state usage store
+                all_usage = st.session_state.get("all_usage", {})
+                current_week = get_current_week()
+                record = all_usage.get(sid, {})
+                if record.get("week") != current_week:
+                    record = {"week": current_week, "minutes_used": 0.0,
+                              "sessions": 0, "api_calls": 0,
+                              "topics_practiced": [], "standards_practiced": []}
+
+                used = record.get("minutes_used", 0.0)
+                remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
+                over_limit = used >= WEEKLY_LIMIT_MINUTES
 
                 if over_limit:
                     st.error(
-                        f"Hi {student_id}! You have used your full {WEEKLY_LIMIT_HOURS}-hour "
-                        f"weekly limit. Your time resets next week ({get_current_week()})."
+                        f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
+                        f"weekly limit. Your time resets next week."
                     )
                 else:
-                    # Set language mapping
                     lang_map = {
-                        "Auto-detect / Auto-deteccion": "auto",
-                        "English only":                 "en",
-                        "Spanish only / Solo espanol":  "es"
+                        "Auto-detect / Auto-detección": "auto",
+                        "English": "en",
+                        "Español": "es"
                     }
-                    diff_map = {
-                        "Easy / Facil":    "easy",
-                        "Medium / Medio":  "medium",
-                        "Hard / Dificil":  "hard"
-                    }
+                    diff_map = {"Easy": "easy", "Medium": "medium", "Hard": "hard"}
 
-                    # Save settings to session state
-                    st.session_state.student_id    = student_id.strip()
+                    st.session_state.student_id    = sid
                     st.session_state.language      = lang_map[lang_choice]
                     st.session_state.difficulty    = diff_map[diff_choice]
                     st.session_state.num_questions = num_q
                     st.session_state.session_start = time.time()
                     st.session_state.screen        = "chat"
-                    st.session_state.current_lang  = "en" if st.session_state.language != "es" else "es"
+                    st.session_state.current_lang  = \
+                        "es" if st.session_state.language == "es" else "en"
 
-                    # Add opening greeting to messages
+                    lang = st.session_state.current_lang
                     welcome_msg = (
-                        f"Hi {student_id}! I am your Calculus 1 tutor. "
-                        f"You have {format_duration(remaining)} of weekly study time available. "
-                        f"Ask me anything, or type **quiz** for a practice problem aligned to C-ID MATH 210 standards. "
-                        f"Type **bye** when you are done to see your session report."
-                        if st.session_state.current_lang == "en" else
-                        f"Hola {student_id}! Soy tu tutor de Calculo 1. "
-                        f"Tienes {format_duration(remaining)} de tiempo de estudio disponible esta semana. "
-                        f"Preguntame lo que quieras, o escribe **quiz** para un problema alineado a los estandares C-ID MATH 210. "
-                        f"Escribe **bye** cuando termines para ver tu reporte de sesion."
+                        f"Hi {sid}! I am your Calculus 1 tutor. "
+                        f"You have {format_duration(remaining)} of study time available this week. "
+                        f"Ask me any calculus question, or type **quiz** for a practice problem "
+                        f"aligned to C-ID MATH 210 standards. Type **bye** when you are done."
+                        if lang == "en" else
+                        f"Hola {sid}! Soy tu tutor de Cálculo 1. "
+                        f"Tienes {format_duration(remaining)} de tiempo disponible esta semana. "
+                        f"Pregúntame cualquier cosa de cálculo, o escribe **quiz** para un problema "
+                        f"alineado a los estándares C-ID MATH 210. Escribe **bye** cuando termines."
                     )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
@@ -1159,39 +1254,54 @@ if st.session_state.screen == "welcome":
                     st.rerun()
 
     with col2:
-        st.subheader("What this tutor does / Lo que hace este tutor")
-        st.markdown("""
-**Quiz mode:** Generates original questions aligned to all 25 C-ID MATH 210 standards.
-Each question includes a real-world connection to a field you might work in:
-engineering, data science, biology, health, business, or social justice.
+        st.markdown('<p class="section-head">About this tutor / Acerca del tutor</p>',
+                    unsafe_allow_html=True)
 
-**Tutor mode:** Ask any Calculus 1 question and get a step-by-step explanation
-with LaTeX-rendered math.
-
-**Bilingual:** Full support in English and Spanish. Switch anytime by typing `/es` or `/en`.
-
-**Weekly limit:** 6 hours per week per student to keep costs sustainable.
-
----
-
-**Modo quiz:** Genera preguntas originales alineadas a los 25 estandares de C-ID MATH 210.
-
-**Modo tutor:** Pregunta cualquier cosa de Calculo 1 y recibe explicaciones paso a paso.
-
-**Bilingue:** Soporte completo en ingles y espanol.
-        """)
-
-        # Show unit coverage
-        st.markdown("**Standards covered / Estandares cubiertos:**")
-        unit_info = [
-            ("Unit 1", "Limits & Continuity", "S-01 to S-05"),
-            ("Unit 2", "Derivatives",          "S-06 to S-12"),
-            ("Unit 3", "Applications of Diff.","S-13 to S-19"),
-            ("Unit 4", "Integration",          "S-20 to S-23"),
-            ("Unit 5", "Applications of Int.", "S-24 to S-25"),
+        features = [
+            ("Quiz mode",
+             "Generates original questions aligned to all 25 C-ID MATH 210 standards. "
+             "Each question connects to a real field: engineering, data science, biology, "
+             "health, business, or social justice."),
+            ("Tutor mode",
+             "Ask any Calculus 1 question and receive a step-by-step explanation "
+             "with rendered math notation."),
+            ("Bilingual",
+             "Full support in English and Spanish. Switch languages anytime "
+             "by typing /es or /en."),
+            ("Weekly limit",
+             "Six hours per week per student keeps usage costs sustainable "
+             "for the whole class."),
         ]
+
+        for label, desc in features:
+            st.markdown(
+                f'<div class="feature-item">'
+                f'<span class="feature-label">{label}.</span> {desc}'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+
+        st.write("")
+        st.markdown('<p class="section-head">C-ID MATH 210 — 25 Standards</p>',
+                    unsafe_allow_html=True)
+
+        unit_info = [
+            ("Unit 1", "Limits & Continuity",         "S-01 – S-05"),
+            ("Unit 2", "Derivatives",                  "S-06 – S-12"),
+            ("Unit 3", "Applications of Derivatives",  "S-13 – S-19"),
+            ("Unit 4", "Integration",                  "S-20 – S-23"),
+            ("Unit 5", "Applications of Integration",  "S-24 – S-25"),
+        ]
+
         for unit, name, codes in unit_info:
-            st.markdown(f"- **{unit}** {name} ({codes})")
+            st.markdown(
+                f'<div class="unit-row">'
+                f'<span class="unit-num">{unit}</span>'
+                f'<span>{name}</span>'
+                f'<span class="unit-codes">{codes}</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -1199,219 +1309,226 @@ with LaTeX-rendered math.
 # ════════════════════════════════════════════════════════════════════════════════
 elif st.session_state.screen == "chat":
 
-    # ── Calculate elapsed time ────────────────────────────────────────────────
+    # ── Compute elapsed time and remaining ───────────────────────────────────
     elapsed_min = (time.time() - st.session_state.session_start) / 60 \
-                  if st.session_state.session_start else 0
-    used_saved, remaining_saved, _ = get_time_status(st.session_state.student_id)
-    total_used   = used_saved + elapsed_min
-    remaining    = max(0.0, WEEKLY_LIMIT_MINUTES - total_used)
-    pct_used     = min(100, int((total_used / WEEKLY_LIMIT_MINUTES) * 100))
+                  if st.session_state.session_start else 0.0
+
+    # Get saved usage from session_state store (not file I/O)
+    all_usage    = st.session_state.get("all_usage", {})
+    current_week = get_current_week()
+    saved_record = all_usage.get(st.session_state.student_id, {})
+    if saved_record.get("week") != current_week:
+        saved_record = {"week": current_week, "minutes_used": 0.0,
+                        "sessions": 0, "api_calls": 0,
+                        "topics_practiced": [], "standards_practiced": []}
+
+    used_saved = saved_record.get("minutes_used", 0.0)
+    total_used = used_saved + elapsed_min
+    remaining  = max(0.0, WEEKLY_LIMIT_MINUTES - total_used)
+    pct_used   = min(1.0, total_used / WEEKLY_LIMIT_MINUTES)
 
     # ── SIDEBAR ───────────────────────────────────────────────────────────────
     with st.sidebar:
-        st.markdown(f"### {st.session_state.student_id}")
-        st.caption(f"Week: {get_current_week()}")
-
+        st.markdown(f"**{st.session_state.student_id}**")
+        st.caption(f"Week {get_current_week()}")
         st.divider()
 
-        # Weekly time
-        st.markdown("**Weekly Time**")
-        st.progress(pct_used / 100)
-        color = "normal" if remaining > 60 else "inverse"
+        st.caption("Weekly time")
+        st.progress(pct_used)
         st.markdown(
-            f"<span class='time-label'>{format_duration(total_used)} used "
-            f"| {format_duration(remaining)} left</span>",
+            f'<p class="time-label">'
+            f'{format_duration(total_used)} used &nbsp;·&nbsp; '
+            f'{format_duration(remaining)} remaining</p>',
             unsafe_allow_html=True
         )
-
         st.divider()
 
-        # Session score
-        st.markdown("**Session Score**")
+        st.caption("Session score")
         if st.session_state.session_max > 0:
-            pct = round((st.session_state.session_score / st.session_state.session_max) * 100)
+            pct_score = round(
+                (st.session_state.session_score / st.session_state.session_max) * 100
+            )
             st.metric(
                 label="Points",
-                value=f"{st.session_state.session_score}/{st.session_state.session_max}",
-                delta=f"{pct}%"
+                value=f"{st.session_state.session_score}"
+                      f"/{st.session_state.session_max}",
+                delta=f"{pct_score}%"
             )
         else:
             st.caption("No quiz questions yet.")
 
-        st.divider()
-
-        # Topics practiced
         if st.session_state.session_topics:
-            st.markdown("**Topics this session**")
+            st.divider()
+            st.caption("Topics this session")
             for t in st.session_state.session_topics:
-                st.caption(f"- {t.replace('_', ' ').title()}")
+                st.caption(f"· {t.replace('_', ' ').title()}")
 
-        # Standards practiced
         if st.session_state.session_standards:
-            st.markdown("**Standards practiced**")
-            st.caption(", ".join(st.session_state.session_standards))
+            st.caption("Standards: " + ", ".join(st.session_state.session_standards))
 
         st.divider()
+        st.caption("Settings")
 
-        # Settings
-        st.markdown("**Settings**")
         new_diff = st.selectbox(
-            "Difficulty:",
+            "Difficulty",
             ["easy", "medium", "hard"],
             index=["easy", "medium", "hard"].index(st.session_state.difficulty)
         )
-        if new_diff != st.session_state.difficulty:
-            st.session_state.difficulty = new_diff
+        st.session_state.difficulty = new_diff
 
-        new_numq = st.slider("Questions per quiz:", 1, 5,
-                              st.session_state.num_questions)
-        if new_numq != st.session_state.num_questions:
-            st.session_state.num_questions = new_numq
-
-        lang_options = {"Auto-detect": "auto", "English": "en", "Spanish": "es"}
-        rev_lang = {v: k for k, v in lang_options.items()}
-        new_lang_label = st.selectbox(
-            "Language:",
-            list(lang_options.keys()),
-            index=list(lang_options.values()).index(st.session_state.language)
+        new_numq = st.select_slider(
+            "Questions per quiz", options=[1, 2, 3, 4, 5],
+            value=st.session_state.num_questions
         )
-        new_lang = lang_options[new_lang_label]
-        if new_lang != st.session_state.language:
-            st.session_state.language = new_lang
+        st.session_state.num_questions = new_numq
+
+        lang_opts  = {"Auto-detect": "auto", "English": "en", "Español": "es"}
+        cur_label  = {v: k for k, v in lang_opts.items()}.get(
+            st.session_state.language, "Auto-detect"
+        )
+        new_lang_label = st.selectbox("Language", list(lang_opts.keys()),
+                                      index=list(lang_opts.keys()).index(cur_label))
+        st.session_state.language = lang_opts[new_lang_label]
 
         st.divider()
-
-        # End session button
-        if st.button("End Session / Terminar", use_container_width=True, type="secondary"):
+        if st.button("End session", use_container_width=True):
             st.session_state.session_ended = True
 
-        # Warnings
         if remaining <= 30 and remaining > 0:
-            st.warning(f"Only {format_duration(remaining)} of weekly time remaining!")
+            st.warning(f"Only {format_duration(remaining)} remaining this week.")
         if remaining <= 0:
-            st.error("Weekly time limit reached. Session ending.")
+            st.error("Weekly limit reached.")
             st.session_state.session_ended = True
 
-    # ── Main chat area ────────────────────────────────────────────────────────
-    st.markdown('<div class="tutor-header" style="font-size:1.4rem;">Calculus 1 Tutor</div>',
-                unsafe_allow_html=True)
+    # ── Chat messages ────────────────────────────────────────────────────────
+    st.markdown(
+        '<p class="app-title" style="font-size:1.2rem; margin-bottom:0.25rem;">'
+        'Calculus 1 Tutor</p>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<p class="app-sub" style="margin-bottom:1rem;">'
+        f'Hartnell College &nbsp;·&nbsp; C-ID MATH 210</p>',
+        unsafe_allow_html=True
+    )
 
-    # Render all messages in conversation history
     for msg in st.session_state.messages:
-        role = msg["role"]
-        content = msg["content"]
+        role     = msg["role"]
+        content  = msg["content"]
         msg_type = msg.get("type", "chat")
 
         with st.chat_message(role):
             if msg_type == "question":
-                # Quiz question: show connection label prominently
                 if "[CONNECTION:" in content:
-                    parts = content.split("]", 1)
-                    label_part = parts[0].replace("[", "").strip()
-                    rest = parts[1].strip() if len(parts) > 1 else ""
-                    st.markdown(f"**{label_part}**")
+                    parts      = content.split("]", 1)
+                    tag_text   = parts[0].replace("[", "").strip()
+                    rest       = parts[1].strip() if len(parts) > 1 else ""
+                    st.markdown(
+                        f'<span class="connection-tag">{tag_text}</span>',
+                        unsafe_allow_html=True
+                    )
                     st.markdown(rest)
                 else:
                     st.markdown(content)
 
             elif msg_type == "grading":
-                # Grading response: show score badge, feedback, solution, mindset
-                score     = msg.get("score", 0)
-                feedback  = msg.get("feedback", "")
-                solution  = msg.get("full_solution", "")
-                mindset   = msg.get("mindset_message", "")
-                scaffold  = msg.get("algebra_scaffold", "")
-                std_code  = msg.get("standard_code", "")
+                score    = msg.get("score", 0)
+                feedback = msg.get("feedback", "")
+                solution = msg.get("full_solution", "")
+                mindset  = msg.get("mindset_message", "")
+                scaffold = msg.get("algebra_scaffold", "")
+                std_code = msg.get("standard_code", "")
 
-                score_labels = {3: "3/3", 2: "2/3", 1: "1/3", 0: "0/3"}
-                score_class  = f"score-{score}"
+                score_labels = {3: "3 / 3", 2: "2 / 3", 1: "1 / 3", 0: "0 / 3"}
+                std_label    = f" &nbsp; {std_code}" if std_code else ""
                 st.markdown(
-                    f'<span class="{score_class}">{score_labels[score]}</span>'
-                    + (f" &nbsp; **{std_code}**" if std_code else ""),
+                    f'<span class="score-{score}">{score_labels[score]}</span>'
+                    f'{std_label}',
                     unsafe_allow_html=True
                 )
                 if feedback:
                     st.markdown(feedback)
                 if scaffold:
-                    st.info(f"Algebra tip: {scaffold}")
+                    st.info(scaffold)
                 if solution:
-                    with st.expander("Full solution / Solucion completa"):
+                    with st.expander("Full solution"):
                         st.markdown(solution)
                 if mindset:
                     st.success(mindset)
 
             else:
-                # Regular chat message
                 st.markdown(content)
 
-    # ── Handle session ended ─────────────────────────────────────────────────
+    # ── Session ended: show report ────────────────────────────────────────────
     if st.session_state.session_ended and not st.session_state.usage_saved:
 
-        # Save usage to file
-        record = load_student_usage(st.session_state.student_id)
-        record["minutes_used"] = record.get("minutes_used", 0.0) + elapsed_min
+        # Save to session_state usage store instead of file
+        record = saved_record.copy()
+        record["minutes_used"] = used_saved + elapsed_min
         record["sessions"]     = record.get("sessions", 0) + 1
-        record["api_calls"]    = record.get("api_calls", 0) + st.session_state.session_calls
+        record["api_calls"]    = record.get("api_calls", 0) + \
+                                  st.session_state.session_calls
 
         for t in st.session_state.session_topics:
             if t not in record.get("topics_practiced", []):
                 record.setdefault("topics_practiced", []).append(t)
-
         for s in st.session_state.session_standards:
             if s not in record.get("standards_practiced", []):
                 record.setdefault("standards_practiced", []).append(s)
 
-        save_student_usage(st.session_state.student_id, record)
+        if "all_usage" not in st.session_state:
+            st.session_state.all_usage = {}
+        st.session_state.all_usage[st.session_state.student_id] = record
         st.session_state.usage_saved = True
 
-        # Show session report
         used_now = record["minutes_used"]
         rem_now  = max(0.0, WEEKLY_LIMIT_MINUTES - used_now)
+
         score_str = (
             f"{st.session_state.session_score}/{st.session_state.session_max} "
-            f"({round((st.session_state.session_score / st.session_state.session_max) * 100)}%)"
+            f"({round((st.session_state.session_score / st.session_state.session_max)*100)}%)"
             if st.session_state.session_max > 0 else "--"
         )
 
         st.divider()
-        st.subheader("Session Report / Reporte de Sesion")
+        st.markdown("**Session report**")
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Session duration", format_duration(elapsed_min))
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("Duration", format_duration(elapsed_min))
             st.metric("Quiz score", score_str)
-        with col2:
+        with c2:
             st.metric("Weekly time used", format_duration(used_now))
             st.metric("Weekly time left", format_duration(rem_now))
-        with col3:
+        with c3:
             st.metric("Sessions this week", record["sessions"])
-            if st.session_state.session_standards:
-                st.markdown("**Standards practiced:**")
-                st.caption(", ".join(st.session_state.session_standards))
 
         if st.session_state.session_topics:
-            st.markdown("**Topics covered:** " +
-                        ", ".join(t.replace("_", " ").title()
-                                  for t in st.session_state.session_topics))
+            st.caption(
+                "Topics covered: " +
+                ", ".join(t.replace("_", " ").title()
+                           for t in st.session_state.session_topics)
+            )
+        if st.session_state.session_standards:
+            st.caption("Standards: " +
+                       ", ".join(st.session_state.session_standards))
 
-        # Identity message
         lang = st.session_state.current_lang
-        identity_msgs = GROWTH_MINDSET_MESSAGES["identity"].get(lang,
-                        GROWTH_MINDSET_MESSAGES["identity"]["en"])
-        st.success(random.choice(identity_msgs))
+        id_msgs = GROWTH_MINDSET_MESSAGES["identity"].get(
+            lang, GROWTH_MINDSET_MESSAGES["identity"]["en"]
+        )
+        st.success(random.choice(id_msgs))
 
-        # Restart button
-        if st.button("Start a new session / Nueva sesion", type="primary"):
+        if st.button("Start a new session"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
 
-    # ── Chat input (only shown when session is active) ───────────────────────
+    # ── Chat input ────────────────────────────────────────────────────────────
     elif not st.session_state.session_ended:
-        user_input = st.chat_input("Ask a question or type 'quiz' / Pregunta o escribe 'quiz'")
+        user_input = st.chat_input("Ask anything, or type 'quiz' / 'bye'")
 
         if user_input:
-
             # Detect language for this turn
             if st.session_state.language == "auto":
                 lang, intent_tag = detect_language_and_intent(user_input)
@@ -1422,112 +1539,104 @@ elif st.session_state.screen == "chat":
                 lang = "en"
                 _, intent_tag = detect_language_and_intent(user_input)
 
-            st.session_state.current_lang = lang
+            st.session_state.current_lang  = lang
             st.session_state.session_calls += 1
 
-            # Add student message to history
             st.session_state.messages.append({
                 "role": "user", "content": user_input, "type": "chat"
             })
 
-            # ── QUIZ ANSWER MODE ─────────────────────────────────────────────
+            # ── QUIZ ANSWER MODE ──────────────────────────────────────────────
             if st.session_state.quiz_state is not None:
                 qs = st.session_state.quiz_state
 
-                # Grade the answer
                 grading = grade_with_mindset(qs["current_question"], user_input, lang)
                 st.session_state.session_calls += 1
-
-                # Update scores
                 st.session_state.session_score += grading["score"]
                 st.session_state.session_max   += 3
                 qs["scores"].append(grading["score"])
 
-                # Track standard
                 std_code = grading.get("standard_code", "")
                 if std_code and std_code not in st.session_state.session_standards:
                     st.session_state.session_standards.append(std_code)
 
-                # Add grading result to messages
                 st.session_state.messages.append({
-                    "role":            "assistant",
-                    "content":         grading["feedback"],
-                    "type":            "grading",
-                    "score":           grading["score"],
-                    "feedback":        grading["feedback"],
-                    "full_solution":   grading["full_solution"],
-                    "mindset_message": grading["mindset_message"],
+                    "role":             "assistant",
+                    "content":          grading["feedback"],
+                    "type":             "grading",
+                    "score":            grading["score"],
+                    "feedback":         grading["feedback"],
+                    "full_solution":    grading["full_solution"],
+                    "mindset_message":  grading["mindset_message"],
                     "algebra_scaffold": grading.get("algebra_scaffold", ""),
-                    "standard_code":   std_code
+                    "standard_code":    std_code
                 })
 
-                # Move to next question or finish quiz
                 qs["q_num"] += 1
 
                 if qs["q_num"] <= qs["num_questions"]:
-                    # Generate next question
-                    topic = qs.get("topic")
-                    pool = INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys())) \
-                           if topic else list(STANDARDS_MAP.keys())
-                    next_code = random.choice(pool)
-                    next_q    = quiz_by_standard(next_code, st.session_state.difficulty, lang)
+                    topic      = qs.get("topic")
+                    pool       = INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys())) \
+                                 if topic else list(STANDARDS_MAP.keys())
+                    next_code  = random.choice(pool)
+                    next_q     = quiz_by_standard(next_code,
+                                                  st.session_state.difficulty, lang)
                     st.session_state.session_calls += 1
                     qs["current_question"] = next_q
 
                     q_header = (
-                        f"**Question {qs['q_num']} of {qs['num_questions']} | "
-                        f"{next_code}: {next_q['topic']}**\n\n"
-                        f"*Algebra you will use: {', '.join(next_q['algebra_prereqs'])}*\n\n"
+                        f"**Question {qs['q_num']} of {qs['num_questions']}"
+                        f" &nbsp;|&nbsp; {next_code}: {next_q['topic']}**\n\n"
+                        f"*Prerequisites: {', '.join(next_q['algebra_prereqs'])}*\n\n"
                         + next_q["question"]
                     )
                     st.session_state.messages.append({
                         "role": "assistant", "content": q_header, "type": "question"
                     })
                 else:
-                    # Quiz complete
                     total = sum(qs["scores"])
                     max_s = len(qs["scores"]) * 3
                     pct   = round((total / max_s) * 100) if max_s > 0 else 0
                     done_msg = (
-                        f"**Quiz complete!** Score: {total}/{max_s} ({pct}%)\n\n"
+                        f"Quiz complete — {total}/{max_s} ({pct}%). "
                         f"Type 'quiz' for another round, or ask me any calculus question."
                         if lang == "en" else
-                        f"**Quiz terminado!** Puntaje: {total}/{max_s} ({pct}%)\n\n"
-                        f"Escribe 'quiz' para otra ronda, o hazme cualquier pregunta de calculo."
+                        f"Quiz terminado — {total}/{max_s} ({pct}%). "
+                        f"Escribe 'quiz' para otra ronda, o hazme cualquier pregunta de cálculo."
                     )
                     st.session_state.messages.append({
                         "role": "assistant", "content": done_msg, "type": "chat"
                     })
                     st.session_state.quiz_state = None
 
-            # ── CHAT / COMMAND MODE ──────────────────────────────────────────
+            # ── CHAT / COMMAND MODE ───────────────────────────────────────────
             else:
-                # Goodbye
                 if intent_tag == "goodbye":
-                    farewell = random.choice(CANNED["goodbye"].get(lang, CANNED["goodbye"]["en"]))
+                    farewell = random.choice(
+                        CANNED["goodbye"].get(lang, CANNED["goodbye"]["en"])
+                    )
                     st.session_state.messages.append({
                         "role": "assistant", "content": farewell, "type": "chat"
                     })
                     st.session_state.session_ended = True
 
-                # Quiz request
                 elif intent_tag == "quiz_request":
                     topic = extract_topic_from_input(user_input)
-
                     if topic and topic not in st.session_state.session_topics:
                         st.session_state.session_topics.append(topic)
 
-                    pool = INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys())) \
-                           if topic else list(STANDARDS_MAP.keys())
+                    pool       = INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys())) \
+                                 if topic else list(STANDARDS_MAP.keys())
                     first_code = random.choice(pool)
-                    first_q    = quiz_by_standard(first_code, st.session_state.difficulty, lang)
+                    first_q    = quiz_by_standard(first_code,
+                                                   st.session_state.difficulty, lang)
                     st.session_state.session_calls += 1
-
                     num_q = st.session_state.num_questions
+
                     q_header = (
-                        f"**Question 1 of {num_q} | "
-                        f"{first_code}: {first_q['topic']}**\n\n"
-                        f"*Algebra you will use: {', '.join(first_q['algebra_prereqs'])}*\n\n"
+                        f"**Question 1 of {num_q}"
+                        f" &nbsp;|&nbsp; {first_code}: {first_q['topic']}**\n\n"
+                        f"*Prerequisites: {', '.join(first_q['algebra_prereqs'])}*\n\n"
                         + first_q["question"]
                     )
                     st.session_state.messages.append({
@@ -1541,10 +1650,9 @@ elif st.session_state.screen == "chat":
                         "scores":           []
                     }
 
-                # Open chat tutoring
                 else:
-                    if intent_tag not in ["greeting", "goodbye", "thanks", "fallback",
-                                          "quiz_request"] and \
+                    if intent_tag not in ["greeting", "goodbye", "thanks",
+                                          "fallback", "quiz_request"] and \
                        intent_tag not in st.session_state.session_topics:
                         st.session_state.session_topics.append(intent_tag)
 

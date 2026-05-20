@@ -1037,6 +1037,280 @@ def get_chat_response(user_input, intent_tag, language="en"):
 
 
 # ── Session state initialization ──────────────────────────────────────────────
+def build_explanation_html(title, std_code, score_label, question,
+                            feedback, solution, scaffold, mindset, is_image=False):
+    """
+    Build a self-contained HTML file with MathJax-rendered math.
+    Student opens in any browser, then saves as PDF or prints in one tap.
+    """
+    # Escape any raw HTML in the content fields
+    def esc(s):
+        return (s.replace("&", "&amp;")
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;"))
+
+    # Convert $...$ and $$...$$ to MathJax-friendly delimiters
+    # MathJax v3 uses \(...\) for inline and \[...\] for display by default,
+    # but we configure it to also accept $...$ below.
+
+    score_color = {
+        "3 / 3": "#065f46", "2 / 3": "#92400e",
+        "1 / 3": "#9a3412", "0 / 3": "#991b1b"
+    }.get(score_label, "#333")
+
+    score_bg = {
+        "3 / 3": "#ecfdf5", "2 / 3": "#fffbeb",
+        "1 / 3": "#fff7ed", "0 / 3": "#fef2f2"
+    }.get(score_label, "#f9f9f9")
+
+    scaffold_block = (
+        f'<div class="note"><strong>Algebra reminder:</strong> {esc(scaffold)}</div>'
+        if scaffold else ""
+    )
+    mindset_block = (
+        f'<div class="mindset">{esc(mindset)}</div>'
+        if mindset else ""
+    )
+    image_note = (
+        '<p class="image-note">Answer submitted as handwritten photo.</p>'
+        if is_image else ""
+    )
+    question_block = (
+        f'<div class="section-label">Question</div>'
+        f'<div class="content-box">{question}</div>'
+        if question else ""
+    )
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{esc(title)}</title>
+  <script>
+    MathJax = {{
+      tex: {{
+        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+        processEscapes: true
+      }},
+      options: {{ skipHtmlTags: ['script','noscript','style','textarea'] }}
+    }};
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: #1f2937;
+      background: #fff;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }}
+    header {{
+      border-bottom: 2px solid #00796b;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+    }}
+    .app-name {{
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #00796b;
+      letter-spacing: -0.01em;
+    }}
+    .app-sub {{
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.1rem;
+    }}
+    .score-badge {{
+      display: inline-block;
+      margin: 1.25rem 0 0.5rem;
+      padding: 0.3rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: {score_bg};
+      color: {score_color};
+    }}
+    .std-label {{
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #00796b;
+      background: #f0fdf9;
+      border: 1px solid #99f6e4;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }}
+    .image-note {{
+      font-size: 0.82rem;
+      color: #6b7280;
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }}
+    .section-label {{
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin: 1.4rem 0 0.4rem;
+    }}
+    .content-box {{
+      background: #f9fafb;
+      border-left: 3px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.25rem;
+      white-space: pre-wrap;
+    }}
+    .feedback-box {{
+      background: #f0fdf9;
+      border-left: 3px solid #00796b;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.25rem;
+      white-space: pre-wrap;
+    }}
+    .solution-box {{
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 0.25rem;
+      white-space: pre-wrap;
+    }}
+    .note {{
+      background: #fffbeb;
+      border-left: 3px solid #f59e0b;
+      border-radius: 4px;
+      padding: 0.65rem 1rem;
+      font-size: 0.88rem;
+      margin: 0.75rem 0;
+    }}
+    .mindset {{
+      background: #f0fdf9;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: #065f46;
+      margin-top: 1rem;
+      font-style: italic;
+    }}
+    footer {{
+      margin-top: 2.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-align: center;
+    }}
+    @media print {{
+      body {{ padding: 1rem; }}
+      .no-print {{ display: none; }}
+    }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="app-name">Canelita con Profe Contreras</div>
+    <div class="app-sub">Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Built for your success</div>
+  </header>
+
+  <div>
+    <span class="score-badge">{score_label}</span>
+    {'<span class="std-label">' + esc(std_code) + '</span>' if std_code else ''}
+  </div>
+
+  {image_note}
+  {question_block}
+
+  <div class="section-label">Feedback</div>
+  <div class="feedback-box">{esc(feedback)}</div>
+
+  {scaffold_block}
+
+  <div class="section-label">Full Solution</div>
+  <div class="solution-box">{solution}</div>
+
+  {mindset_block}
+
+  <footer>
+    Canelita con Profe Contreras &nbsp;·&nbsp; Hartnell College
+    &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {std_code or ''}
+    <br>To save as PDF: File &rarr; Print &rarr; Save as PDF &nbsp;|&nbsp;
+    On iPhone/iPad: Share &rarr; Print &rarr; pinch to zoom preview
+  </footer>
+</body>
+</html>"""
+    return html
+
+
+def build_tutor_html(content):
+    """Build a self-contained HTML file for a tutor chat response."""
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canelita — Tutor Response</title>
+  <script>
+    MathJax = {{
+      tex: {{
+        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+        processEscapes: true
+      }}
+    }};
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px; line-height: 1.7; color: #1f2937;
+      max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 3rem;
+    }}
+    header {{
+      border-bottom: 2px solid #00796b;
+      padding-bottom: 0.75rem; margin-bottom: 1.5rem;
+    }}
+    .app-name {{ font-size: 1.2rem; font-weight: 600; color: #00796b; }}
+    .app-sub {{ font-size: 0.8rem; color: #6b7280; margin-top: 0.1rem; }}
+    .response {{
+      background: #f9fafb; border-left: 3px solid #00796b;
+      border-radius: 4px; padding: 1rem 1.2rem;
+      white-space: pre-wrap; margin-top: 1rem;
+    }}
+    footer {{
+      margin-top: 2.5rem; padding-top: 0.75rem;
+      border-top: 1px solid #e5e7eb; font-size: 0.75rem;
+      color: #9ca3af; text-align: center;
+    }}
+    @media print {{ body {{ padding: 1rem; }} }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="app-name">Canelita con Profe Contreras</div>
+    <div class="app-sub">Hartnell College &nbsp;·&nbsp; C-ID MATH 210</div>
+  </header>
+  <div class="response">{content}</div>
+  <footer>
+    To save as PDF: File &rarr; Print &rarr; Save as PDF &nbsp;|&nbsp;
+    On iPhone/iPad: Share &rarr; Print &rarr; pinch to zoom preview
+  </footer>
+</body>
+</html>"""
+    return html
+
+
 def init_session_state():
     """Initialize all Streamlit session state variables on first load."""
     defaults = {
@@ -1173,42 +1447,44 @@ if st.session_state.screen == "welcome":
                 index=2, key="welcome_numq"
             )
 
-        st.markdown('<p class="section-label" style="margin-top:0.9rem;">'
-                    "What would you like to start with?</p>",
-                    unsafe_allow_html=True)
-        quickstart = st.selectbox(
-            "Start with",
-            [
-                "Just say hello — I will ask as we go",
-                "Give me a random quiz question",
-                "I have a specific question for the tutor",
-            ],
-            label_visibility="collapsed",
-            key="welcome_quickstart"
-        )
-
-        # Show selected standard (set from right-column buttons)
+        # Check selected standard FIRST — it drives everything below
         chosen_std   = st.session_state.get("selected_standard")
         chosen_skill = st.session_state.get("selected_skill")
 
-        if chosen_std:
-            std_data = STANDARDS_MAP[chosen_std]
+        # Only show quickstart when NO specific standard is selected
+        quickstart = None
+        if not chosen_std:
+            st.markdown('<p class="section-label" style="margin-top:0.9rem;">'
+                        "What would you like to start with?</p>",
+                        unsafe_allow_html=True)
+            quickstart = st.selectbox(
+                "Start with",
+                [
+                    "Just say hello — I will ask as we go",
+                    "Give me a random quiz question",
+                    "I have a specific question for the tutor",
+                ],
+                label_visibility="collapsed",
+                key="welcome_quickstart"
+            )
+        else:
+            # Standard is selected — show it prominently instead of quickstart
             st.markdown(
                 f'<div style="margin-top:0.6rem;padding:0.6rem 0.8rem;'
                 f'background:rgba(0,121,107,0.08);border-radius:6px;'
                 f'border-left:3px solid #00796b;">'
                 f'<span style="font-size:0.72rem;font-weight:500;'
                 f'text-transform:uppercase;letter-spacing:0.06em;'
-                f'color:#00796b;">Selected standard</span><br>'
+                f'color:#00796b;">Ready to practice</span><br>'
                 f'<strong style="font-size:0.88rem;">'
-                f'{chosen_std}: {std_data["topic"]}</strong><br>'
+                f'{chosen_std}: {STANDARDS_MAP[chosen_std]["topic"]}</strong><br>'
                 f'<span style="font-size:0.76rem;opacity:0.7;">'
-                f'Algebra needed: {", ".join(std_data["algebra_prereqs"])}'
+                f'Algebra needed: {", ".join(STANDARDS_MAP[chosen_std]["algebra_prereqs"])}'
                 f'</span></div>',
                 unsafe_allow_html=True
             )
             # Skill drill-down
-            skill_opts = ["Any skill"] + std_data["skills"]
+            skill_opts = ["Any skill"] + STANDARDS_MAP[chosen_std]["skills"]
             skill_choice = st.selectbox(
                 "Skill to focus on", skill_opts,
                 label_visibility="visible", key="skill_selector"
@@ -1216,11 +1492,11 @@ if st.session_state.screen == "welcome":
             st.session_state.selected_skill = (
                 skill_choice if skill_choice != "Any skill" else None
             )
-            if st.button("✕ Clear selection", key="clear_std"):
+            if st.button("← Change selection", key="clear_std"):
                 st.session_state.selected_standard = None
                 st.session_state.selected_skill    = None
                 st.rerun()
-        else:
+            # No standard selected — just show hint
             st.caption("Or click any standard in the unit browser →")
 
         st.write("")
@@ -1516,8 +1792,35 @@ elif st.session_state.screen == "chat":
                          index=list(lang_opts.keys()).index(cur_lbl))
         ]
         st.divider()
-        if st.button("End session", use_container_width=True):
-            st.session_state.session_ended = True
+        col_back, col_end = st.columns(2)
+        with col_back:
+            if st.button("← Back", use_container_width=True, help="Return to topic selection"):
+                # Save elapsed time before going back
+                all_usage = st.session_state.get("all_usage", {})
+                sid       = st.session_state.get("student_id", "")
+                cw        = get_current_week()
+                rec       = all_usage.get(sid, {"week": cw, "minutes_used": 0.0,
+                                                  "sessions": 0, "api_calls": 0,
+                                                  "topics_practiced": [],
+                                                  "standards_practiced": []})
+                rec["minutes_used"] = rec.get("minutes_used", 0.0) + elapsed_min
+                rec["api_calls"]    = rec.get("api_calls", 0) + st.session_state.session_calls
+                all_usage[sid] = rec
+                st.session_state.all_usage = all_usage
+                # Clear chat state but keep identity/settings
+                keep = {k: st.session_state[k] for k in
+                        ["student_id","language","difficulty","num_questions",
+                         "all_usage","selected_standard","selected_skill"]
+                        if k in st.session_state}
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                for k, v in keep.items():
+                    st.session_state[k] = v
+                st.session_state.screen = "welcome"
+                st.rerun()
+        with col_end:
+            if st.button("End session", use_container_width=True):
+                st.session_state.session_ended = True
         if 0 < remaining <= 30:
             st.warning(f"Only {format_duration(remaining)} left this week.")
         if remaining <= 0:
@@ -1568,6 +1871,7 @@ elif st.session_state.screen == "chat":
                 mindset  = msg.get("mindset_message", "")
                 scaffold = msg.get("algebra_scaffold", "")
                 std_code = msg.get("standard_code", "")
+                question = msg.get("question_text", "")
                 is_img   = msg.get("from_image", False)
 
                 score_labels = {3:"3 / 3", 2:"2 / 3", 1:"1 / 3", 0:"0 / 3"}
@@ -1585,8 +1889,45 @@ elif st.session_state.screen == "chat":
                         st.markdown(solution)
                 if mindset:    st.success(mindset)
 
+                # ── Print / Download explanation as HTML ──────────────────
+                score_label_str = {3:"3 / 3", 2:"2 / 3",
+                                   1:"1 / 3", 0:"0 / 3"}.get(score, "0 / 3")
+                html_content = build_explanation_html(
+                    title=f"Explanation — {std_code or 'Calculus 1'}",
+                    std_code=std_code,
+                    score_label=score_label_str,
+                    question=question,
+                    feedback=feedback,
+                    solution=solution,
+                    scaffold=scaffold,
+                    mindset=mindset,
+                    is_image=is_img
+                )
+                dl_col, _ = st.columns([1, 3])
+                with dl_col:
+                    st.download_button(
+                        label="Print / Save as PDF",
+                        data=html_content,
+                        file_name=f"explanation_{std_code or 'calc1'}.html",
+                        mime="text/html",
+                        key=f"dl_{id(msg)}",
+                        use_container_width=True
+                    )
+
             else:
                 st.markdown(content)
+                # Download button for tutor chat responses
+                if role == "assistant" and len(content) > 120:
+                    dl_col, _ = st.columns([1, 3])
+                    with dl_col:
+                        st.download_button(
+                            label="Print / Save as PDF",
+                            data=build_tutor_html(content),
+                            file_name="tutor_response.html",
+                            mime="text/html",
+                            key=f"dl_chat_{id(msg)}",
+                            use_container_width=True
+                        )
 
     # ── Session ended: report ─────────────────────────────────────────────────
     if st.session_state.session_ended and not st.session_state.usage_saved:
@@ -1730,7 +2071,8 @@ elif st.session_state.screen == "chat":
                     "full_solution": grading["full_solution"],
                     "mindset_message": grading["mindset_message"],
                     "algebra_scaffold": grading.get("algebra_scaffold",""),
-                    "standard_code": std_code, "from_image": from_image
+                    "standard_code": std_code, "from_image": from_image,
+                    "question_text": qs["current_question"].get("question","")
                 })
 
                 qs["q_num"] += 1

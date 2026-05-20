@@ -1144,78 +1144,107 @@ if st.session_state.screen == "welcome":
 
     col_form, col_info = st.columns([9, 11], gap="large")
 
+    # ── LEFT: sign-in form ────────────────────────────────────────────────────
     with col_form:
         st.markdown('<p class="section-label">Sign in / Iniciar sesión</p>',
                     unsafe_allow_html=True)
 
-        # st.form ensures Enter key submits and avoids re-render on each keystroke
-        with st.form("signin_form", clear_on_submit=False):
-
-            student_id = st.text_input(
-                "Your name or student ID / Tu nombre o ID",
-                placeholder="e.g. Maria G. or 12345"
+        student_id = st.text_input(
+            "Your name or student ID / Tu nombre o ID",
+            placeholder="e.g. Maria G. or 12345",
+            key="welcome_student_id"
+        )
+        lang_choice = st.selectbox(
+            "Language / Idioma",
+            ["Auto-detect", "English", "Español"],
+            key="welcome_lang"
+        )
+        col_d, col_q = st.columns(2)
+        with col_d:
+            diff_choice = st.selectbox(
+                "Difficulty / Dificultad",
+                ["Easy", "Medium", "Hard"],
+                index=1, key="welcome_diff"
+            )
+        with col_q:
+            num_q = st.selectbox(
+                "Questions / Preguntas",
+                [1, 2, 3, 4, 5],
+                index=2, key="welcome_numq"
             )
 
-            lang_choice = st.selectbox(
-                "Language / Idioma",
-                ["Auto-detect", "English", "Español"]
+        st.markdown('<p class="section-label" style="margin-top:0.9rem;">'
+                    "What would you like to start with?</p>",
+                    unsafe_allow_html=True)
+        quickstart = st.selectbox(
+            "Start with",
+            [
+                "Just say hello — I will ask as we go",
+                "Give me a random quiz question",
+                "I have a specific question for the tutor",
+            ],
+            label_visibility="collapsed",
+            key="welcome_quickstart"
+        )
+
+        # Show selected standard (set from right-column buttons)
+        chosen_std   = st.session_state.get("selected_standard")
+        chosen_skill = st.session_state.get("selected_skill")
+
+        if chosen_std:
+            std_data = STANDARDS_MAP[chosen_std]
+            st.markdown(
+                f'<div style="margin-top:0.6rem;padding:0.6rem 0.8rem;'
+                f'background:rgba(0,121,107,0.08);border-radius:6px;'
+                f'border-left:3px solid #00796b;">'
+                f'<span style="font-size:0.72rem;font-weight:500;'
+                f'text-transform:uppercase;letter-spacing:0.06em;'
+                f'color:#00796b;">Selected standard</span><br>'
+                f'<strong style="font-size:0.88rem;">'
+                f'{chosen_std}: {std_data["topic"]}</strong><br>'
+                f'<span style="font-size:0.76rem;opacity:0.7;">'
+                f'Algebra needed: {", ".join(std_data["algebra_prereqs"])}'
+                f'</span></div>',
+                unsafe_allow_html=True
             )
-
-            col_d, col_q = st.columns(2)
-            with col_d:
-                diff_choice = st.selectbox(
-                    "Difficulty / Dificultad",
-                    ["Easy", "Medium", "Hard"],
-                    index=1
-                )
-            with col_q:
-                num_q = st.selectbox(
-                    "Questions / Preguntas",
-                    [1, 2, 3, 4, 5],
-                    index=2
-                )
-
-            st.markdown('<p class="section-label" style="margin-top:0.9rem;">'
-                        'What would you like to start with?</p>',
-                        unsafe_allow_html=True)
-
-            quickstart = st.selectbox(
-                "Start with",
-                [
-                    "Just say hello — I will ask as we go",
-                    "Give me a random quiz question",
-                    "Quiz me on Limits",
-                    "Quiz me on Derivatives",
-                    "Quiz me on Applications of Derivatives",
-                    "Quiz me on Integration",
-                    "I have a specific question for the tutor",
-                ],
-                label_visibility="collapsed"
+            # Skill drill-down
+            skill_opts = ["Any skill"] + std_data["skills"]
+            skill_choice = st.selectbox(
+                "Skill to focus on", skill_opts,
+                label_visibility="visible", key="skill_selector"
             )
-
-            submitted = st.form_submit_button(
-                "Start session / Comenzar",
-                type="primary",
-                use_container_width=True
+            st.session_state.selected_skill = (
+                skill_choice if skill_choice != "Any skill" else None
             )
+            if st.button("✕ Clear selection", key="clear_std"):
+                st.session_state.selected_standard = None
+                st.session_state.selected_skill    = None
+                st.rerun()
+        else:
+            st.caption("Or click any standard in the unit browser →")
 
-        if submitted:
-            if not student_id.strip():
+        st.write("")
+        start_clicked = st.button(
+            "Start session / Comenzar",
+            type="primary",
+            use_container_width=True,
+            key="start_btn"
+        )
+
+        if start_clicked:
+            sid = student_id.strip()
+            if not sid:
                 st.warning("Please enter your name or student ID.")
             else:
-                sid          = student_id.strip()
                 all_usage    = st.session_state.get("all_usage", {})
                 current_week = get_current_week()
                 record       = all_usage.get(sid, {})
-
                 if record.get("week") != current_week:
                     record = {"week": current_week, "minutes_used": 0.0,
                               "sessions": 0, "api_calls": 0,
                               "topics_practiced": [], "standards_practiced": []}
-
                 used      = record.get("minutes_used", 0.0)
                 remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
-
                 if used >= WEEKLY_LIMIT_MINUTES:
                     st.error(
                         f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
@@ -1224,7 +1253,6 @@ if st.session_state.screen == "welcome":
                 else:
                     lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
                     diff_map = {"Easy": "easy", "Medium": "medium", "Hard": "hard"}
-
                     st.session_state.student_id    = sid
                     st.session_state.language      = lang_map[lang_choice]
                     st.session_state.difficulty    = diff_map[diff_choice]
@@ -1234,244 +1262,184 @@ if st.session_state.screen == "welcome":
                     lang = "es" if st.session_state.language == "es" else "en"
                     st.session_state.current_lang  = lang
 
-                    # Opening welcome message
                     welcome_msg = (
                         f"Hi {sid}! I am your Calculus 1 tutor at Hartnell College. "
                         f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                        f"Here is how to get started:\n"
-                        f"- Type **quiz** (or **quiz limits**, **quiz derivatives**, "
-                        f"**quiz integrals**) for a practice problem\n"
-                        f"- Ask me **any calculus question** in plain language\n"
-                        f"- When answering a quiz, you can **upload a photo** of your "
-                        f"handwritten work\n"
-                        f"- Type **bye** when you are done to see your session report"
+                        f"- Type **quiz** for a practice problem\n"
+                        f"- Ask me **any calculus question**\n"
+                        f"- Upload a **photo** of your handwritten work as an answer\n"
+                        f"- Type **bye** when done to see your report"
                         if lang == "en" else
                         f"Hola {sid}! Soy tu tutor de Cálculo 1 en Hartnell College. "
                         f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                        f"Cómo comenzar:\n"
                         f"- Escribe **quiz** para un problema de práctica\n"
                         f"- Hazme **cualquier pregunta de cálculo**\n"
-                        f"- Cuando respondas un quiz, puedes **subir una foto** de tu trabajo\n"
+                        f"- Sube una **foto** de tu trabajo escrito como respuesta\n"
                         f"- Escribe **bye** para terminar y ver tu reporte"
                     )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
                     })
 
-                    # Fire quickstart action immediately if student chose a quiz
                     qs_topic_map = {
-                        "Give me a random quiz question":          "__random__",
-                        "Quiz me on Limits":                       "limits",
-                        "Quiz me on Derivatives":                  "derivatives",
-                        "Quiz me on Applications of Derivatives":  "applications_derivatives",
-                        "Quiz me on Integration":                  "integrals",
+                        "Give me a random quiz question": "__random__",
                     }
                     qs_action = qs_topic_map.get(quickstart)
 
-                    # Check if student targeted a specific standard
-                    chosen_std   = st.session_state.get("selected_standard")
-                    chosen_skill = st.session_state.get("selected_skill")
-
-                    if chosen_std and chosen_std != "Auto — any standard":
-                        # Generate quiz directly for the chosen standard
-                        first_q = quiz_by_standard(
+                    if chosen_std:
+                        first_q  = quiz_by_standard(
                             chosen_std, st.session_state.difficulty, lang,
-                            skill_focus=chosen_skill
+                            skill_focus=st.session_state.get("selected_skill")
                         )
                         st.session_state.session_calls += 1
-                        nq = st.session_state.num_questions
+                        nq       = st.session_state.num_questions
                         std_data = STANDARDS_MAP[chosen_std]
-                        skill_note = (f"\n*Skill focus: {chosen_skill}*\n\n"
-                                      if chosen_skill and chosen_skill != "Any skill" else "\n\n")
+                        chosen_skill_val = st.session_state.get("selected_skill")
+                        skill_note = (f"\n*Skill focus: {chosen_skill_val}*\n\n"
+                                      if chosen_skill_val else "\n\n")
+                        prereqs_str = ", ".join(std_data["algebra_prereqs"])
                         st.session_state.messages.append({
                             "role": "assistant", "type": "question",
                             "content": (
                                 f"**Question 1 of {nq} | "
                                 f"{chosen_std}: {std_data['topic']}**\n"
-                                f"*Prerequisites: {', '.join(std_data['algebra_prereqs'])}*"
-                                f"{skill_note}"
-                                + first_q["question"]
+                                f"*Prerequisites: {prereqs_str}*"
+                                f"{skill_note}" + first_q["question"]
                             )
                         })
                         st.session_state.quiz_state = {
                             "current_question": first_q,
                             "q_num": 2, "num_questions": nq,
                             "topic": std_data["intent_tag"],
-                            "standard_lock": chosen_std,
-                            "scores": []
+                            "standard_lock": chosen_std, "scores": []
                         }
                         if std_data["intent_tag"] not in st.session_state.session_topics:
                             st.session_state.session_topics.append(std_data["intent_tag"])
 
-                    elif qs_action:
-                        topic = None if qs_action == "__random__" else qs_action
-                        if topic and topic not in st.session_state.session_topics:
-                            st.session_state.session_topics.append(topic)
-                        pool       = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
-                                      if topic else list(STANDARDS_MAP.keys()))
-                        first_code = random.choice(pool)
+                    elif qs_action == "__random__":
+                        first_code = random.choice(list(STANDARDS_MAP.keys()))
                         first_q    = quiz_by_standard(
                             first_code, st.session_state.difficulty, lang
                         )
                         st.session_state.session_calls += 1
                         nq = st.session_state.num_questions
-
+                        prereqs_str = ", ".join(first_q["algebra_prereqs"])
                         st.session_state.messages.append({
-                            "role": "assistant",
+                            "role": "assistant", "type": "question",
                             "content": (
                                 f"**Question 1 of {nq} | "
                                 f"{first_code}: {first_q['topic']}**\n\n"
-                                f"*Prerequisites: "
-                                f"{', '.join(first_q['algebra_prereqs'])}*\n\n"
+                                f"*Prerequisites: {prereqs_str}*\n\n"
                                 + first_q["question"]
-                            ),
-                            "type": "question"
+                            )
                         })
                         st.session_state.quiz_state = {
                             "current_question": first_q,
                             "q_num": 2, "num_questions": nq,
-                            "topic": topic, "scores": []
+                            "topic": None, "scores": []
                         }
 
                     st.rerun()
 
-        # ── Standard & skill targeting (outside form so dropdowns react) ──
-        st.markdown('<p class="section-label" style="margin-top:1rem;">'
-                    'Target a specific standard (optional)</p>',
-                    unsafe_allow_html=True)
-
-        # Build standard options list
-        std_options = ["Auto — any standard"] + [
-            f"{code}: {data['topic']}"
-            for code, data in STANDARDS_MAP.items()
-        ]
-        std_choice = st.selectbox(
-            "Standard", std_options, label_visibility="collapsed",
-            key="std_selector"
-        )
-
-        selected_code = None
-        if std_choice != "Auto — any standard":
-            selected_code = std_choice.split(":")[0].strip()
-            st.session_state.selected_standard = selected_code
-
-            # Show skills for the chosen standard
-            std_data  = STANDARDS_MAP[selected_code]
-            skill_opts = ["Any skill"] + std_data["skills"]
-            skill_choice = st.selectbox(
-                "Skill within this standard", skill_opts,
-                label_visibility="visible", key="skill_selector"
-            )
-            st.session_state.selected_skill = (
-                skill_choice if skill_choice != "Any skill" else None
-            )
-
-            # Show a preview of the standard
-            st.markdown(
-                f'<div style="font-size:0.78rem;color:#4b5563;'
-                f'background:#f9fafb;border-radius:6px;padding:0.6rem 0.8rem;'
-                f'margin-top:0.4rem;line-height:1.6;">'
-                f'<strong style="color:#00796b">{selected_code}</strong> — '
-                f'{std_data["topic"]}<br>'
-                f'<em>Algebra needed: '
-                f'{", ".join(std_data["algebra_prereqs"])}</em>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-        else:
-            st.session_state.selected_standard = None
-            st.session_state.selected_skill    = None
+    # ── RIGHT: about + interactive standard browser ────────────────────────────
+    with col_info:
+        # Features
         st.markdown('<p class="section-label">What this tutor does</p>',
                     unsafe_allow_html=True)
-
-        # ── Main feature descriptions ─────────────────────────────────────
         st.markdown("""
 <div class="feature-block">
 <span class="feature-label">Quiz mode.</span>
-Generates original practice problems aligned to C-ID MATH 210 standards.
-Each question connects calculus to a real career field — engineering, data science,
-biology, health, business, or social justice.
+Original questions aligned to all 25 C-ID MATH 210 standards.
+Each connects to a real career field — engineering, data science, biology,
+health, business, or social justice.
 </div>
-
 <div class="feature-block">
 <span class="feature-label">Tutor chat.</span>
-Ask any Calculus 1 question in plain language and get a step-by-step explanation
-with rendered math notation, in English or Spanish.
+Ask any Calculus 1 question and get a step-by-step explanation
+with rendered math, in English or Spanish.
 </div>
-
 <div class="feature-block" style="margin-bottom:0.5rem;">
 <span class="feature-label">What you can send:</span>
-<ul style="margin:0.3rem 0 0 1rem; padding:0; font-size:0.85rem; color:#374151; line-height:1.7;">
+<ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
   <li>A typed answer or question — in English or Spanish</li>
   <li>A photo of your handwritten work</li>
-  <li>A request for a quiz on a specific topic</li>
-  <li>A follow-up question about any step you do not understand</li>
+  <li>A follow-up question about any step</li>
 </ul>
 </div>
-
 <div class="feature-block">
 <span class="feature-label">Weekly limit.</span>
 Six hours per week keeps this free for every student in the class.
 </div>
 """, unsafe_allow_html=True)
 
-        # ── Pitch textbox for mistakes-feedback loop ──────────────────────
+        # Pitch quote
         st.markdown("""
-<div style="
-    margin: 1rem 0 1.1rem 0;
-    padding: 0.9rem 1.1rem;
-    background: rgba(0,121,107,0.08);
-    border-left: 3px solid #00796b;
-    border-radius: 6px;
-">
-  <p style="
-    margin: 0;
-    font-size: 0.95rem;
-    font-style: italic;
-    font-weight: 400;
-    color: inherit;
-    line-height: 1.65;
-    font-family: Georgia, serif;
-    opacity: 0.9;
-  ">
+<div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
+background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
+  <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
+  color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
     "Getting it wrong is part of getting it right.
-    Every incorrect answer comes with an explanation of where your reasoning went,
+    Every incorrect answer comes with an explanation,
     a full worked solution, and a check on the algebra underneath —
     so the next attempt starts from a stronger place."
   </p>
 </div>
 """, unsafe_allow_html=True)
 
-        # ── Standards section ─────────────────────────────────────────────
+        # Interactive standard browser
         st.markdown('<p class="section-label" style="margin-top:0.2rem;">'
-                    'Your C-ID MATH 210 Checklist — 25 Standards</p>',
+                    "Your C-ID MATH 210 Checklist — click any standard to select it</p>",
                     unsafe_allow_html=True)
+        st.markdown(
+            '<p style="font-size:0.82rem;color:inherit;opacity:0.75;'
+            'line-height:1.6;margin-bottom:0.6rem;">'
+            "These 25 standards are California's official Calculus 1 framework. "
+            "Work through them all and you'll know you're ready for "
+            "Calculus 2, Differential Equations, Physics, and beyond.</p>",
+            unsafe_allow_html=True
+        )
 
-        st.markdown("""
-<p style="font-size:0.84rem; color:inherit; opacity:0.8; line-height:1.6; margin-bottom:0.75rem;">
-These 25 standards are the official California framework for Calculus 1.
-They are your checklist — work through them and you will know you are ready
-to step into Calculus 2, Differential Equations, Physics, and beyond.
-</p>
-""", unsafe_allow_html=True)
+        unit_info = [
+            (1, "Limits & Continuity"),
+            (2, "Derivatives"),
+            (3, "Applications of Derivatives"),
+            (4, "Integration"),
+            (5, "Applications of Integration"),
+        ]
 
-        for unit, name, codes in [
-            ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
-            ("Unit 2", "Derivatives",                 "S-06 – S-12"),
-            ("Unit 3", "Applications of Derivatives", "S-13 – S-19"),
-            ("Unit 4", "Integration",                 "S-20 – S-23"),
-            ("Unit 5", "Applications of Integration", "S-24 – S-25"),
-        ]:
-            st.markdown(
-                f'<div class="unit-row">'
-                f'<span class="unit-num">{unit}</span>'
-                f'<span style="font-size:0.9rem;">{name}</span>'
-                f'<span class="unit-codes">{codes}</span>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
+        current_selected = st.session_state.get("selected_standard")
 
+        for unit_num, unit_name in unit_info:
+            unit_stds = [(c, d) for c, d in STANDARDS_MAP.items()
+                         if d["unit"] == unit_num]
+            # Check if any standard in this unit is selected
+            unit_active = any(c == current_selected for c, _ in unit_stds)
 
+            with st.expander(
+                f"Unit {unit_num} — {unit_name}  ({len(unit_stds)} standards)",
+                expanded=unit_active
+            ):
+                for code, data in unit_stds:
+                    is_selected = code == current_selected
+                    btn_label   = (
+                        f"✓ {code}: {data['topic']}"
+                        if is_selected else
+                        f"{code}: {data['topic']}"
+                    )
+                    if st.button(
+                        btn_label,
+                        key=f"std_btn_{code}",
+                        use_container_width=True,
+                        type="primary" if is_selected else "secondary"
+                    ):
+                        # Toggle: clicking selected standard deselects it
+                        if is_selected:
+                            st.session_state.selected_standard = None
+                            st.session_state.selected_skill    = None
+                        else:
+                            st.session_state.selected_standard = code
+                            st.session_state.selected_skill    = None
+                        st.rerun()
 # ════════════════════════════════════════════════════════════════════════════════
 # SCREEN: CHAT
 # ════════════════════════════════════════════════════════════════════════════════

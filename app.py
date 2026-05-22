@@ -719,6 +719,7 @@ SEMILLA_VALUES = {
     "resilience":    2,   # Retried after a wrong answer
     "consistency":   2,   # Completed a full challenge round
     "time_10min":    1,   # Per 10 minutes of study
+    "vuelo":         5,   # Requested a take-home practice set
 }
 
 # Poetic semilla description — shown permanently in sidebar
@@ -1026,7 +1027,11 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"- Include [CONNECTION: FieldName] at the start, then one brief context sentence, "
         f"then the mathematical question\n"
         f"- Use LaTeX: $...$ for inline, $$...$$ for display math\n"
-        f"- Write ONLY the question, nothing else\n\n"
+        f"- Write ONLY the question, nothing else\n"
+        f"- IMPORTANT: Do NOT generate questions that require the student to read or "
+        f"interpret a graph or diagram that you cannot display. All information the "
+        f"student needs must be expressible entirely in text and LaTeX. "
+        f"If the concept typically uses a graph, describe the function algebraically instead.\n\n"
         f"Question:"
     )
 
@@ -1201,11 +1206,36 @@ def build_explanation_html(title, std_code, score_label, question,
     Build a self-contained HTML file with MathJax-rendered math.
     Student opens in any browser, then saves as PDF or prints in one tap.
     """
-    # Escape any raw HTML in the content fields
     def esc(s):
         return (s.replace("&", "&amp;")
                   .replace("<", "&lt;")
                   .replace(">", "&gt;"))
+
+    def md_to_html(text):
+        """
+        Convert basic markdown to HTML so it renders properly in the browser.
+        Handles: **bold**, *italic*, numbered steps, line breaks.
+        Does NOT escape $ signs so MathJax processes them.
+        """
+        import re
+        if not text:
+            return ""
+        # Escape HTML special chars except $ (needed for MathJax)
+        text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        # Bold
+        text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+        # Italic (not inside math)
+        text = re.sub(r'\*([^*\n]+?)\*', r'<em>\1</em>', text)
+        # Numbered list lines: "1. text" → paragraph with number
+        lines = text.split('\n')
+        html_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                html_lines.append('<br>')
+            else:
+                html_lines.append(f'<p style="margin:0.35rem 0;">{stripped}</p>')
+        return '\n'.join(html_lines)
 
     # Convert $...$ and $$...$$ to MathJax-friendly delimiters
     # MathJax v3 uses \(...\) for inline and \[...\] for display by default,
@@ -1235,9 +1265,12 @@ def build_explanation_html(title, std_code, score_label, question,
     )
     question_block = (
         f'<div class="section-label">Question</div>'
-        f'<div class="content-box">{question}</div>'
+        f'<div class="content-box">{md_to_html(question)}</div>'
         if question else ""
     )
+    # Use md_to_html for solution so markdown renders and MathJax can process $...$ 
+    solution_html = md_to_html(solution) if solution else ""
+    feedback_html = md_to_html(feedback) if feedback else ""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1342,9 +1375,9 @@ def build_explanation_html(title, std_code, score_label, question,
       border: 1px solid #e5e7eb;
       border-radius: 6px;
       padding: 0.9rem 1rem;
-      white-space: pre-wrap;
       word-break: break-word;
       overflow-x: auto;
+      line-height: 1.8;
     }}
     .note {{
       background: #fffbeb;
@@ -1396,12 +1429,12 @@ def build_explanation_html(title, std_code, score_label, question,
   {question_block}
 
   <div class="section-label">Feedback</div>
-  <div class="feedback-box">{esc(feedback)}</div>
+  <div class="feedback-box">{feedback_html}</div>
 
   {scaffold_block}
 
   <div class="section-label">Full Solution</div>
-  <div class="solution-box">{solution}</div>
+  <div class="solution-box">{solution_html}</div>
 
   {mindset_block}
 
@@ -1469,6 +1502,217 @@ def build_tutor_html(content):
   <footer>
     To save as PDF: File &rarr; Print &rarr; Save as PDF &nbsp;|&nbsp;
     On iPhone/iPad: Share &rarr; Print &rarr; pinch to zoom preview
+  </footer>
+</body>
+</html>"""
+    return html
+
+
+def generate_practice_set_html(standards_practiced, difficulty, language, student_name):
+    """
+    Generate a printable take-home practice set with fresh questions
+    for each standard the student worked on this session.
+    Returns an HTML string with MathJax-rendered math.
+    """
+    lang_word  = "Spanish" if language == "es" else "English"
+    week       = get_current_week()
+    title_text = (f"Practice Set — {student_name}" if language == "en"
+                  else f"Conjunto de Práctica — {student_name}")
+
+    # Build questions for each standard practiced
+    question_blocks = ""
+    for i, std_code in enumerate(standards_practiced, 1):
+        if std_code not in STANDARDS_MAP:
+            continue
+        std_data = STANDARDS_MAP[std_code]
+        # Generate a fresh question (different from session — different seed via field rotation)
+        q = quiz_by_standard(std_code, difficulty, language)
+        q_text = q.get("question", "")
+
+        import re
+        def md_to_html_ps(text):
+            if not text:
+                return ""
+            text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+            text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+            text = re.sub(r'\*([^*\n]+?)\*', r'<em>\1</em>', text)
+            lines = text.split('\n')
+            html_lines = []
+            for line in lines:
+                s = line.strip()
+                if s:
+                    html_lines.append(f'<p style="margin:0.3rem 0;">{s}</p>')
+            return '\n'.join(html_lines)
+
+        prereqs = ", ".join(std_data["algebra_prereqs"])
+        question_blocks += f"""
+<div class="question-block">
+  <div class="q-header">
+    <span class="q-num">{i}</span>
+    <span class="q-std">{std_code}</span>
+    <span class="q-topic">{std_data['topic']}</span>
+  </div>
+  <div class="q-prereq">Algebra you'll use: {prereqs}</div>
+  <div class="q-body">{md_to_html_ps(q_text)}</div>
+  <div class="work-space">
+    <div class="work-label">{"Your work / Tu trabajo" if language == "en" else "Tu trabajo"}</div>
+  </div>
+</div>
+"""
+
+    header_note = (
+        "These questions are similar to the ones you worked on in today's session. "
+        "Each one is fresh — tackle them on your own, then bring questions back to Canelita."
+        if language == "en" else
+        "Estas preguntas son similares a las que trabajaste en la sesión de hoy. "
+        "Cada una es nueva — resuélvelas por tu cuenta y luego trae preguntas a Canelita."
+    )
+
+    html = f"""<!DOCTYPE html>
+<html lang="{language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>{title_text}</title>
+  <script>
+    MathJax = {{
+      tex: {{
+        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+        processEscapes: true
+      }},
+      chtml: {{ scale: 1.1 }}
+    }};
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: #1f2937;
+      background: #fff;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }}
+    header {{
+      border-bottom: 2px solid #00796b;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.25rem;
+    }}
+    .app-name {{ font-size: 1.15rem; font-weight: 600; color: #00796b; }}
+    .app-sub  {{ font-size: 0.78rem; color: #6b7280; margin-top: 0.1rem; }}
+    .intro {{
+      background: rgba(0,121,107,0.07);
+      border-left: 3px solid #00796b;
+      border-radius: 4px;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.88rem;
+      font-style: italic;
+      color: #065f46;
+      margin-bottom: 1.5rem;
+    }}
+    .semilla-note {{
+      font-size: 0.82rem;
+      color: #00796b;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }}
+    .question-block {{
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.5rem;
+      page-break-inside: avoid;
+    }}
+    .q-header {{
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }}
+    .q-num {{
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #00796b;
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }}
+    .q-std {{
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #00796b;
+      background: #f0fdf9;
+      border: 1px solid #99f6e4;
+      border-radius: 4px;
+      padding: 1px 6px;
+    }}
+    .q-topic {{
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #374151;
+    }}
+    .q-prereq {{
+      font-size: 0.72rem;
+      color: #9ca3af;
+      margin-bottom: 0.6rem;
+    }}
+    .q-body {{
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin-bottom: 0.75rem;
+    }}
+    .work-space {{
+      border-top: 1px dashed #e5e7eb;
+      margin-top: 0.5rem;
+      padding-top: 0.4rem;
+      height: 120px;
+    }}
+    .work-label {{
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #d1d5db;
+    }}
+    footer {{
+      margin-top: 2rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      text-align: center;
+    }}
+    mjx-container {{ overflow-x: auto; max-width: 100%; }}
+    @media print {{
+      body {{ padding: 0.75rem; }}
+      .question-block {{ page-break-inside: avoid; }}
+    }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="app-name">Canelita con Profe Contreras</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+  </header>
+
+  <div class="intro">{header_note}</div>
+  <div class="semilla-note">🌱 You earned Semillas de Vuelo for taking your learning home.</div>
+
+  {question_blocks}
+
+  <footer>
+    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210<br>
+    Standards: {', '.join(standards_practiced)}<br>
+    To save as PDF: File → Print → Save as PDF &nbsp;|&nbsp;
+    iPhone/iPad: Share → Print → pinch to zoom
   </footer>
 </body>
 </html>"""
@@ -1650,6 +1894,18 @@ if st.session_state.screen == "professor":
 
         # Download all data as JSON
         st.divider()
+        
+        # Glitch reports
+        glitch_log = all_usage.get("__glitch_log__", [])
+        if glitch_log:
+            st.subheader(f"Reported glitches ({len(glitch_log)})")
+            for g in reversed(glitch_log[-20:]):
+                st.markdown(
+                    f"- **{g.get('standard','?')}** by {g.get('student','?')} "
+                    f"(week {g.get('week','?')}): _{g.get('question_preview','')}_"
+                )
+            st.divider()
+
         st.download_button(
             label="Download all student data (JSON)",
             data=json.dumps(all_usage, indent=2, ensure_ascii=False),
@@ -2245,23 +2501,38 @@ elif st.session_state.screen == "chat":
                 if solution:
                     with st.expander("Full solution"):
                         st.markdown(solution)
-                if mindset:    st.success(mindset)
+                if mindset:
+                    st.markdown(
+                        f'<div style="margin:0.6rem 0;padding:0.75rem 1rem;'
+                        f'background:linear-gradient(135deg,rgba(0,121,107,0.12),rgba(0,121,107,0.05));'
+                        f'border-radius:8px;border-left:3px solid #00796b;">'
+                        f'<p style="font-size:0.97rem;font-weight:500;color:#00796b;'
+                        f'line-height:1.6;margin:0;">{mindset}</p>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
 
                 # Semilla award
                 if semilla_note:
                     st.markdown(
-                        f'<div style="font-size:0.8rem;color:inherit;opacity:0.75;'
-                        f'margin:0.3rem 0 0.2rem 0;">{semilla_note}</div>',
+                        f'<div style="margin:0.5rem 0;padding:0.5rem 0.9rem;'
+                        f'background:rgba(0,121,107,0.06);border-radius:6px;'
+                        f'display:inline-block;">'
+                        f'<span style="font-size:0.95rem;font-weight:600;'
+                        f'color:#00796b;">{semilla_note}</span>'
+                        f'</div>',
                         unsafe_allow_html=True
                     )
 
                 # Wisdom quote
                 if wisdom_quote:
                     st.markdown(
-                        f'<div style="font-size:0.82rem;font-style:italic;'
-                        f'color:inherit;opacity:0.65;border-left:2px solid #00796b;'
-                        f'padding:0.3rem 0.7rem;margin:0.4rem 0;">'
-                        f'{wisdom_quote}</div>',
+                        f'<div style="margin:0.5rem 0 0.3rem 0;padding:0.5rem 0.9rem;'
+                        f'border-left:3px solid #d97706;background:rgba(217,119,6,0.06);'
+                        f'border-radius:0 6px 6px 0;">'
+                        f'<p style="font-size:0.9rem;font-style:italic;'
+                        f'color:#92400e;line-height:1.6;margin:0;">{wisdom_quote}</p>'
+                        f'</div>',
                         unsafe_allow_html=True
                     )
 
@@ -2322,7 +2593,7 @@ elif st.session_state.screen == "chat":
                     mindset=mindset,
                     is_image=is_img
                 )
-                dl_col, _ = st.columns([1, 3])
+                dl_col, report_col, _ = st.columns([1, 1, 2])
                 with dl_col:
                     st.download_button(
                         label="Print / Save as PDF",
@@ -2332,6 +2603,25 @@ elif st.session_state.screen == "chat":
                         key=f"dl_{id(msg)}",
                         use_container_width=True
                     )
+                with report_col:
+                    if st.button("Report a glitch", key=f"glitch_{id(msg)}",
+                                 use_container_width=True):
+                        # Log the glitch to session state for review
+                        glitches = st.session_state.get("glitch_log", [])
+                        glitches.append({
+                            "standard": std_code,
+                            "question_preview": question[:80] if question else "",
+                            "score": score,
+                            "week": get_current_week(),
+                            "student": st.session_state.get("student_id","?")
+                        })
+                        st.session_state.glitch_log = glitches
+                        # Also store in all_usage so professor can see it
+                        au = st.session_state.get("all_usage", {})
+                        au["__glitch_log__"] = glitches
+                        st.session_state.all_usage = au
+                        st.toast("Glitch reported — Profe Contreras will review it.",
+                                 icon="✅")
 
             else:
                 st.markdown(content)
@@ -2397,6 +2687,74 @@ elif st.session_state.screen == "chat":
             lang, GROWTH_MINDSET_MESSAGES["identity"]["en"]
         )
         st.success(random.choice(id_msgs))
+
+        # ── Semillas de Vuelo — take-home practice set ────────────────────
+        st.divider()
+        standards_done = st.session_state.session_standards
+        if standards_done:
+            vuelo_label = (
+                "🌱 Llevar Semillas a Casa — Get my take-home practice set"
+                if lang == "es" else
+                "🌱 Semillas de Vuelo — Take these seeds home"
+            )
+            vuelo_caption = (
+                "Generate a fresh set of similar questions for every standard you practiced today. "
+                "Print it, save it as PDF, and keep growing away from the screen."
+                if lang == "en" else
+                "Genera un nuevo conjunto de preguntas similares para cada estándar que practicaste hoy. "
+                "Imprímelo, guárdalo como PDF, y sigue creciendo lejos de la pantalla."
+            )
+            st.markdown(
+                f'<p style="font-size:0.88rem;line-height:1.6;margin-bottom:0.5rem;">'
+                f'{vuelo_caption}</p>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<p style="font-size:0.78rem;color:#00796b;font-weight:600;'
+                'margin-bottom:0.5rem;">+5 Semillas de Vuelo for taking your learning home</p>',
+                unsafe_allow_html=True
+            )
+
+            if st.button(vuelo_label, type="primary", use_container_width=True,
+                         key="vuelo_btn"):
+                with st.spinner("Preparing your practice set..." if lang == "en"
+                                else "Preparando tu conjunto de práctica..."):
+                    practice_html = generate_practice_set_html(
+                        standards_practiced=standards_done,
+                        difficulty=st.session_state.difficulty,
+                        language=lang,
+                        student_name=st.session_state.student_id
+                    )
+                # Award Semillas de Vuelo
+                au = st.session_state.get("all_usage", {})
+                sid = st.session_state.get("student_id", "guest")
+                au, vuelo_total = award_semillas(
+                    sid, "vuelo", SEMILLA_VALUES["vuelo"], au
+                )
+                st.session_state.all_usage     = au
+                st.session_state.session_semillas += SEMILLA_VALUES["vuelo"]
+
+                st.download_button(
+                    label="Download practice set (open in browser → Print → Save PDF)",
+                    data=practice_html,
+                    file_name=f"practice_set_{get_current_week()}.html",
+                    mime="text/html",
+                    key="vuelo_download",
+                    use_container_width=True
+                )
+                st.markdown(
+                    f'<div style="margin:0.4rem 0;padding:0.5rem 0.9rem;'
+                    f'background:rgba(0,121,107,0.08);border-radius:6px;">'
+                    f'<span style="font-size:0.95rem;font-weight:600;color:#00796b;">'
+                    f'🌱🌱🌱🌱🌱 +5 Semillas de Vuelo · Total: {vuelo_total}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+        else:
+            st.caption("Complete at least one challenge to unlock your take-home set."
+                       if lang == "en" else
+                       "Completa al menos un reto para desbloquear tu conjunto de práctica.")
+
         if st.button("Start a new session"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
@@ -2557,11 +2915,17 @@ elif st.session_state.screen == "chat":
 
                 qs["q_num"] += 1
                 if qs["q_num"] <= qs["num_questions"]:
-                    topic      = qs.get("topic")
-                    pool       = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
-                                  if topic else list(STANDARDS_MAP.keys()))
-                    next_code  = random.choice(pool)
-                    next_q     = quiz_by_standard(
+                    # Respect standard_lock: if a specific standard was chosen,
+                    # ALL questions in this round use that same standard
+                    locked = qs.get("standard_lock")
+                    if locked and locked in STANDARDS_MAP:
+                        next_code = locked
+                    else:
+                        topic = qs.get("topic")
+                        pool  = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
+                                 if topic else list(STANDARDS_MAP.keys()))
+                        next_code = random.choice(pool)
+                    next_q = quiz_by_standard(
                         next_code, st.session_state.difficulty, lang
                     )
                     st.session_state.session_calls += 1

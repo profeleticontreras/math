@@ -1977,48 +1977,57 @@ if st.session_state.screen == "professor":
 
 elif st.session_state.screen == "welcome":
 
-    # ── Title ─────────────────────────────────────────────────────────────────
+    # ── Logo + title ──────────────────────────────────────────────────────────
+    logo_col, title_col = st.columns([1, 5], gap="small")
+    with logo_col:
+        st.markdown(
+            f'<div style="padding:4px;display:flex;align-items:center;">' +
+            f'<img src="{LOGO_SRC}" style="width:100%;max-width:110px;" alt="Canelita logo"/>' +
+            f'</div>',
+            unsafe_allow_html=True
+        )
+    with title_col:
+        st.markdown(
+            '<p class="app-title" style="margin-bottom:0.25rem;">Canelita con Profe Contreras</p>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<p style="font-size:0.92rem;font-weight:400;color:inherit;opacity:0.75;margin:0 0 0.1rem 0;">Your personal Calc 1 tutor</p>',
+            unsafe_allow_html=True
+        )
     st.markdown(
-        '<p class="app-title">Canelita con Profe Contreras</p>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        '<p style="font-size:0.92rem;font-weight:400;color:inherit;'
-        'opacity:0.75;margin:0 0 0.1rem 0;">Your personal Calc 1 tutor</p>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        '<p class="app-sub" style="margin-bottom:1.4rem;">'
-        'C-ID MATH 210 &nbsp;·&nbsp; Your math. Your pace. Your place.</p>',
+        '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Your math. Your pace. Your place. &nbsp;·&nbsp; Made for you by Profe Contreras</p>',
         unsafe_allow_html=True
     )
 
-    # ── Center the form on wider screens ─────────────────────────────────────
-    _, form_col, _ = st.columns([1, 3, 1])
+    col_form, col_info = st.columns([9, 11], gap="large")
 
-    with form_col:
+    # ── LEFT: clean vertical form ─────────────────────────────────────────────
+    with col_form:
+        st.markdown('<p class="section-label">Sign in / Iniciar sesión</p>',
+                    unsafe_allow_html=True)
 
-        # 1. Name / ID ────────────────────────────────────────────────────────
+        # 1. Name / ID
         student_id = st.text_input(
             "1. Your name or student ID / Tu nombre o ID",
             placeholder="e.g. Maria G. or 12345",
             key="welcome_student_id"
         )
 
-        # 2. Language ─────────────────────────────────────────────────────────
+        # 2. Language
         lang_choice = st.selectbox(
             "2. Language / Idioma",
             ["Auto-detect", "English", "Español"],
             key="welcome_lang"
         )
 
-        # 3. Standard ─────────────────────────────────────────────────────────
+        # 3. Standard
         std_options = ["Random — surprise me"] + [
             f"{code}: {data['topic']}"
             for code, data in STANDARDS_MAP.items()
         ]
         std_choice = st.selectbox(
-            "3. Learning standard / Estándar",
+            "3. Learning standard / Estándar de aprendizaje",
             std_options,
             key="welcome_std"
         )
@@ -2031,165 +2040,232 @@ elif st.session_state.screen == "welcome":
             st.session_state.selected_standard = None
             st.session_state.selected_skill    = None
 
-        # 3b. Subskill (only shown when a specific standard is chosen) ─────────
+        # 3b. Subskill — only when a specific standard is chosen
         if selected_code and selected_code in STANDARDS_MAP:
-            std_data   = STANDARDS_MAP[selected_code]
-            skill_opts = ["Random — any skill"] + std_data["skills"]
+            std_preview = STANDARDS_MAP[selected_code]
+            skill_opts  = ["Random — any skill"] + std_preview["skills"]
             skill_choice = st.selectbox(
-                "3b. Specific skill / Habilidad específica",
+                "3b. Specific skill / Habilidad específica (optional)",
                 skill_opts,
                 key="welcome_skill"
             )
             st.session_state.selected_skill = (
                 skill_choice if skill_choice != "Random — any skill" else None
             )
-            # Prereq hint
             st.markdown(
-                f'<p style="font-size:0.75rem;color:inherit;opacity:0.55;margin:0.1rem 0 0.4rem;">' +
-                f'Algebra needed: {", ".join(std_data["algebra_prereqs"])}</p>',
+                f'<p style="font-size:0.75rem;color:inherit;opacity:0.55;margin:0.1rem 0 0.5rem;">' +
+                f'Algebra needed: {", ".join(std_preview["algebra_prereqs"])}</p>',
                 unsafe_allow_html=True
             )
 
-        # 4. Difficulty ───────────────────────────────────────────────────────
+        # 4. Difficulty
         diff_choice = st.selectbox(
             "4. Difficulty / Dificultad",
             ["Random — mix it up", "Easy", "Medium", "Hard"],
-            index=2,  # Default Medium
+            index=2,
             key="welcome_diff"
         )
 
-        # 5. Number of questions ──────────────────────────────────────────────
+        # 5. Number of questions
         num_q = st.selectbox(
             "5. Questions per session / Preguntas por sesión",
             [1, 2, 3, 4, 5],
-            index=2,  # Default 3
+            index=2,
             key="welcome_numq"
         )
 
         st.write("")
-
-        # ── START ─────────────────────────────────────────────────────────────
         start_clicked = st.button(
-            "Start / Comenzar",
+            "Start session / Comenzar",
             type="primary",
             use_container_width=True,
             key="start_btn"
         )
 
-    if start_clicked:
-        sid = student_id.strip()
-        if not sid:
-            st.warning("Please enter your name or student ID / Por favor ingresa tu nombre o ID.")
-        else:
-            all_usage    = st.session_state.get("all_usage", {})
-            current_week = get_current_week()
-            record       = all_usage.get(sid, {})
-            if record.get("week") != current_week:
-                record = {"week": current_week, "minutes_used": 0.0,
-                          "sessions": 0, "api_calls": 0,
-                          "topics_practiced": [], "standards_practiced": []}
-            used      = record.get("minutes_used", 0.0)
-            remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
-
-            if used >= WEEKLY_LIMIT_MINUTES:
-                st.error(
-                    f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
-                    f"weekly limit. Your time resets next week."
-                )
+        if start_clicked:
+            sid = student_id.strip()
+            if not sid:
+                st.warning("Please enter your name or student ID.")
             else:
-                lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
-                diff_map = {
-                    "Random — mix it up": random.choice(["easy", "medium", "hard"]),
-                    "Easy": "easy", "Medium": "medium", "Hard": "hard"
-                }
+                all_usage    = st.session_state.get("all_usage", {})
+                current_week = get_current_week()
+                record       = all_usage.get(sid, {})
+                if record.get("week") != current_week:
+                    record = {"week": current_week, "minutes_used": 0.0,
+                              "sessions": 0, "api_calls": 0,
+                              "topics_practiced": [], "standards_practiced": []}
+                used      = record.get("minutes_used", 0.0)
+                remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
 
-                st.session_state.student_id    = sid
-                st.session_state.language      = lang_map[lang_choice]
-                st.session_state.difficulty    = diff_map[diff_choice]
-                st.session_state.num_questions = num_q
-                st.session_state.session_start = time.time()
-                st.session_state.screen        = "chat"
-                lang = "es" if st.session_state.language == "es" else "en"
-                st.session_state.current_lang  = lang
-
-                # Welcome message
-                welcome_msg = (
-                    f"Hi {sid}! I am your Calculus 1 tutor. "
-                    f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                    f"- Type **challenge** for a practice problem\n"
-                    f"- Ask me **any calculus question**\n"
-                    f"- Upload a **photo** of your handwritten work as an answer\n"
-                    f"- Type **bye** when done to see your report and take-home set"
-                    if lang == "en" else
-                    f"Hola {sid}! Soy tu tutor de Cálculo 1. "
-                    f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                    f"- Escribe **reto** para un problema de práctica\n"
-                    f"- Hazme **cualquier pregunta de cálculo**\n"
-                    f"- Sube una **foto** de tu trabajo escrito como respuesta\n"
-                    f"- Escribe **bye** para terminar y ver tu reporte"
-                )
-                st.session_state.messages.append({
-                    "role": "assistant", "content": welcome_msg, "type": "chat"
-                })
-
-                # Fire first question if a standard was chosen
-                chosen_std   = st.session_state.get("selected_standard")
-                chosen_skill = st.session_state.get("selected_skill")
-
-                if chosen_std:
-                    first_q = quiz_by_standard(
-                        chosen_std, st.session_state.difficulty, lang,
-                        skill_focus=chosen_skill
+                if used >= WEEKLY_LIMIT_MINUTES:
+                    st.error(
+                        f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
+                        f"weekly limit. Your time resets next week."
                     )
-                    st.session_state.session_calls += 1
-                    nq       = st.session_state.num_questions
-                    std_data = STANDARDS_MAP[chosen_std]
-                    skill_note = (f"\n*Skill focus: {chosen_skill}*\n\n"
-                                  if chosen_skill else "\n\n")
-                    prereqs_str = ", ".join(std_data["algebra_prereqs"])
-                    st.session_state.messages.append({
-                        "role": "assistant", "type": "question",
-                        "content": (
-                            f"**Question 1 of {nq} | "
-                            f"{chosen_std}: {std_data['topic']}**\n"
-                            f"*Prerequisites: {prereqs_str}*"
-                            f"{skill_note}" + first_q["question"]
-                        )
-                    })
-                    st.session_state.quiz_state = {
-                        "current_question": first_q,
-                        "q_num": 1, "num_questions": nq,
-                        "topic": std_data["intent_tag"],
-                        "standard_lock": chosen_std, "scores": []
-                    }
-                    if std_data["intent_tag"] not in st.session_state.session_topics:
-                        st.session_state.session_topics.append(std_data["intent_tag"])
-
-                elif diff_choice != "I have a question for the tutor":
-                    # Random standard — fire first question immediately
-                    first_code = random.choice(list(STANDARDS_MAP.keys()))
-                    first_q    = quiz_by_standard(
-                        first_code, st.session_state.difficulty, lang
-                    )
-                    st.session_state.session_calls += 1
-                    nq = st.session_state.num_questions
-                    prereqs_str = ", ".join(first_q["algebra_prereqs"])
-                    st.session_state.messages.append({
-                        "role": "assistant", "type": "question",
-                        "content": (
-                            f"**Question 1 of {nq} | "
-                            f"{first_code}: {first_q['topic']}**\n\n"
-                            f"*Prerequisites: {prereqs_str}*\n\n"
-                            + first_q["question"]
-                        )
-                    })
-                    st.session_state.quiz_state = {
-                        "current_question": first_q,
-                        "q_num": 1, "num_questions": nq,
-                        "topic": None, "scores": []
+                else:
+                    lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
+                    diff_map = {
+                        "Random — mix it up": random.choice(["easy","medium","hard"]),
+                        "Easy": "easy", "Medium": "medium", "Hard": "hard"
                     }
 
-                st.rerun()
+                    st.session_state.student_id    = sid
+                    st.session_state.language      = lang_map[lang_choice]
+                    st.session_state.difficulty    = diff_map[diff_choice]
+                    st.session_state.num_questions = num_q
+                    st.session_state.session_start = time.time()
+                    st.session_state.screen        = "chat"
+                    lang = "es" if st.session_state.language == "es" else "en"
+                    st.session_state.current_lang  = lang
+
+                    welcome_msg = (
+                        f"Hi {sid}! I am your Calculus 1 tutor. "
+                        f"You have **{format_duration(remaining)}** of study time this week.\n\n"
+                        f"- Type **challenge** for a practice problem\n"
+                        f"- Ask me **any calculus question**\n"
+                        f"- Upload a **photo** of your handwritten work as an answer\n"
+                        f"- Type **bye** when done to see your report and take-home set"
+                        if lang == "en" else
+                        f"Hola {sid}! Soy tu tutor de Cálculo 1. "
+                        f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
+                        f"- Escribe **reto** para un problema de práctica\n"
+                        f"- Hazme **cualquier pregunta de cálculo**\n"
+                        f"- Sube una **foto** de tu trabajo escrito\n"
+                        f"- Escribe **bye** para terminar y ver tu reporte"
+                    )
+                    st.session_state.messages.append({
+                        "role": "assistant", "content": welcome_msg, "type": "chat"
+                    })
+
+                    chosen_std   = st.session_state.get("selected_standard")
+                    chosen_skill = st.session_state.get("selected_skill")
+
+                    if chosen_std and chosen_std in STANDARDS_MAP:
+                        first_q = quiz_by_standard(
+                            chosen_std, st.session_state.difficulty, lang,
+                            skill_focus=chosen_skill
+                        )
+                        st.session_state.session_calls += 1
+                        nq       = st.session_state.num_questions
+                        std_data = STANDARDS_MAP[chosen_std]
+                        skill_note  = (f"\n*Skill: {chosen_skill}*\n\n"
+                                       if chosen_skill else "\n\n")
+                        prereqs_str = ", ".join(std_data["algebra_prereqs"])
+                        st.session_state.messages.append({
+                            "role": "assistant", "type": "question",
+                            "content": (
+                                f"**Question 1 of {nq} | "
+                                f"{chosen_std}: {std_data['topic']}**\n"
+                                f"*Prerequisites: {prereqs_str}*"
+                                f"{skill_note}" + first_q["question"]
+                            )
+                        })
+                        st.session_state.quiz_state = {
+                            "current_question": first_q,
+                            "q_num": 1, "num_questions": nq,
+                            "topic": std_data["intent_tag"],
+                            "standard_lock": chosen_std, "scores": []
+                        }
+                        if std_data["intent_tag"] not in st.session_state.session_topics:
+                            st.session_state.session_topics.append(std_data["intent_tag"])
+                    else:
+                        # Random standard
+                        first_code  = random.choice(list(STANDARDS_MAP.keys()))
+                        first_q     = quiz_by_standard(
+                            first_code, st.session_state.difficulty, lang
+                        )
+                        st.session_state.session_calls += 1
+                        nq = st.session_state.num_questions
+                        prereqs_str = ", ".join(first_q["algebra_prereqs"])
+                        st.session_state.messages.append({
+                            "role": "assistant", "type": "question",
+                            "content": (
+                                f"**Question 1 of {nq} | "
+                                f"{first_code}: {first_q['topic']}**\n\n"
+                                f"*Prerequisites: {prereqs_str}*\n\n"
+                                + first_q["question"]
+                            )
+                        })
+                        st.session_state.quiz_state = {
+                            "current_question": first_q,
+                            "q_num": 1, "num_questions": nq,
+                            "topic": None, "scores": []
+                        }
+
+                    st.rerun()
+
+    # ── RIGHT: about panel (all the beautiful content) ────────────────────────
+    with col_info:
+        st.markdown('<p class="section-label">What this tutor does</p>',
+                    unsafe_allow_html=True)
+
+        st.markdown("""
+<div class="feature-block">
+<span class="feature-label">Challenge mode.</span>
+Original questions aligned to all 25 C-ID MATH 210 standards.
+Each connects to a real career field — engineering, data science, biology,
+health, business, or social justice.
+</div>
+<div class="feature-block">
+<span class="feature-label">Tutor chat.</span>
+Ask any Calculus 1 question and get a step-by-step explanation
+with rendered math, in English or Spanish.
+</div>
+<div class="feature-block" style="margin-bottom:0.5rem;">
+<span class="feature-label">What you can send:</span>
+<ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
+  <li>A typed answer or question — in English or Spanish</li>
+  <li>A photo of your handwritten work</li>
+  <li>A follow-up question about any step</li>
+</ul>
+</div>
+<div class="feature-block">
+<span class="feature-label">Weekly limit.</span>
+Six hours per week keeps this free for every student in the class.
+</div>
+""", unsafe_allow_html=True)
+
+        # Pitch quote
+        st.markdown("""
+<div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
+background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
+  <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
+  color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
+    "Getting it wrong is part of getting it right.
+    Every incorrect answer comes with an explanation,
+    a full worked solution, and a check on the algebra underneath —
+    so the next attempt starts from a stronger place."
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Standards section
+        st.markdown('<p class="section-label" style="margin-top:0.2rem;">' +
+                    "Your C-ID MATH 210 Checklist — 25 Standards</p>",
+                    unsafe_allow_html=True)
+        st.markdown(
+            '<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
+            "These 25 standards are California's official Calculus 1 framework. "
+            "They are your checklist — work through them all and you'll know you're ready "
+            "for Calculus 2, Differential Equations, Physics, and beyond.</p>",
+            unsafe_allow_html=True
+        )
+
+        for unit, name, codes in [
+            ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
+            ("Unit 2", "Derivatives",                 "S-06 – S-12"),
+            ("Unit 3", "Applications of Derivatives", "S-13 – S-19"),
+            ("Unit 4", "Integration",                 "S-20 – S-23"),
+            ("Unit 5", "Applications of Integration", "S-24 – S-25"),
+        ]:
+            st.markdown(
+                f'<div class="unit-row">' +
+                f'<span class="unit-num">{unit}</span>' +
+                f'<span style="font-size:0.9rem;">{name}</span>' +
+                f'<span class="unit-codes">{codes}</span>' +
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
 
 # ════════════════════════════════════════════════════════════════════════════════

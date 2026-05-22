@@ -676,18 +676,18 @@ GROWTH_MINDSET_MESSAGES = {
     },
     "wrong_but_trying": {
         "en": [
-            "That tells me something useful -- let me show you a different way to see this.",
-            "This is a really common confusion here. You are in good company -- let us clear it up.",
-            "Not quite, but your mistake shows you understand the setup. That is the harder part.",
-            "Let us look at where this veered off -- I can see your thinking, and it is close.",
-            "Every mistake is information. This one tells me exactly what to show you next."
+            "This one is tricky. Let the solution walk you through it -- then try again.",
+            "This concept trips up a lot of students. You are not alone here. Let us look at it together.",
+            "Not there yet. The full solution below will show you the path -- take it step by step.",
+            "Take a look at the worked solution. Follow each step, then see if the next one makes more sense.",
+            "No worries. Sometimes a concept needs to be seen solved before it clicks. That is what the solution is for."
         ],
         "es": [
-            "Eso me dice algo util -- dejame mostrarte otra forma de verlo.",
-            "Esta es una confusion muy comun aqui. No estas solo/a -- aclaremos la.",
-            "No del todo, pero tu error muestra que entiendes el planteamiento.",
-            "Veamos donde se desvio -- puedo ver tu razonamiento, y esta cerca.",
-            "Cada error es informacion. Este me dice exactamente que mostrarte a continuacion."
+            "Este es dificil. Deja que la solucion te guie paso a paso -- luego intenta de nuevo.",
+            "Este concepto le cuesta a muchos estudiantes. No estas solo/a. Veamoslo juntos.",
+            "Todavia no. La solucion completa abajo te mostrara el camino -- toma un paso a la vez.",
+            "Revisa la solucion trabajada. Sigue cada paso y ve si el siguiente tiene mas sentido.",
+            "No te preocupes. A veces un concepto necesita verse resuelto antes de hacer clic."
         ]
     },
     "identity": {
@@ -1031,7 +1031,10 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"- IMPORTANT: Do NOT generate questions that require the student to read or "
         f"interpret a graph or diagram that you cannot display. All information the "
         f"student needs must be expressible entirely in text and LaTeX. "
-        f"If the concept typically uses a graph, describe the function algebraically instead.\n\n"
+        f"If the concept typically uses a graph, describe the function algebraically instead.\n"
+        f"- For dollar amounts in text (not inside math), write the amount as a word or use "
+        f"the format: '30 dollars' or '$30' (no backslash before the dollar sign outside of LaTeX). "
+        f"Never write '\\$30' -- it renders incorrectly in the student interface.\n\n"
         f"Question:"
     )
 
@@ -1128,19 +1131,45 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
 
     score = result.get("score", 0)
 
+    # Detect blank or minimal answers — don't praise what isn't there
+    stripped_answer = student_answer.strip() if student_answer else ""
+    answer_is_minimal = (
+        not stripped_answer or
+        stripped_answer.lower() in ["?", "idk", "no se", "skip", "i don't know", "no lo se", ""] or
+        (len(stripped_answer) < 6 and not any(c.isalpha() for c in stripped_answer))
+    )
+
     if score == 3:
         msg_cat = "correct"
     elif score >= 1:
         msg_cat = "partial"
+    elif answer_is_minimal:
+        # Blank or single-number guess — honest and warm, no praise
+        msg_cat = "blank"
     else:
         msg_cat = "wrong_but_trying"
 
-    lang_msgs   = GROWTH_MINDSET_MESSAGES[msg_cat].get(language, GROWTH_MINDSET_MESSAGES[msg_cat]["en"])
-    mindset_msg = random.choice(lang_msgs)
-
-    if random.random() < 0.33:
-        id_msgs     = GROWTH_MINDSET_MESSAGES["identity"].get(language, GROWTH_MINDSET_MESSAGES["identity"]["en"])
-        mindset_msg += "\n\n" + random.choice(id_msgs)
+    if msg_cat == "blank":
+        blank_msgs = {
+            "en": [
+                "This one stumped you for now -- completely okay. The worked solution below will show you exactly how to approach it.",
+                "No answer yet -- no problem. Read through the full solution and come back to it.",
+                "Sometimes a problem needs to be seen solved before you know where to start. That is what this is for.",
+            ],
+            "es": [
+                "Este te trabo por ahora -- esta bien. La solucion abajo te mostrara exactamente como abordarlo.",
+                "Sin respuesta todavia -- no hay problema. Lee la solucion completa y vuelve a intentarlo.",
+                "A veces un problema necesita verse resuelto antes de saber por donde empezar.",
+            ]
+        }
+        mindset_msg = random.choice(blank_msgs.get(language, blank_msgs["en"]))
+    else:
+        lang_msgs   = GROWTH_MINDSET_MESSAGES[msg_cat].get(language, GROWTH_MINDSET_MESSAGES[msg_cat]["en"])
+        mindset_msg = random.choice(lang_msgs)
+        # Only add identity message for correct/partial — not for wrong answers
+        if score >= 1 and random.random() < 0.33:
+            id_msgs     = GROWTH_MINDSET_MESSAGES["identity"].get(language, GROWTH_MINDSET_MESSAGES["identity"]["en"])
+            mindset_msg += "\n\n" + random.choice(id_msgs)
 
     algebra_scaffold = ""
     gap = result.get("algebra_gap", "").lower().strip()
@@ -1745,6 +1774,9 @@ def init_session_state():
         "session_semillas":  0,
         "retry_standard":    None,
         "awarded_showed_up": False,
+        "vuelo_html":        None,
+        "vuelo_week":        None,
+        "vuelo_total":       None,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -2343,26 +2375,29 @@ elif st.session_state.screen == "chat":
         lang_now      = st.session_state.get("current_lang", "en")
 
         st.markdown(
-            f'<div style="text-align:center;padding:0.6rem 0.4rem;'
-            f'background:rgba(0,121,107,0.07);border-radius:8px;margin-bottom:0.5rem;">'
-            f'<div style="font-size:1.4rem;">🌱</div>'
-            f'<div style="font-size:1.05rem;font-weight:600;color:#00796b;">'
+            f'<div style="text-align:center;padding:0.7rem 0.5rem 0.5rem;'
+            f'background:rgba(0,121,107,0.07);border-radius:8px;margin-bottom:0.4rem;">'
+            f'<div style="font-size:1.6rem;margin-bottom:0.2rem;">🌱</div>'
+            f'<div style="font-size:1.1rem;font-weight:600;color:#00796b;margin-bottom:0.15rem;">'
             f'{total_sem} semillas</div>'
-            f'<div style="font-size:0.7rem;color:inherit;opacity:0.65;'
-            f'line-height:1.4;margin-top:0.15rem;">'
-            + (f'+{sess_sem} this session' if sess_sem else
-               ('challenge yourself to plant your first' if lang_now == 'en'
-                else 'desafíate para plantar tu primera'))
+            f'<div style="font-size:0.7rem;color:inherit;opacity:0.65;line-height:1.4;">'
+            + (f'+{sess_sem} planted this session' if sess_sem else
+               ('plant your first — start a challenge' if lang_now == 'en'
+                else 'planta tu primera — comienza un reto'))
             + f'</div></div>',
             unsafe_allow_html=True
         )
-        with st.expander("🌱 What are semillas?", expanded=False):
-            poem = SEMILLA_POEM.get(lang_now, SEMILLA_POEM["en"])
-            st.markdown(
-                f'<p style="font-size:0.78rem;line-height:1.65;'
-                f'font-style:italic;color:inherit;opacity:0.85;">{poem}</p>',
-                unsafe_allow_html=True
-            )
+        # Poem always visible — not collapsed
+        poem = SEMILLA_POEM.get(lang_now, SEMILLA_POEM["en"])
+        st.markdown(
+            f'<div style="padding:0.55rem 0.7rem;'
+            f'background:rgba(0,121,107,0.04);border-radius:6px;'
+            f'border-left:2px solid rgba(0,121,107,0.3);margin-bottom:0.3rem;">'
+            f'<p style="font-size:0.72rem;line-height:1.6;'
+            f'font-style:italic;color:inherit;opacity:0.8;margin:0;">{poem}</p>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
 
         st.divider()
         st.caption("Session score")
@@ -2688,6 +2723,35 @@ elif st.session_state.screen == "chat":
         )
         st.success(random.choice(id_msgs))
 
+        # ── Semillitas story — prominent at end of session ────────────────
+        total_sem_report = get_total_semillas(
+            st.session_state.get("student_id",""), 
+            st.session_state.get("all_usage",{})
+        )
+        sess_sem_report = st.session_state.get("session_semillas", 0)
+        poem_report = SEMILLA_POEM.get(lang, SEMILLA_POEM["en"])
+
+        st.markdown(
+            f'<div style="margin:1rem 0;padding:1.1rem 1.3rem;'
+            f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));'
+            f'border-radius:10px;border:1px solid rgba(0,121,107,0.2);">'
+            f'<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">'
+            f'<span style="font-size:1.8rem;">🌱</span>'
+            f'<div>'
+            f'<div style="font-size:1.05rem;font-weight:600;color:#00796b;">'
+            f'{"You planted" if lang == "en" else "Plantaste"} '
+            f'{sess_sem_report} semilla{"s" if sess_sem_report != 1 else ""} '
+            f'{"today" if lang == "en" else "hoy"} · '
+            f'{"Total:" if lang == "en" else "Total:"} {total_sem_report}</div>'
+            f'<div style="font-size:0.75rem;color:inherit;opacity:0.6;">'
+            f'{"Every session, every attempt, every mistake — each one is a seed." if lang == "en" else "Cada sesión, cada intento, cada error — cada uno es una semilla."}'
+            f'</div></div></div>'
+            f'<p style="font-size:0.88rem;line-height:1.7;font-style:italic;'
+            f'color:inherit;opacity:0.85;margin:0;">{poem_report}</p>'
+            f'</div>',
+            unsafe_allow_html=True
+        )
+
         # ── Semillas de Vuelo — take-home practice set ────────────────────
         st.divider()
         standards_done = st.session_state.session_standards
@@ -2725,23 +2789,31 @@ elif st.session_state.screen == "chat":
                         language=lang,
                         student_name=st.session_state.student_id
                     )
+                # Store in session state so it survives the rerun triggered by download
+                st.session_state.vuelo_html       = practice_html
+                st.session_state.vuelo_week       = get_current_week()
                 # Award Semillas de Vuelo
                 au = st.session_state.get("all_usage", {})
                 sid = st.session_state.get("student_id", "guest")
                 au, vuelo_total = award_semillas(
                     sid, "vuelo", SEMILLA_VALUES["vuelo"], au
                 )
-                st.session_state.all_usage     = au
+                st.session_state.all_usage        = au
+                st.session_state.vuelo_total      = vuelo_total
                 st.session_state.session_semillas += SEMILLA_VALUES["vuelo"]
+                st.rerun()
 
+            # Show download button if HTML was already generated
+            if st.session_state.get("vuelo_html"):
                 st.download_button(
-                    label="Download practice set (open in browser → Print → Save PDF)",
-                    data=practice_html,
-                    file_name=f"practice_set_{get_current_week()}.html",
+                    label="⬇ Download practice set (open in browser → Print → Save PDF)",
+                    data=st.session_state.vuelo_html,
+                    file_name=f"practice_set_{st.session_state.get('vuelo_week', get_current_week())}.html",
                     mime="text/html",
                     key="vuelo_download",
                     use_container_width=True
                 )
+                vuelo_total = st.session_state.get("vuelo_total", "")
                 st.markdown(
                     f'<div style="margin:0.4rem 0;padding:0.5rem 0.9rem;'
                     f'background:rgba(0,121,107,0.08);border-radius:6px;">'

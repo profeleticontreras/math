@@ -55,7 +55,7 @@ LOGO_SRC = f"data:image/png;base64,{LOGO_B64}"
 VALID_TAGS = [
     "limits", "continuity", "derivatives",
     "applications_derivatives", "integrals",
-    "greeting", "goodbye", "thanks", "quiz_request", "fallback"
+    "greeting", "goodbye", "thanks", "challenge_request", "fallback"
 ]
 
 # ── Canned responses for social turns (no API call needed) ───────────────────
@@ -63,7 +63,7 @@ CANNED = {
     "greeting": {
         "en": [
             "Hi! I am your Calculus 1 tutor. What would you like to work on today?",
-            "Hello! Ready to practice calculus? Ask me anything or type 'quiz' for a problem.",
+            "Hello! Ready to practice calculus? Ask me anything or type 'challenge' for a problem.",
             "Welcome! What calculus topic can I help you with?"
         ],
         "es": [
@@ -98,8 +98,8 @@ CANNED = {
     },
     "fallback": {
         "en": [
-            "I'm not sure I caught that. Try asking about limits, derivatives, integrals, or type 'quiz' to practice.",
-            "Could you rephrase that? I can help with any Calculus 1 topic, or type 'quiz' for a practice problem."
+            "I'm not sure I caught that. Try asking about limits, derivatives, integrals, or type 'challenge' to practice.",
+            "Could you rephrase that? I can help with any Calculus 1 topic, or type 'challenge' for a practice problem."
         ],
         "es": [
             "No entendi bien. Preguntame sobre limites, derivadas, integrales, o escribe 'quiz' para practicar.",
@@ -708,6 +708,150 @@ GROWTH_MINDSET_MESSAGES = {
     }
 }
 
+
+# ── Semillas (token) system constants ────────────────────────────────────────
+SEMILLA_VALUES = {
+    "showed_up":     1,   # Starting a session
+    "attempted":     1,   # Each question attempted
+    "mastery":       3,   # Score 3/3
+    "progress":      2,   # Score 2/3
+    "courage":       1,   # Score 0-1/3 (still planted a seed)
+    "resilience":    2,   # Retried after a wrong answer
+    "consistency":   2,   # Completed a full challenge round
+    "time_10min":    1,   # Per 10 minutes of study
+}
+
+# Poetic semilla description — shown permanently in sidebar
+SEMILLA_POEM = {
+    "en": (
+        "Every semilla you plant today grows quietly beneath the surface — "
+        "in this class, the next class, when you transfer, when you walk across "
+        "a stage, when someone in your family sees what is possible. "
+        "These semillitas you are planting right now are the beginning of something "
+        "that belongs not only to you, but to everyone who comes after you."
+    ),
+    "es": (
+        "Cada semilla que plantas hoy crece en silencio bajo la superficie — "
+        "en esta clase, en la próxima, cuando transfieras, cuando cruces un escenario, "
+        "cuando alguien en tu familia vea lo que es posible. "
+        "Estas semillitas que plantas hoy son el comienzo de algo "
+        "que no solo te pertenece a ti, sino a todos los que vengan después."
+    )
+}
+
+# Atomic Habits wisdom (adapted) — shown in feedback and session report
+ATOMIC_HABITS_WISDOM = {
+    "en": [
+        "Every rep counts. You don't rise to the level of your goals — "
+        "you fall to the level of your systems. Show up, and the system does the rest.",
+        "A 1% improvement every day is 37 times better by the end of the year. "
+        "Today's problem is today's 1%.",
+        "You don't have to be perfect. You have to be consistent. "
+        "Missing once is an accident. Missing twice is the start of a new habit — "
+        "make sure it's the right one.",
+        "The most powerful thing you can say is: I am the kind of person who does not give up. "
+        "Every practice session is a vote for that identity.",
+        "Make it small enough that you can't say no. One problem. One minute. One semilla.",
+        "Environment shapes behavior. You showed up here — that's the environment working.",
+        "Habits are the compound interest of self-improvement. "
+        "What seems to make no difference today accumulates into everything tomorrow.",
+    ],
+    "es": [
+        "Cada repetición cuenta. No llegas al nivel de tus metas — "
+        "caes al nivel de tus sistemas. Preséntate, y el sistema hace el resto.",
+        "Una mejora del 1% cada día es 37 veces mejor al final del año. "
+        "El problema de hoy es tu 1% de hoy.",
+        "No tienes que ser perfecta/o. Tienes que ser constante/a. "
+        "Fallar una vez es un accidente. Fallar dos veces es el comienzo de un nuevo hábito — "
+        "asegúrate de que sea el correcto.",
+        "Lo más poderoso que puedes decir es: soy el tipo de persona que no se rinde. "
+        "Cada sesión de práctica es un voto por esa identidad.",
+        "Hazlo tan pequeño que no puedas decir que no. Un problema. Un minuto. Una semilla.",
+        "El ambiente moldea el comportamiento. Llegaste aquí — eso es el ambiente funcionando.",
+        "Los hábitos son el interés compuesto de la superación personal. "
+        "Lo que hoy parece no hacer diferencia se convierte en todo mañana.",
+    ]
+}
+
+# Four Agreements wisdom (adapted) — shown in session opening and identity moments
+FOUR_AGREEMENTS_WISDOM = {
+    "en": [
+        "Be impeccable with your word — especially the words you say to yourself "
+        "when you get something wrong.",
+        "Don't take anything personally. A wrong answer is information, not a verdict.",
+        "Don't make assumptions. Ask the question. Send the message. Try the problem. "
+        "You don't know until you try.",
+        "Always do your best — and your best changes every day. "
+        "Today's best is enough.",
+        "Your word is the most powerful tool you have. "
+        "Say: I am learning. I am growing. I belong here.",
+        "You have the right to break any agreement that is making you suffer — "
+        "including the agreement that you are 'not a math person.'",
+    ],
+    "es": [
+        "Sé impecable con tus palabras — especialmente las que te dices a ti misma/o "
+        "cuando te equivocas.",
+        "No te tomes nada personalmente. Una respuesta incorrecta es información, no un veredicto.",
+        "No hagas suposiciones. Haz la pregunta. Manda el mensaje. Intenta el problema. "
+        "No sabes hasta que lo intentas.",
+        "Haz siempre lo mejor que puedas — y tu mejor cambia cada día. "
+        "El mejor de hoy es suficiente.",
+        "Tu palabra es la herramienta más poderosa que tienes. "
+        "Di: Estoy aprendiendo. Estoy creciendo. Pertenezco aquí.",
+        "Tienes el derecho de romper cualquier acuerdo que te haga sufrir — "
+        "incluyendo el acuerdo de que no eres 'una persona de matemáticas.'",
+    ]
+}
+
+# ── Semilla utility functions ─────────────────────────────────────────────────
+def award_semillas(student_id, reason, count, all_usage):
+    """
+    Award semillas to a student and update their usage record.
+    Returns updated all_usage dict.
+    """
+    current_week = get_current_week()
+    record = all_usage.get(student_id, {})
+    if record.get("week") != current_week:
+        record = {"week": current_week, "minutes_used": 0.0,
+                  "sessions": 0, "api_calls": 0,
+                  "topics_practiced": [], "standards_practiced": []}
+    # Update total semillas (persists across weeks)
+    total_semillas = all_usage.get(f"{student_id}_total_semillas", 0) + count
+    all_usage[f"{student_id}_total_semillas"] = total_semillas
+    # Log this award in the record
+    log = record.get("semilla_log", [])
+    log.append({"reason": reason, "count": count, "week": current_week})
+    record["semilla_log"] = log[-50:]  # keep last 50 entries
+    all_usage[student_id] = record
+    return all_usage, total_semillas
+
+
+def get_total_semillas(student_id, all_usage):
+    """Return the student's total semilla count across all time."""
+    return all_usage.get(f"{student_id}_total_semillas", 0)
+
+
+def record_standard_attempt(student_id, standard_code, score, all_usage):
+    """
+    Track per-standard attempt data for the professor dashboard.
+    """
+    current_week = get_current_week()
+    key = f"{student_id}_standards"
+    std_data = all_usage.get(key, {})
+    entry = std_data.get(standard_code, {
+        "attempts": 0, "total_score": 0, "best_score": 0,
+        "last_practiced": None
+    })
+    entry["attempts"]      += 1
+    entry["total_score"]   += score
+    entry["best_score"]    = max(entry["best_score"], score)
+    entry["last_practiced"] = get_current_week()
+    std_data[standard_code] = entry
+    all_usage[key] = std_data
+    return all_usage
+
+
+# ── Algebra scaffold hints ───────────────────────────────────────────────────────────────────────────────────────
 # ── Algebra scaffold hints ────────────────────────────────────────────────────
 ALGEBRA_SCAFFOLD_HINTS = {
     "factoring": "Quick tip: to factor $ax^2 + bx + c$, look for two numbers that multiply to $ac$ and add to $b$.",
@@ -840,8 +984,22 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
     skills_list = "\n".join(f"  - {s}" for s in std["skills"])
     prereqs     = ", ".join(std["algebra_prereqs"])
 
+    # Rotate randomly through all 8 fields — pick 3 different ones per question
+    # Track used fields in session to avoid repeating
+    all_fields = list(std["field_connections"].keys())
+    used_fields = st.session_state.get("used_connection_fields", [])
+    # Prefer fields not recently used
+    fresh_fields = [f for f in all_fields if f not in used_fields]
+    if len(fresh_fields) < 3:
+        fresh_fields = all_fields  # reset rotation when all used
+    # Pick 3 fields to show Claude (without repeating recent)
+    sample_size = min(3, len(fresh_fields))
+    chosen_fields = random.sample(fresh_fields, sample_size)
+    # Update used fields tracker (keep last 5)
+    st.session_state.used_connection_fields = (used_fields + chosen_fields)[-5:]
     connections_block = ""
-    for field, example in std["field_connections"].items():
+    for field in chosen_fields:
+        example = std["field_connections"][field]
         connections_block += f"  [CONNECTION: {field}]\n  {example}\n\n"
 
     lang_word = "Spanish" if language == "es" else "English"
@@ -1085,7 +1243,7 @@ def build_explanation_html(title, std_code, score_label, question,
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>{esc(title)}</title>
   <script>
     MathJax = {{
@@ -1102,13 +1260,13 @@ def build_explanation_html(title, std_code, score_label, question,
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 15px;
-      line-height: 1.65;
+      font-size: 16px;
+      line-height: 1.7;
       color: #1f2937;
       background: #fff;
-      max-width: 760px;
+      max-width: 680px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
+      padding: 1.25rem 1rem 3rem;
     }}
     header {{
       border-bottom: 2px solid #00796b;
@@ -1166,25 +1324,27 @@ def build_explanation_html(title, std_code, score_label, question,
       background: #f9fafb;
       border-left: 3px solid #e5e7eb;
       border-radius: 4px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.25rem;
+      padding: 0.75rem 0.9rem;
       white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
     }}
     .feedback-box {{
       background: #f0fdf9;
       border-left: 3px solid #00796b;
       border-radius: 4px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 0.25rem;
+      padding: 0.75rem 0.9rem;
       white-space: pre-wrap;
+      word-break: break-word;
     }}
     .solution-box {{
       background: #fafafa;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
-      padding: 1rem 1.1rem;
-      margin-bottom: 0.25rem;
+      padding: 0.9rem 1rem;
       white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
     }}
     .note {{
       background: #fffbeb;
@@ -1211,16 +1371,20 @@ def build_explanation_html(title, std_code, score_label, question,
       color: #9ca3af;
       text-align: center;
     }}
+    @media (max-width: 480px) {{
+      body {{ font-size: 15px; padding: 1rem 0.75rem 2.5rem; }}
+      .app-name {{ font-size: 1rem; }}
+    }}
+    mjx-container {{ overflow-x: auto; max-width: 100%; }}
     @media print {{
-      body {{ padding: 1rem; }}
-      .no-print {{ display: none; }}
+      body {{ padding: 0.75rem; }}
     }}
   </style>
 </head>
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Built for your success</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</div>
   </header>
 
   <div>
@@ -1242,7 +1406,7 @@ def build_explanation_html(title, std_code, score_label, question,
   {mindset_block}
 
   <footer>
-    Canelita con Profe Contreras &nbsp;·&nbsp; Hartnell College
+    Canelita con Profe Contreras
     &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {std_code or ''}
     <br>To save as PDF: File &rarr; Print &rarr; Save as PDF &nbsp;|&nbsp;
     On iPhone/iPad: Share &rarr; Print &rarr; pinch to zoom preview
@@ -1299,7 +1463,7 @@ def build_tutor_html(content):
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Hartnell College &nbsp;·&nbsp; C-ID MATH 210</div>
+    <div class="app-sub">Your math. Your pace. Your place.</div>
   </header>
   <div class="response">{content}</div>
   <footer>
@@ -1332,6 +1496,11 @@ def init_session_state():
         "usage_saved":      False,
         "selected_standard": None,
         "selected_skill":    None,
+        "selected_mode":     "Challenge me",
+        "used_connection_fields": [],
+        "session_semillas":  0,
+        "retry_standard":    None,
+        "awarded_showed_up": False,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -1393,7 +1562,106 @@ st.markdown("""
 # ════════════════════════════════════════════════════════════════════════════════
 # SCREEN: WELCOME
 # ════════════════════════════════════════════════════════════════════════════════
-if st.session_state.screen == "welcome":
+
+# ── Professor login check (sidebar) ─────────────────────────────────────────
+with st.sidebar:
+    if st.session_state.get("screen") not in ["chat"]:
+        with st.expander("Instructor view", expanded=False):
+            prof_id  = st.text_input("Instructor ID", key="prof_id_input",
+                                      placeholder="ProfeLeti")
+            prof_pw  = st.text_input("Password", type="password",
+                                      key="prof_pw_input")
+            if st.button("Sign in as instructor", key="prof_login"):
+                if prof_id.strip() == "ProfeLeti" and prof_pw.strip() == "Contreras":
+                    st.session_state.screen = "professor"
+                    st.rerun()
+                else:
+                    st.error("Incorrect ID or password.")
+
+if st.session_state.screen == "professor":
+    st.markdown('<p class="app-title">Instructor Dashboard</p>',
+                unsafe_allow_html=True)
+    st.markdown(
+        '<p class="app-sub">Canelita con Profe Contreras &nbsp;·&nbsp; '
+        'C-ID MATH 210 &nbsp;·&nbsp; Student Progress</p>',
+        unsafe_allow_html=True
+    )
+
+    all_usage = st.session_state.get("all_usage", {})
+
+    # Get all student IDs (filter out the metadata keys)
+    student_ids = [k for k in all_usage.keys()
+                   if not k.endswith("_total_semillas")
+                   and not k.endswith("_standards")
+                   and all_usage[k].get("week")]
+
+    if not student_ids:
+        st.info("No student session data yet. Students must log in and complete "
+                "at least one challenge for data to appear here.")
+    else:
+        st.subheader(f"Students this week — {get_current_week()}")
+
+        # Summary table
+        rows = []
+        for sid in sorted(student_ids):
+            rec     = all_usage[sid]
+            semillas = get_total_semillas(sid, all_usage)
+            std_data = all_usage.get(f"{sid}_standards", {})
+            attempted = len(std_data)
+            mastered  = sum(1 for v in std_data.values() if v.get("best_score",0) == 3)
+            rows.append({
+                "Student":         sid,
+                "Minutes":         round(rec.get("minutes_used", 0)),
+                "Sessions":        rec.get("sessions", 0),
+                "Standards tried": attempted,
+                "Mastered (3/3)":  mastered,
+                "Semillas":        semillas,
+                "Topics":          ", ".join(rec.get("topics_practiced", [])),
+            })
+
+        import pandas as pd
+        df = pd.DataFrame(rows)
+        st.dataframe(df, use_container_width=True)
+
+        # Per-student drill-down
+        selected_student = st.selectbox(
+            "Drill down — select a student:", student_ids
+        )
+        if selected_student:
+            std_data = all_usage.get(f"{selected_student}_standards", {})
+            if std_data:
+                st.markdown(f"**Standards practiced by {selected_student}:**")
+                std_rows = []
+                for code, v in sorted(std_data.items()):
+                    topic = STANDARDS_MAP.get(code, {}).get("topic", code)
+                    avg   = round(v["total_score"] / v["attempts"], 2) if v["attempts"] else 0
+                    std_rows.append({
+                        "Standard": code,
+                        "Topic":    topic,
+                        "Attempts": v["attempts"],
+                        "Best score (0-3)": v["best_score"],
+                        "Avg score": avg,
+                        "Last practiced": v.get("last_practiced","—"),
+                    })
+                df_std = pd.DataFrame(std_rows)
+                st.dataframe(df_std, use_container_width=True)
+            else:
+                st.info(f"No standard-level data yet for {selected_student}.")
+
+        # Download all data as JSON
+        st.divider()
+        st.download_button(
+            label="Download all student data (JSON)",
+            data=json.dumps(all_usage, indent=2, ensure_ascii=False),
+            file_name=f"canelita_student_data_{get_current_week()}.json",
+            mime="application/json"
+        )
+
+    if st.button("← Back to tutor", key="prof_back"):
+        st.session_state.screen = "welcome"
+        st.rerun()
+
+elif st.session_state.screen == "welcome":
 
     # Logo + title row
     logo_col, title_col = st.columns([1, 5], gap="small")
@@ -1411,8 +1679,7 @@ if st.session_state.screen == "welcome":
         st.markdown('<p style="font-size:0.92rem; font-weight:400; color:inherit; opacity:0.75; margin:0 0 0.15rem 0;">Your personal Calc 1 tutor</p>',
                     unsafe_allow_html=True)
     st.markdown(
-        '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Hartnell College '
-        '&nbsp;·&nbsp; Built for your success</p>',
+        '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Your math. Your pace. Your place.</p>',
         unsafe_allow_html=True
     )
 
@@ -1447,9 +1714,10 @@ if st.session_state.screen == "welcome":
                 index=2, key="welcome_numq"
             )
 
-        # Check selected standard FIRST — it drives everything below
+        # Check selected standard — it drives everything below
         chosen_std   = st.session_state.get("selected_standard")
         chosen_skill = st.session_state.get("selected_skill")
+        chosen_mode  = st.session_state.get("selected_mode", "Challenge me")
 
         # Only show quickstart when NO specific standard is selected
         quickstart = None
@@ -1460,44 +1728,36 @@ if st.session_state.screen == "welcome":
             quickstart = st.selectbox(
                 "Start with",
                 [
-                    "Just say hello — I will ask as we go",
-                    "Give me a random quiz question",
-                    "I have a specific question for the tutor",
+                    "Just say hello — I will explore as we go",
+                    "Challenge me — random standard",
+                    "I have a question for the tutor",
                 ],
                 label_visibility="collapsed",
                 key="welcome_quickstart"
             )
+            st.caption("Or open a unit → and click a standard to target it")
         else:
-            # Standard is selected — show it prominently instead of quickstart
+            # Standard selected — show compact summary card
+            mode_icon  = "📝" if chosen_mode == "Challenge me" else "💬"
+            skill_line = (f"<br><em style='font-size:0.76rem;opacity:0.7;'>"
+                          f"Skill: {chosen_skill}</em>" if chosen_skill else "")
             st.markdown(
                 f'<div style="margin-top:0.6rem;padding:0.6rem 0.8rem;'
                 f'background:rgba(0,121,107,0.08);border-radius:6px;'
                 f'border-left:3px solid #00796b;">'
                 f'<span style="font-size:0.72rem;font-weight:500;'
                 f'text-transform:uppercase;letter-spacing:0.06em;'
-                f'color:#00796b;">Ready to practice</span><br>'
+                f'color:#00796b;">{mode_icon} {chosen_mode}</span><br>'
                 f'<strong style="font-size:0.88rem;">'
-                f'{chosen_std}: {STANDARDS_MAP[chosen_std]["topic"]}</strong><br>'
-                f'<span style="font-size:0.76rem;opacity:0.7;">'
-                f'Algebra needed: {", ".join(STANDARDS_MAP[chosen_std]["algebra_prereqs"])}'
-                f'</span></div>',
+                f'{chosen_std}: {STANDARDS_MAP[chosen_std]["topic"]}</strong>'
+                f'{skill_line}</div>',
                 unsafe_allow_html=True
-            )
-            # Skill drill-down
-            skill_opts = ["Any skill"] + STANDARDS_MAP[chosen_std]["skills"]
-            skill_choice = st.selectbox(
-                "Skill to focus on", skill_opts,
-                label_visibility="visible", key="skill_selector"
-            )
-            st.session_state.selected_skill = (
-                skill_choice if skill_choice != "Any skill" else None
             )
             if st.button("← Change selection", key="clear_std"):
                 st.session_state.selected_standard = None
                 st.session_state.selected_skill    = None
+                st.session_state.selected_mode     = "Challenge me"
                 st.rerun()
-            # No standard selected — just show hint
-            st.caption("Or click any standard in the unit browser →")
 
         st.write("")
         start_clicked = st.button(
@@ -1539,16 +1799,16 @@ if st.session_state.screen == "welcome":
                     st.session_state.current_lang  = lang
 
                     welcome_msg = (
-                        f"Hi {sid}! I am your Calculus 1 tutor at Hartnell College. "
+                        f"Hi {sid}! I am your personal Calculus 1 tutor. "
                         f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                        f"- Type **quiz** for a practice problem\n"
+                        f"- Type **challenge** for a practice problem\n"
                         f"- Ask me **any calculus question**\n"
                         f"- Upload a **photo** of your handwritten work as an answer\n"
                         f"- Type **bye** when done to see your report"
                         if lang == "en" else
-                        f"Hola {sid}! Soy tu tutor de Cálculo 1 en Hartnell College. "
+                        f"Hola {sid}! Soy tu tutor personal de Cálculo 1. "
                         f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                        f"- Escribe **quiz** para un problema de práctica\n"
+                        f"- Escribe **reto** para un problema de práctica\n"
                         f"- Hazme **cualquier pregunta de cálculo**\n"
                         f"- Sube una **foto** de tu trabajo escrito como respuesta\n"
                         f"- Escribe **bye** para terminar y ver tu reporte"
@@ -1558,11 +1818,35 @@ if st.session_state.screen == "welcome":
                     })
 
                     qs_topic_map = {
-                        "Give me a random quiz question": "__random__",
+                        "Challenge me — random standard": "__random__",
                     }
                     qs_action = qs_topic_map.get(quickstart)
 
-                    if chosen_std:
+                    chosen_mode_val = st.session_state.get("selected_mode", "Challenge me")
+
+                    if chosen_std and chosen_mode_val == "Tutor chat":
+                        # Tutor mode: open a chat about this standard
+                        std_data    = STANDARDS_MAP[chosen_std]
+                        skill_val   = st.session_state.get("selected_skill")
+                        focus_line  = (f" specifically the skill: {skill_val}"
+                                       if skill_val else "")
+                        tutor_prompt = (
+                            f"Explain {chosen_std}: {std_data['topic']}{focus_line}. "
+                            f"Start with a clear intuitive explanation, then show a worked example."
+                            if lang == "en" else
+                            f"Explica {chosen_std}: {std_data['topic']}{focus_line}. "
+                            f"Comienza con una explicación intuitiva clara, luego muestra un ejemplo resuelto."
+                        )
+                        response = get_chat_response(tutor_prompt, std_data["intent_tag"], lang)
+                        st.session_state.session_calls += 1
+                        st.session_state.messages.append({
+                            "role": "assistant", "content": response, "type": "chat"
+                        })
+                        if std_data["intent_tag"] not in st.session_state.session_topics:
+                            st.session_state.session_topics.append(std_data["intent_tag"])
+
+                    elif chosen_std:
+                        # Quiz mode with specific standard
                         first_q  = quiz_by_standard(
                             chosen_std, st.session_state.difficulty, lang,
                             skill_focus=st.session_state.get("selected_skill")
@@ -1585,7 +1869,7 @@ if st.session_state.screen == "welcome":
                         })
                         st.session_state.quiz_state = {
                             "current_question": first_q,
-                            "q_num": 2, "num_questions": nq,
+                            "q_num": 1, "num_questions": nq,
                             "topic": std_data["intent_tag"],
                             "standard_lock": chosen_std, "scores": []
                         }
@@ -1611,7 +1895,7 @@ if st.session_state.screen == "welcome":
                         })
                         st.session_state.quiz_state = {
                             "current_question": first_q,
-                            "q_num": 2, "num_questions": nq,
+                            "q_num": 1, "num_questions": nq,
                             "topic": None, "scores": []
                         }
 
@@ -1662,16 +1946,15 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 </div>
 """, unsafe_allow_html=True)
 
-        # Interactive standard browser
+        # Interactive standard browser with mode + skill integrated
         st.markdown('<p class="section-label" style="margin-top:0.2rem;">'
-                    "Your C-ID MATH 210 Checklist — click any standard to select it</p>",
+                    "Your C-ID MATH 210 Checklist — 25 Standards</p>",
                     unsafe_allow_html=True)
         st.markdown(
             '<p style="font-size:0.82rem;color:inherit;opacity:0.75;'
             'line-height:1.6;margin-bottom:0.6rem;">'
             "These 25 standards are California's official Calculus 1 framework. "
-            "Work through them all and you'll know you're ready for "
-            "Calculus 2, Differential Equations, Physics, and beyond.</p>",
+            "Click any standard, choose how you want to work on it, then hit Start.</p>",
             unsafe_allow_html=True
         )
 
@@ -1688,7 +1971,6 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         for unit_num, unit_name in unit_info:
             unit_stds = [(c, d) for c, d in STANDARDS_MAP.items()
                          if d["unit"] == unit_num]
-            # Check if any standard in this unit is selected
             unit_active = any(c == current_selected for c, _ in unit_stds)
 
             with st.expander(
@@ -1697,7 +1979,9 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             ):
                 for code, data in unit_stds:
                     is_selected = code == current_selected
-                    btn_label   = (
+
+                    # Standard select button
+                    btn_label = (
                         f"✓ {code}: {data['topic']}"
                         if is_selected else
                         f"{code}: {data['topic']}"
@@ -1708,14 +1992,53 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                         use_container_width=True,
                         type="primary" if is_selected else "secondary"
                     ):
-                        # Toggle: clicking selected standard deselects it
                         if is_selected:
                             st.session_state.selected_standard = None
                             st.session_state.selected_skill    = None
+                            st.session_state.selected_mode     = "Challenge me"
                         else:
                             st.session_state.selected_standard = code
                             st.session_state.selected_skill    = None
+                            st.session_state.selected_mode     = "Challenge me"
                         st.rerun()
+
+                    # When this standard is selected, show mode + skill inline
+                    if is_selected:
+                        mode_col, skill_col = st.columns([1, 2])
+
+                        with mode_col:
+                            mode = st.radio(
+                                "How?",
+                                ["Challenge me", "Tutor chat"],
+                                index=0 if st.session_state.get(
+                                    "selected_mode", "Challenge me") == "Challenge me" else 1,
+                                key=f"mode_{code}",
+                                horizontal=False,
+                                label_visibility="visible"
+                            )
+                            st.session_state.selected_mode = mode
+
+                        with skill_col:
+                            skill_opts = ["Any skill"] + data["skills"]
+                            skill_choice = st.selectbox(
+                                "Specific skill (optional)",
+                                skill_opts,
+                                key=f"skill_{code}",
+                                label_visibility="visible"
+                            )
+                            st.session_state.selected_skill = (
+                                skill_choice if skill_choice != "Any skill" else None
+                            )
+
+                        # Show prereqs as a small hint
+                        st.markdown(
+                            f'<p style="font-size:0.74rem;color:inherit;opacity:0.6;'
+                            f'margin:0.2rem 0 0.5rem 0;">'
+                            f'Algebra needed: '
+                            f'{", ".join(data["algebra_prereqs"])}</p>',
+                            unsafe_allow_html=True
+                        )
+
 # ════════════════════════════════════════════════════════════════════════════════
 # SCREEN: CHAT
 # ════════════════════════════════════════════════════════════════════════════════
@@ -1755,6 +2078,37 @@ elif st.session_state.screen == "chat":
             unsafe_allow_html=True
         )
         st.divider()
+
+        # ── Semillas — permanent seed counter ─────────────────────────────
+        all_usage_now = st.session_state.get("all_usage", {})
+        sid_now       = st.session_state.get("student_id", "")
+        total_sem     = get_total_semillas(sid_now, all_usage_now)
+        sess_sem      = st.session_state.get("session_semillas", 0)
+        lang_now      = st.session_state.get("current_lang", "en")
+
+        st.markdown(
+            f'<div style="text-align:center;padding:0.6rem 0.4rem;'
+            f'background:rgba(0,121,107,0.07);border-radius:8px;margin-bottom:0.5rem;">'
+            f'<div style="font-size:1.4rem;">🌱</div>'
+            f'<div style="font-size:1.05rem;font-weight:600;color:#00796b;">'
+            f'{total_sem} semillas</div>'
+            f'<div style="font-size:0.7rem;color:inherit;opacity:0.65;'
+            f'line-height:1.4;margin-top:0.15rem;">'
+            + (f'+{sess_sem} this session' if sess_sem else
+               ('challenge yourself to plant your first' if lang_now == 'en'
+                else 'desafíate para plantar tu primera'))
+            + f'</div></div>',
+            unsafe_allow_html=True
+        )
+        with st.expander("🌱 What are semillas?", expanded=False):
+            poem = SEMILLA_POEM.get(lang_now, SEMILLA_POEM["en"])
+            st.markdown(
+                f'<p style="font-size:0.78rem;line-height:1.65;'
+                f'font-style:italic;color:inherit;opacity:0.85;">{poem}</p>',
+                unsafe_allow_html=True
+            )
+
+        st.divider()
         st.caption("Session score")
         if st.session_state.session_max > 0:
             pct_s = round(
@@ -1764,7 +2118,7 @@ elif st.session_state.screen == "chat":
                       f"{st.session_state.session_score}/{st.session_state.session_max}",
                       f"{pct_s}%")
         else:
-            st.caption("No quiz questions yet.")
+            st.caption("No challenges yet.")
 
         if st.session_state.session_topics:
             st.divider()
@@ -1840,7 +2194,7 @@ elif st.session_state.screen == "chat":
     )
     st.markdown(
         '<p class="app-sub" style="margin-bottom:0.8rem;">'
-        'Hartnell College &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; Built for your success</p>',
+        'Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</p>',
         unsafe_allow_html=True
     )
 
@@ -1873,6 +2227,10 @@ elif st.session_state.screen == "chat":
                 std_code = msg.get("standard_code", "")
                 question = msg.get("question_text", "")
                 is_img   = msg.get("from_image", False)
+                semilla_note  = msg.get("semilla_note", "")
+                wisdom_quote  = msg.get("wisdom_quote", "")
+                offer_retry   = msg.get("offer_retry", False)
+                retry_std     = msg.get("retry_standard", "")
 
                 score_labels = {3:"3 / 3", 2:"2 / 3", 1:"1 / 3", 0:"0 / 3"}
                 std_lbl = f" &nbsp; {std_code}" if std_code else ""
@@ -1889,9 +2247,70 @@ elif st.session_state.screen == "chat":
                         st.markdown(solution)
                 if mindset:    st.success(mindset)
 
-                # ── Print / Download explanation as HTML ──────────────────
-                score_label_str = {3:"3 / 3", 2:"2 / 3",
-                                   1:"1 / 3", 0:"0 / 3"}.get(score, "0 / 3")
+                # Semilla award
+                if semilla_note:
+                    st.markdown(
+                        f'<div style="font-size:0.8rem;color:inherit;opacity:0.75;'
+                        f'margin:0.3rem 0 0.2rem 0;">{semilla_note}</div>',
+                        unsafe_allow_html=True
+                    )
+
+                # Wisdom quote
+                if wisdom_quote:
+                    st.markdown(
+                        f'<div style="font-size:0.82rem;font-style:italic;'
+                        f'color:inherit;opacity:0.65;border-left:2px solid #00796b;'
+                        f'padding:0.3rem 0.7rem;margin:0.4rem 0;">'
+                        f'{wisdom_quote}</div>',
+                        unsafe_allow_html=True
+                    )
+
+                # Retry offer after wrong answer
+                if offer_retry and retry_std and msg == st.session_state.messages[-1]:
+                    lang_now = st.session_state.get("current_lang", "en")
+                    retry_label = (
+                        f"Try another question on {retry_std}"
+                        if lang_now == "en" else
+                        f"Intenta otra pregunta sobre {retry_std}"
+                    )
+                    if st.button(retry_label, key=f"retry_{id(msg)}", type="secondary"):
+                        # Generate same standard, award resilience semillas
+                        retry_q = quiz_by_standard(
+                            retry_std, st.session_state.difficulty, lang_now
+                        )
+                        st.session_state.session_calls += 1
+                        all_usage = st.session_state.get("all_usage", {})
+                        sid       = st.session_state.get("student_id", "guest")
+                        all_usage, rtotal = award_semillas(
+                            sid, "resilience", SEMILLA_VALUES["resilience"], all_usage
+                        )
+                        st.session_state.all_usage     = all_usage
+                        st.session_state.session_semillas += SEMILLA_VALUES["resilience"]
+                        r_icon = "🌱🌱"
+                        r_note = (
+                            f"{r_icon} +{SEMILLA_VALUES['resilience']} semillas de "
+                            f"Resiliencia · Total: {rtotal}"
+                        )
+                        # Show as a new single-question mini-challenge
+                        st.session_state.messages.append({
+                            "role": "assistant", "type": "question",
+                            "content": (
+                                f"**Retry — {retry_std}: {retry_q['topic']}**\n\n"
+                                f"*{r_note}*\n\n"
+                                + retry_q["question"]
+                            )
+                        })
+                        # Create a fresh one-question quiz state
+                        st.session_state.quiz_state = {
+                            "current_question": retry_q,
+                            "q_num": 1, "num_questions": 1,
+                            "topic": STANDARDS_MAP[retry_std]["intent_tag"],
+                            "standard_lock": retry_std, "scores": []
+                        }
+                        st.rerun()
+
+                # Print / Download button
+                score_label_str = score_labels.get(score, "0 / 3")
                 html_content = build_explanation_html(
                     title=f"Explanation — {std_code or 'Calculus 1'}",
                     std_code=std_code,
@@ -2064,6 +2483,63 @@ elif st.session_state.screen == "chat":
                 if std_code and std_code not in st.session_state.session_standards:
                     st.session_state.session_standards.append(std_code)
 
+                # ── Award semillas based on score ─────────────────────────
+                all_usage = st.session_state.get("all_usage", {})
+                sid       = st.session_state.get("student_id", "guest")
+                score     = grading["score"]
+
+                # Award showed-up semilla on first question of session
+                if not st.session_state.get("awarded_showed_up"):
+                    all_usage, _ = award_semillas(sid, "showed_up",
+                                                   SEMILLA_VALUES["showed_up"], all_usage)
+                    st.session_state.awarded_showed_up = True
+
+                # Award per-attempt semilla
+                all_usage, _ = award_semillas(sid, "attempted",
+                                               SEMILLA_VALUES["attempted"], all_usage)
+
+                # Award score-based semillas
+                if score == 3:
+                    semilla_reason = "mastery"
+                    semilla_count  = SEMILLA_VALUES["mastery"]
+                elif score == 2:
+                    semilla_reason = "progress"
+                    semilla_count  = SEMILLA_VALUES["progress"]
+                else:
+                    semilla_reason = "courage"
+                    semilla_count  = SEMILLA_VALUES["courage"]
+
+                all_usage, new_total = award_semillas(
+                    sid, semilla_reason, semilla_count, all_usage
+                )
+                st.session_state.session_semillas += semilla_count + SEMILLA_VALUES["attempted"]
+                st.session_state.all_usage = all_usage
+
+                # Track per-standard progress
+                all_usage = record_standard_attempt(sid, std_code, score, all_usage)
+                st.session_state.all_usage = all_usage
+
+                # Pick a wisdom quote to weave in
+                wisdom_pool = (ATOMIC_HABITS_WISDOM.get(lang, ATOMIC_HABITS_WISDOM["en"])
+                               if score >= 2 else
+                               FOUR_AGREEMENTS_WISDOM.get(lang, FOUR_AGREEMENTS_WISDOM["en"]))
+                wisdom_quote = random.choice(wisdom_pool)
+
+                # Build semilla award note
+                semilla_icons = {
+                    "mastery":    ("🌱🌱🌱", "Maestría", "Mastery"),
+                    "progress":   ("🌱🌱",    "Progreso", "Progress"),
+                    "courage":    ("🌱",      "Valentía", "Courage"),
+                }
+                icon, label_es, label_en = semilla_icons.get(
+                    semilla_reason, ("🌱", "Semilla", "Seed")
+                )
+                semilla_label = label_es if lang == "es" else label_en
+                semilla_note  = (
+                    f"{icon} +{semilla_count} semilla{'s' if semilla_count > 1 else ''} "
+                    f"de {semilla_label} · Total: {new_total}"
+                )
+
                 st.session_state.messages.append({
                     "role": "assistant", "content": grading["feedback"],
                     "type": "grading", "score": grading["score"],
@@ -2072,7 +2548,11 @@ elif st.session_state.screen == "chat":
                     "mindset_message": grading["mindset_message"],
                     "algebra_scaffold": grading.get("algebra_scaffold",""),
                     "standard_code": std_code, "from_image": from_image,
-                    "question_text": qs["current_question"].get("question","")
+                    "question_text": qs["current_question"].get("question",""),
+                    "semilla_note": semilla_note,
+                    "wisdom_quote": wisdom_quote,
+                    "offer_retry": score <= 1,
+                    "retry_standard": std_code,
                 })
 
                 qs["q_num"] += 1
@@ -2103,10 +2583,10 @@ elif st.session_state.screen == "chat":
                         "role": "assistant", "type": "chat",
                         "content": (
                             f"Quiz complete — {total}/{max_s} ({pct}%). "
-                            f"Type 'quiz' for another round or ask me anything."
+                            f"Type 'challenge' for another round or ask me anything."
                             if lang == "en" else
                             f"Quiz terminado — {total}/{max_s} ({pct}%). "
-                            f"Escribe 'quiz' para otra ronda."
+                            f"Escribe 'reto' para otra ronda."
                         )
                     })
                     st.session_state.quiz_state = None
@@ -2122,7 +2602,7 @@ elif st.session_state.screen == "chat":
                     })
                     st.session_state.session_ended = True
 
-                elif intent_tag == "quiz_request":
+                elif intent_tag == "challenge_request":
                     topic = extract_topic_from_input(user_input)
                     if topic and topic not in st.session_state.session_topics:
                         st.session_state.session_topics.append(topic)
@@ -2145,13 +2625,13 @@ elif st.session_state.screen == "chat":
                     })
                     st.session_state.quiz_state = {
                         "current_question": first_q,
-                        "q_num": 2, "num_questions": nq,
+                        "q_num": 1, "num_questions": nq,
                         "topic": topic, "scores": []
                     }
 
                 else:
                     if intent_tag not in ["greeting","goodbye","thanks",
-                                          "fallback","quiz_request"] and \
+                                          "fallback","challenge_request"] and \
                        intent_tag not in st.session_state.session_topics:
                         st.session_state.session_topics.append(intent_tag)
                     response = get_chat_response(user_input, intent_tag, lang)

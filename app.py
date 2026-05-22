@@ -1193,9 +1193,35 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
 # ── AI: open chat tutor response (Sonnet) ─────────────────────────────────────
 def get_chat_response(user_input, intent_tag, language="en"):
     """Generate a tutoring reply for an open-ended question."""
-    if intent_tag in ["greeting", "goodbye", "thanks", "fallback"]:
-        options = CANNED.get(intent_tag, CANNED["fallback"])
+    # For social turns, use canned responses (no API cost)
+    if intent_tag in ["greeting", "goodbye", "thanks"]:
+        options = CANNED.get(intent_tag, CANNED["greeting"])
         return random.choice(options.get(language, options["en"]))
+
+    # For fallback: try to answer anyway rather than rejecting the student
+    # Haiku classification can miss Spanglish and informal phrasing
+    # Route through Sonnet so any calculus question gets a real answer
+    if intent_tag == "fallback":
+        lang_word = "Spanish" if language == "es" else "English"
+        fallback_prompt = (
+            f"You are a warm, encouraging Calculus 1 tutor. Respond entirely in {lang_word}.\n\n"
+            f"A student asked: \"{user_input}\"\n\n"
+            f"If this is a Calculus 1 question (in any language or phrasing), answer it "
+            f"with a clear explanation and a worked example.\n"
+            f"If it is truly unrelated to calculus, respond warmly and redirect them to "
+            f"a calculus topic or suggest typing \'challenge\' for a practice problem.\n"
+            f"Keep the response to 4-6 sentences. Use LaTeX $...$ for any math."
+        )
+        try:
+            resp = client.messages.create(
+                model=SONNET_MODEL, max_tokens=400,
+                system=CULTURAL_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": fallback_prompt}]
+            )
+            return resp.content[0].text.strip()
+        except Exception:
+            options = CANNED["fallback"]
+            return random.choice(options.get(language, options["en"]))
 
     std_codes    = INTENT_TO_STANDARDS.get(intent_tag, [])
     topic_label  = intent_tag.replace("_", " ").title()
@@ -2016,14 +2042,13 @@ elif st.session_state.screen == "welcome":
             quickstart = st.selectbox(
                 "Start with",
                 [
-                    "Just say hello — I will explore as we go",
                     "Challenge me — random standard",
                     "I have a question for the tutor",
                 ],
                 label_visibility="collapsed",
                 key="welcome_quickstart"
             )
-            st.caption("Or open a unit → and click a standard to target it")
+            st.caption("Or open a unit in the browser → pick a standard to focus on")
         else:
             # Standard selected — show compact summary card
             mode_icon  = "📝" if chosen_mode == "Challenge me" else "💬"

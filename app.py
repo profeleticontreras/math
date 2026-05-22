@@ -1774,6 +1774,199 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
     return html
 
 
+def build_session_report_html(student_name, messages, session_score,
+                               session_max, elapsed_min, standards_practiced,
+                               session_semillas, language):
+    """
+    Build a full printable HTML session report with every question,
+    answer, feedback, and solution from the session.
+    """
+    import re
+
+    def md_to_html_r(text):
+        if not text:
+            return ""
+        text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+        text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+        text = re.sub(r'\*([^*\n]+?)\*', r'<em>\1</em>', text)
+        lines = text.split('\n')
+        parts = []
+        for line in lines:
+            s = line.strip()
+            if s:
+                parts.append(f'<p style="margin:0.3rem 0;">{s}</p>')
+            else:
+                parts.append('<br>')
+        return '\n'.join(parts)
+
+    week      = get_current_week()
+    score_pct = round((session_score / session_max) * 100) if session_max > 0 else 0
+    duration  = format_duration(elapsed_min)
+    title_txt = (f"Session Report — {student_name}" if language == "en"
+                 else f"Reporte de Sesión — {student_name}")
+
+    # Build question blocks from grading messages
+    question_blocks = ""
+    q_num = 0
+    pending_question = ""
+
+    for msg in messages:
+        if msg.get("type") == "question":
+            pending_question = msg.get("content", "")
+        elif msg.get("type") == "grading":
+            q_num += 1
+            score    = msg.get("score", 0)
+            feedback = msg.get("feedback", "")
+            solution = msg.get("full_solution", "")
+            std_code = msg.get("standard_code", "")
+            mindset  = msg.get("mindset_message", "")
+            q_text   = msg.get("question_text", "") or pending_question
+
+            score_colors = {
+                3: ("#ecfdf5","#065f46"),
+                2: ("#fffbeb","#92400e"),
+                1: ("#fff7ed","#9a3412"),
+                0: ("#fef2f2","#991b1b")
+            }
+            bg, fg = score_colors.get(score, ("#f9fafb","#374151"))
+            score_label = {3:"3 / 3", 2:"2 / 3", 1:"1 / 3", 0:"0 / 3"}.get(score,"—")
+
+            question_blocks += f"""
+<div class="q-block">
+  <div class="q-header">
+    <span class="q-num">{q_num}</span>
+    <span class="q-std">{std_code}</span>
+    <span class="score-badge" style="background:{bg};color:{fg};">{score_label}</span>
+  </div>
+  {'<div class="section-lbl">Question</div><div class="q-body">' + md_to_html_r(q_text) + '</div>' if q_text else ''}
+  <div class="section-lbl">Feedback</div>
+  <div class="feedback-box">{md_to_html_r(feedback)}</div>
+  <div class="section-lbl">Full Solution</div>
+  <div class="solution-box">{solution}</div>
+  {'<div class="mindset-box">' + md_to_html_r(mindset) + '</div>' if mindset else ''}
+</div>
+"""
+            pending_question = ""
+
+    poem = SEMILLA_POEM.get(language, SEMILLA_POEM["en"])
+
+    html = f"""<!DOCTYPE html>
+<html lang="{language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>{title_txt}</title>
+  <script>
+    MathJax = {{
+      tex: {{
+        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+        processEscapes: true
+      }},
+      chtml: {{ scale: 1.05 }}
+    }};
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    * {{ box-sizing:border-box; margin:0; padding:0; }}
+    body {{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+            font-size:15px; line-height:1.7; color:#1f2937; background:#fff;
+            max-width:720px; margin:0 auto; padding:1.5rem 1.25rem 3rem; }}
+    header {{ border-bottom:2px solid #00796b; padding-bottom:0.75rem; margin-bottom:1.25rem; }}
+    .app-name {{ font-size:1.15rem; font-weight:600; color:#00796b; }}
+    .app-sub {{ font-size:0.78rem; color:#6b7280; margin-top:0.1rem; }}
+    .stats {{ display:flex; gap:1.5rem; margin:1rem 0 1.5rem;
+              background:#f0fdf9; border-radius:8px; padding:0.8rem 1rem; }}
+    .stat {{ text-align:center; }}
+    .stat-val {{ font-size:1.3rem; font-weight:600; color:#00796b; }}
+    .stat-lbl {{ font-size:0.7rem; color:#6b7280; text-transform:uppercase;
+                 letter-spacing:0.06em; }}
+    .q-block {{ border:1px solid #e5e7eb; border-radius:8px;
+                padding:1rem 1.1rem; margin-bottom:1.5rem;
+                page-break-inside:avoid; }}
+    .q-header {{ display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem; }}
+    .q-num {{ font-size:0.72rem; font-weight:700; background:#00796b; color:#fff;
+              border-radius:50%; width:22px; height:22px; display:flex;
+              align-items:center; justify-content:center; flex-shrink:0; }}
+    .q-std {{ font-size:0.72rem; font-weight:600; color:#00796b;
+              background:#f0fdf9; border:1px solid #99f6e4;
+              border-radius:4px; padding:1px 6px; }}
+    .score-badge {{ font-size:0.8rem; font-weight:600; border-radius:12px;
+                   padding:2px 9px; }}
+    .section-lbl {{ font-size:0.65rem; font-weight:600; text-transform:uppercase;
+                   letter-spacing:0.08em; color:#9ca3af; margin:0.9rem 0 0.35rem; }}
+    .q-body {{ background:#f9fafb; border-left:3px solid #e5e7eb;
+               border-radius:4px; padding:0.65rem 0.8rem;
+               word-break:break-word; overflow-x:auto; }}
+    .feedback-box {{ background:#f0fdf9; border-left:3px solid #00796b;
+                     border-radius:4px; padding:0.65rem 0.8rem;
+                     word-break:break-word; }}
+    .solution-box {{ background:#fafafa; border:1px solid #e5e7eb;
+                     border-radius:6px; padding:0.8rem 0.9rem;
+                     word-break:break-word; overflow-x:auto; line-height:1.8; }}
+    .mindset-box {{ margin-top:0.6rem; padding:0.6rem 0.8rem;
+                    background:rgba(0,121,107,0.07); border-radius:6px;
+                    font-style:italic; font-size:0.88rem; color:#065f46; }}
+    .semilla-card {{ margin:1.5rem 0; padding:1rem 1.2rem;
+                     background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));
+                     border-radius:10px; border:1px solid rgba(0,121,107,0.2); }}
+    .semilla-count {{ font-size:1.05rem; font-weight:600; color:#00796b;
+                      margin-bottom:0.5rem; }}
+    .semilla-poem {{ font-size:0.88rem; font-style:italic; color:#065f46;
+                     line-height:1.7; }}
+    footer {{ margin-top:2rem; padding-top:0.75rem; border-top:1px solid #e5e7eb;
+              font-size:0.72rem; color:#9ca3af; text-align:center; line-height:1.8; }}
+    mjx-container {{ overflow-x:auto; max-width:100%; }}
+    @media print {{ body {{ padding:0.75rem; }} .q-block {{ page-break-inside:avoid; }} }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="app-name">Canelita con Profe Contreras</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val">{session_score}/{session_max}</div>
+      <div class="stat-lbl">Score</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">{score_pct}%</div>
+      <div class="stat-lbl">Accuracy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">{duration}</div>
+      <div class="stat-lbl">Duration</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">{session_semillas} 🌱</div>
+      <div class="stat-lbl">Semillas</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">{', '.join(standards_practiced) or '—'}</div>
+      <div class="stat-lbl">Standards</div>
+    </div>
+  </div>
+
+  {question_blocks if question_blocks else '<p style="color:#6b7280;font-style:italic;">No challenge questions were answered this session.</p>'}
+
+  <div class="semilla-card">
+    <div class="semilla-count">🌱 {session_semillas} semillas planted this session</div>
+    <div class="semilla-poem">{poem}</div>
+  </div>
+
+  <footer>
+    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210<br>
+    <strong>Save as PDF:</strong>
+    iPhone/iPad: Share → Print → pinch to zoom &nbsp;|&nbsp;
+    Mac/PC: File → Print → Save as PDF
+  </footer>
+</body>
+</html>"""
+    return html
+
+
 def init_session_state():
     """Initialize all Streamlit session state variables on first load."""
     defaults = {
@@ -1803,6 +1996,7 @@ def init_session_state():
         "vuelo_html":        None,
         "vuelo_week":        None,
         "vuelo_total":       None,
+        "showed_semilla_welcome": False,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -2413,6 +2607,29 @@ elif st.session_state.screen == "chat":
             st.error("Weekly limit reached.")
             st.session_state.session_ended = True
 
+        # ── Finish & print full session report ────────────────────────────
+        if st.session_state.session_max > 0:
+            st.divider()
+            report_html = build_session_report_html(
+                student_name        = st.session_state.get("student_id","Student"),
+                messages            = st.session_state.messages,
+                session_score       = st.session_state.session_score,
+                session_max         = st.session_state.session_max,
+                elapsed_min         = elapsed_min,
+                standards_practiced = st.session_state.session_standards,
+                session_semillas    = st.session_state.get("session_semillas", 0),
+                language            = st.session_state.get("current_lang","en")
+            )
+            st.download_button(
+                label="🖨 Finish & print session report",
+                data=report_html,
+                file_name=f"session_report_{get_current_week()}.html",
+                mime="text/html",
+                key="sidebar_report_download",
+                use_container_width=True,
+                help="All questions, feedback & solutions. Open in browser → Print → Save as PDF"
+            )
+
     # ── Chat header ───────────────────────────────────────────────────────────
     st.markdown(
         '<p class="app-title" style="font-size:1.15rem;margin-bottom:0.2rem;">'
@@ -2430,11 +2647,35 @@ elif st.session_state.screen == "chat":
         unsafe_allow_html=True
     )
 
+    # ── Semillitas welcome message — shown once at top ───────────────────────
+    if not st.session_state.get("showed_semilla_welcome"):
+        lang_now  = st.session_state.get("current_lang","en")
+        std_now   = st.session_state.get("selected_standard")
+        std_label = (f" on **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
+                     if std_now and std_now in STANDARDS_MAP else "")
+        semilla_open = (
+            f"🌱 Every question you attempt today — right or wrong — plants a seed. "
+            f"You are here{std_label}. That already counts."
+            if lang_now == "en" else
+            f"🌱 Cada pregunta que intentas hoy — correcta o no — planta una semilla. "
+            f"Estás aquí{std_label}. Eso ya cuenta."
+        )
+        st.markdown(
+            f'<div style="margin:0 0 0.75rem;padding:0.6rem 0.9rem;'
+            f'background:rgba(0,121,107,0.07);border-left:3px solid #00796b;'
+            f'border-radius:6px;font-size:0.88rem;color:inherit;line-height:1.6;">'
+            f'{semilla_open}</div>',
+            unsafe_allow_html=True
+        )
+        st.session_state.showed_semilla_welcome = True
+
     # ── Message history ───────────────────────────────────────────────────────
-    for msg in st.session_state.messages:
+    for msg_idx, msg in enumerate(st.session_state.messages):
         role     = msg["role"]
         content  = msg["content"]
         msg_type = msg.get("type", "chat")
+        # First assistant message is always the welcome — never show print button on it
+        is_welcome_msg = (msg_idx == 0 and role == "assistant")
 
         with st.chat_message(role):
             if msg_type == "question":
@@ -2601,8 +2842,12 @@ elif st.session_state.screen == "chat":
 
             else:
                 st.markdown(content)
-                # Download button for tutor chat responses
-                if role == "assistant" and len(content) > 120:
+                # Only show print button for genuine tutor explanations
+                # Never on the welcome message or short replies
+                if (role == "assistant"
+                        and not is_welcome_msg
+                        and len(content) > 200
+                        and msg.get("intent_type") == "explanation"):
                     dl_col, _ = st.columns([1, 3])
                     with dl_col:
                         st.download_button(

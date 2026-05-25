@@ -1842,7 +1842,7 @@ def build_session_report_html(student_name, messages, session_score,
   <div class="section-lbl">Feedback</div>
   <div class="feedback-box">{md_to_html_r(feedback)}</div>
   <div class="section-lbl">Full Solution</div>
-  <div class="solution-box">{solution}</div>
+  <div class="solution-box">{md_to_html_r(solution) if solution else ""}</div>
   {'<div class="mindset-box">' + md_to_html_r(mindset) + '</div>' if mindset else ''}
 </div>
 """
@@ -2194,9 +2194,84 @@ elif st.session_state.screen == "welcome":
         unsafe_allow_html=True
     )
 
-    col_form, col_info = st.columns([9, 11], gap="large")
+    # ── Responsive layout ─────────────────────────────────────────────────────
+    # Mobile: content first, then form (single column via CSS order)
+    # Desktop: info on left, form on right
+    col_info, col_form = st.columns([11, 9], gap="large")
 
-    # ── LEFT: clean vertical form ─────────────────────────────────────────────
+    # ── LEFT (desktop) / TOP (mobile): about panel ───────────────────────────
+    with col_info:
+        st.markdown('<p class="section-label">What this tutor does</p>',
+                    unsafe_allow_html=True)
+
+        st.markdown("""
+<div class="feature-block">
+<span class="feature-label">Challenge mode.</span>
+Original questions aligned to all 25 C-ID MATH 210 standards.
+Each connects to a real career field — engineering, data science, biology,
+health, business, or social justice.
+</div>
+<div class="feature-block">
+<span class="feature-label">Tutor chat.</span>
+Ask any Calculus 1 question and get a step-by-step explanation
+with rendered math, in English or Spanish.
+</div>
+<div class="feature-block" style="margin-bottom:0.5rem;">
+<span class="feature-label">What you can send:</span>
+<ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
+  <li>A typed answer or question — in English or Spanish</li>
+  <li>A photo of your handwritten work</li>
+  <li>A follow-up question about any step</li>
+</ul>
+</div>
+<div class="feature-block">
+<span class="feature-label">Weekly limit.</span>
+Six hours per week keeps this free for every student in the class.
+</div>
+""", unsafe_allow_html=True)
+
+        # Pitch quote
+        st.markdown("""
+<div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
+background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
+  <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
+  color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
+    "Getting it wrong is part of getting it right.
+    Every incorrect answer comes with an explanation,
+    a full worked solution, and a check on the algebra underneath —
+    so the next attempt starts from a stronger place."
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Standards checklist
+        st.markdown('<p class="section-label" style="margin-top:0.2rem;">' +
+                    "Your C-ID MATH 210 Checklist — 25 Standards</p>",
+                    unsafe_allow_html=True)
+        st.markdown(
+            '<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
+            "These 25 standards are California's official Calculus 1 framework. "
+            "They are your checklist — work through them all and you'll know you're ready "
+            "for Calculus 2, Differential Equations, Physics, and beyond.</p>",
+            unsafe_allow_html=True
+        )
+        for unit, name, codes in [
+            ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
+            ("Unit 2", "Derivatives",                 "S-06 – S-12"),
+            ("Unit 3", "Applications of Derivatives", "S-13 – S-19"),
+            ("Unit 4", "Integration",                 "S-20 – S-23"),
+            ("Unit 5", "Applications of Integration", "S-24 – S-25"),
+        ]:
+            st.markdown(
+                f'<div class="unit-row">' +
+                f'<span class="unit-num">{unit}</span>' +
+                f'<span style="font-size:0.9rem;">{name}</span>' +
+                f'<span class="unit-codes">{codes}</span>' +
+                f'</div>',
+                unsafe_allow_html=True
+            )
+
+    # ── RIGHT (desktop) / BOTTOM (mobile): sign-in form ──────────────────────
     with col_form:
         st.markdown('<p class="section-label">Sign in / Iniciar sesión</p>',
                     unsafe_allow_html=True)
@@ -2221,7 +2296,7 @@ elif st.session_state.screen == "welcome":
             for code, data in STANDARDS_MAP.items()
         ]
         std_choice = st.selectbox(
-            "3. Learning standard / Estándar de aprendizaje",
+            "3. Learning standard / Estándar",
             std_options,
             key="welcome_std"
         )
@@ -2239,7 +2314,7 @@ elif st.session_state.screen == "welcome":
             std_preview = STANDARDS_MAP[selected_code]
             skill_opts  = ["Random — any skill"] + std_preview["skills"]
             skill_choice = st.selectbox(
-                "3b. Specific skill / Habilidad específica (optional)",
+                "3b. Specific skill (optional) / Habilidad específica",
                 skill_opts,
                 key="welcome_skill"
             )
@@ -2363,7 +2438,6 @@ elif st.session_state.screen == "welcome":
                         if std_data["intent_tag"] not in st.session_state.session_topics:
                             st.session_state.session_topics.append(std_data["intent_tag"])
                     else:
-                        # Random standard
                         first_code  = random.choice(list(STANDARDS_MAP.keys()))
                         first_q     = quiz_by_standard(
                             first_code, st.session_state.difficulty, lang
@@ -2387,79 +2461,6 @@ elif st.session_state.screen == "welcome":
                         }
 
                     st.rerun()
-
-    # ── RIGHT: about panel (all the beautiful content) ────────────────────────
-    with col_info:
-        st.markdown('<p class="section-label">What this tutor does</p>',
-                    unsafe_allow_html=True)
-
-        st.markdown("""
-<div class="feature-block">
-<span class="feature-label">Challenge mode.</span>
-Original questions aligned to all 25 C-ID MATH 210 standards.
-Each connects to a real career field — engineering, data science, biology,
-health, business, or social justice.
-</div>
-<div class="feature-block">
-<span class="feature-label">Tutor chat.</span>
-Ask any Calculus 1 question and get a step-by-step explanation
-with rendered math, in English or Spanish.
-</div>
-<div class="feature-block" style="margin-bottom:0.5rem;">
-<span class="feature-label">What you can send:</span>
-<ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
-  <li>A typed answer or question — in English or Spanish</li>
-  <li>A photo of your handwritten work</li>
-  <li>A follow-up question about any step</li>
-</ul>
-</div>
-<div class="feature-block">
-<span class="feature-label">Weekly limit.</span>
-Six hours per week keeps this free for every student in the class.
-</div>
-""", unsafe_allow_html=True)
-
-        # Pitch quote
-        st.markdown("""
-<div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
-background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
-  <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
-  color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
-    "Getting it wrong is part of getting it right.
-    Every incorrect answer comes with an explanation,
-    a full worked solution, and a check on the algebra underneath —
-    so the next attempt starts from a stronger place."
-  </p>
-</div>
-""", unsafe_allow_html=True)
-
-        # Standards section
-        st.markdown('<p class="section-label" style="margin-top:0.2rem;">' +
-                    "Your C-ID MATH 210 Checklist — 25 Standards</p>",
-                    unsafe_allow_html=True)
-        st.markdown(
-            '<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
-            "These 25 standards are California's official Calculus 1 framework. "
-            "They are your checklist — work through them all and you'll know you're ready "
-            "for Calculus 2, Differential Equations, Physics, and beyond.</p>",
-            unsafe_allow_html=True
-        )
-
-        for unit, name, codes in [
-            ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
-            ("Unit 2", "Derivatives",                 "S-06 – S-12"),
-            ("Unit 3", "Applications of Derivatives", "S-13 – S-19"),
-            ("Unit 4", "Integration",                 "S-20 – S-23"),
-            ("Unit 5", "Applications of Integration", "S-24 – S-25"),
-        ]:
-            st.markdown(
-                f'<div class="unit-row">' +
-                f'<span class="unit-num">{unit}</span>' +
-                f'<span style="font-size:0.9rem;">{name}</span>' +
-                f'<span class="unit-codes">{codes}</span>' +
-                f'</div>',
-                unsafe_allow_html=True
-            )
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -2647,27 +2648,25 @@ elif st.session_state.screen == "chat":
         unsafe_allow_html=True
     )
 
-    # ── Semillitas welcome message — shown once at top ───────────────────────
-    if not st.session_state.get("showed_semilla_welcome"):
-        lang_now  = st.session_state.get("current_lang","en")
-        std_now   = st.session_state.get("selected_standard")
-        std_label = (f" on **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
-                     if std_now and std_now in STANDARDS_MAP else "")
-        semilla_open = (
-            f"🌱 Every question you attempt today — right or wrong — plants a seed. "
-            f"You are here{std_label}. That already counts."
-            if lang_now == "en" else
-            f"🌱 Cada pregunta que intentas hoy — correcta o no — planta una semilla. "
-            f"Estás aquí{std_label}. Eso ya cuenta."
-        )
-        st.markdown(
-            f'<div style="margin:0 0 0.75rem;padding:0.6rem 0.9rem;'
-            f'background:rgba(0,121,107,0.07);border-left:3px solid #00796b;'
-            f'border-radius:6px;font-size:0.88rem;color:inherit;line-height:1.6;">'
-            f'{semilla_open}</div>',
-            unsafe_allow_html=True
-        )
-        st.session_state.showed_semilla_welcome = True
+    # ── Semillitas welcome banner — always visible at top of chat ───────────
+    lang_now  = st.session_state.get("current_lang","en")
+    std_now   = st.session_state.get("selected_standard")
+    std_label = (f" · **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
+                 if std_now and std_now in STANDARDS_MAP else "")
+    semilla_open = (
+        f"🌱 Every question you attempt — right or wrong — plants a seed."
+        f"{std_label} That already counts."
+        if lang_now == "en" else
+        f"🌱 Cada pregunta que intentas — correcta o no — planta una semilla."
+        f"{std_label} Eso ya cuenta."
+    )
+    st.markdown(
+        f'<div style="margin:0 0 0.75rem;padding:0.55rem 0.9rem;'
+        f'background:rgba(0,121,107,0.07);border-left:3px solid #00796b;'
+        f'border-radius:6px;font-size:0.88rem;color:inherit;line-height:1.6;">'
+        f'{semilla_open}</div>',
+        unsafe_allow_html=True
+    )
 
     # ── Message history ───────────────────────────────────────────────────────
     for msg_idx, msg in enumerate(st.session_state.messages):
@@ -2990,22 +2989,21 @@ elif st.session_state.screen == "chat":
                             st.error(f"Could not generate practice set: {e}")
 
                     if practice_html:
-                        # Store everything before any rerun
+                        # Store in session state — no rerun, download renders immediately
                         st.session_state.vuelo_html  = practice_html
                         st.session_state.vuelo_week  = get_current_week()
-                        # Award semillas
                         au = st.session_state.get("all_usage", {})
-                        sid = st.session_state.get("student_id", "guest")
+                        sid_v = st.session_state.get("student_id", "guest")
                         au, vuelo_total = award_semillas(
-                            sid, "vuelo", SEMILLA_VALUES["vuelo"], au
+                            sid_v, "vuelo", SEMILLA_VALUES["vuelo"], au
                         )
                         st.session_state.all_usage        = au
                         st.session_state.vuelo_total      = vuelo_total
                         st.session_state.session_semillas += SEMILLA_VALUES["vuelo"]
-                        # Force re-render to show download button — no rerun needed
-                        st.rerun()
+                        # No st.rerun() — let Streamlit re-render naturally
+                        # The download button renders below on the same pass
 
-            # Download button — rendered from session state, survives all reruns
+            # Download button — always rendered when vuelo_html is set
             if st.session_state.get("vuelo_html"):
                 vuelo_total = st.session_state.get("vuelo_total", "")
                 st.markdown(

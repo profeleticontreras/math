@@ -1432,8 +1432,9 @@ def build_explanation_html(title, std_code, score_label, question,
       padding: 0.9rem 1rem;
       word-break: break-word;
       overflow-x: auto;
-      line-height: 1.8;
+      line-height: 1.85;
     }}
+    .solution-box p {{ margin: 0.35rem 0; }}
     .note {{
       background: #fffbeb;
       border-left: 3px solid #f59e0b;
@@ -1903,7 +1904,8 @@ def build_session_report_html(student_name, messages, session_score,
                      word-break:break-word; }}
     .solution-box {{ background:#fafafa; border:1px solid #e5e7eb;
                      border-radius:6px; padding:0.8rem 0.9rem;
-                     word-break:break-word; overflow-x:auto; line-height:1.8; }}
+                     word-break:break-word; overflow-x:auto; line-height:1.85; }}
+    .solution-box p {{ margin:0.35rem 0; }}
     .mindset-box {{ margin-top:0.6rem; padding:0.6rem 0.8rem;
                     background:rgba(0,121,107,0.07); border-radius:6px;
                     font-style:italic; font-size:0.88rem; color:#065f46; }}
@@ -2171,97 +2173,168 @@ if st.session_state.screen == "professor":
 
 elif st.session_state.screen == "welcome":
 
+    # ── Language selector — top of page so it affects all text ───────────────
+    lang_top = st.selectbox(
+        "Language / Idioma",
+        ["English", "Español"],
+        key="welcome_lang_top",
+        label_visibility="collapsed",
+        help="Switch language / Cambiar idioma"
+    )
+    _tl = lambda en, es: es if lang_top == "Español" else en
+
     # ── Logo + title ──────────────────────────────────────────────────────────
-    logo_col, title_col = st.columns([1, 5], gap="small")
+    logo_col, title_col = st.columns([2, 5], gap="small")
     with logo_col:
         st.markdown(
-            f'<div style="padding:4px;display:flex;align-items:center;">' +
-            f'<img src="{LOGO_SRC}" style="width:100%;max-width:110px;" alt="Canelita logo"/>' +
-            f'</div>',
+            f'<div style="display:flex;align-items:stretch;">' +
+            f'<img src="{LOGO_SRC}" style="width:100%;max-width:160px;"' +
+            f' alt="Canelita logo"/></div>',
             unsafe_allow_html=True
         )
     with title_col:
         st.markdown(
-            '<p class="app-title" style="margin-bottom:0.25rem;">Canelita con Profe Contreras</p>',
+            '<p class="app-title" style="margin-bottom:0.4rem;font-size:1.8rem;">' +
+            'Canelita con Profe Contreras</p>',
             unsafe_allow_html=True
         )
         st.markdown(
-            '<p style="font-size:0.92rem;font-weight:400;color:inherit;opacity:0.75;margin:0 0 0.1rem 0;">Your personal Calc 1 tutor</p>',
+            '<p style="font-size:1.05rem;font-weight:400;color:inherit;' +
+            'opacity:0.78;margin:0 0 0.15rem 0;">Your personal Calc 1 tutor</p>',
             unsafe_allow_html=True
         )
+        # Three-line slogan stacked, same visual height as mug
+        st.markdown(
+            '<div style="font-size:1.0rem;font-weight:500;color:#00796b;' +
+            'line-height:1.85;margin-top:0.15rem;">' +
+            'Your Math.<br>Your Pace.<br>Your Place.</div>',
+            unsafe_allow_html=True
+        )
+
+    st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
+
+    # ── Semillitas — permanent visible block below header ─────────────────────
+    semilla_poem_text = SEMILLA_POEM.get("es" if lang_top == "Español" else "en",
+                                          SEMILLA_POEM["en"])
     st.markdown(
-        '<p class="app-sub">C-ID MATH 210 &nbsp;·&nbsp; Your math. Your pace. Your place. &nbsp;·&nbsp; Made for you by Profe Contreras</p>',
+        f'<div style="margin:0.4rem 0 0.9rem;padding:0.9rem 1.1rem;' +
+        f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));' +
+        f'border-radius:10px;border-left:4px solid #00796b;">' +
+        f'<div style="font-size:0.95rem;font-weight:600;color:#00796b;margin-bottom:0.4rem;">' +
+        f'🌱 {_tl("What are semillas?", "¿Qué son las semillas?")}</div>' +
+        f'<p style="font-size:0.88rem;font-style:italic;color:inherit;' +
+        f'line-height:1.7;margin:0;">{semilla_poem_text}</p>' +
+        f'</div>',
         unsafe_allow_html=True
     )
 
-    # ── Responsive layout ─────────────────────────────────────────────────────
-    # Mobile: content first, then form (single column via CSS order)
-    # Desktop: info on left, form on right
+    # My Why — reflection prompt
+    _mywhy_en = "Take a moment before you begin. What brought you here today? Who or what are you planting these semillas for?"
+    _mywhy_es = "Toma un momento antes de comenzar. ¿Qué te trajo aquí hoy? ¿Para quién o para qué estás plantando estas semillas?"
+    _mywhy_title = "✨ My Why" if lang_top == "English" else "✨ Mi Por Qué"
+    _mywhy_body  = _mywhy_en if lang_top == "English" else _mywhy_es
+    st.markdown(
+        f'<div style="margin:0 0 0.9rem;padding:0.75rem 1rem;' +
+        f'background:rgba(245,158,11,0.08);border-left:4px solid #F59E0B;' +
+        f'border-radius:8px;">' +
+        f'<p style="font-size:0.92rem;font-weight:600;color:#92400e;margin:0 0 0.3rem;">' +
+        f'{_mywhy_title}</p>' +
+        f'<p style="font-size:0.85rem;color:inherit;opacity:0.8;line-height:1.6;margin:0;">' +
+        f'{_mywhy_body}</p>' +
+        f'</div>',
+        unsafe_allow_html=True
+    )
+
+    # Semillas earning rubric — collapsible
+    with st.expander(
+        _tl("🌱 How do I earn semillas?", "🌱 ¿Cómo gano semillas?"),
+        expanded=False
+    ):
+        rubric_rows = [
+            (_tl("Show up (start a session)", "Presentarte (iniciar sesión"),              "+1"),
+            (_tl("Attempt each question",       "Intentar cada pregunta"),                  "+1"),
+            (_tl("Mastery — score 3/3",          "Maestría — puntuación 3/3"),               "+3"),
+            (_tl("Progress — score 2/3",         "Progreso — puntuación 2/3"),               "+2"),
+            (_tl("Courage — score 0–1/3",        "Valentía — puntuación 0–1/3"),             "+1"),
+            (_tl("Resilience — retry after wrong","Resiliencia — reintentar tras error"),     "+2"),
+            (_tl("Semillas de Vuelo — take work home","Semillas de Vuelo — llevar trabajo a casa"),"+5"),
+        ]
+        for label, pts in rubric_rows:
+            st.markdown(
+                f'<div style="display:flex;justify-content:space-between;' +
+                f'padding:0.22rem 0;font-size:0.83rem;border-bottom:1px solid rgba(128,128,128,0.12);">' +
+                f'<span>{label}</span>' +
+                f'<span style="font-weight:600;color:#00796b;">{pts}</span></div>',
+                unsafe_allow_html=True
+            )
+
+    # ── Responsive layout: info left, form right ──────────────────────────────
     col_info, col_form = st.columns([11, 9], gap="large")
 
-    # ── LEFT (desktop) / TOP (mobile): about panel ───────────────────────────
+    # ── LEFT: about panel ─────────────────────────────────────────────────────
     with col_info:
-        st.markdown('<p class="section-label">What this tutor does</p>',
+        st.markdown(f'<p class="section-label">{_tl("What this tutor does","Qué hace este tutor")}</p>',
                     unsafe_allow_html=True)
-
-        st.markdown("""
+        st.markdown(f"""
 <div class="feature-block">
-<span class="feature-label">Challenge mode.</span>
-Original questions aligned to all 25 C-ID MATH 210 standards.
-Each connects to a real career field — engineering, data science, biology,
-health, business, or social justice.
+<span class="feature-label">{_tl("Challenge mode.","Modo reto.")}</span>
+{_tl("Original questions aligned to all 25 C-ID MATH 210 standards. Each connects to a real career field — engineering, data science, biology, health, business, or social justice.",
+     "Preguntas originales alineadas a los 25 estándares C-ID MATH 210. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
 </div>
 <div class="feature-block">
-<span class="feature-label">Tutor chat.</span>
-Ask any Calculus 1 question and get a step-by-step explanation
-with rendered math, in English or Spanish.
+<span class="feature-label">{_tl("Tutor chat.","Chat con tutor.")}</span>
+{_tl("Ask any Calculus 1 question and get a step-by-step explanation with rendered math, in English or Spanish.",
+     "Pregunta cualquier cosa de Cálculo 1 y obtén una explicación paso a paso con notación matemática renderizada.")}
 </div>
 <div class="feature-block" style="margin-bottom:0.5rem;">
-<span class="feature-label">What you can send:</span>
+<span class="feature-label">{_tl("What you can send:","Qué puedes enviar:")}</span>
 <ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
-  <li>A typed answer or question — in English or Spanish</li>
-  <li>A photo of your handwritten work</li>
-  <li>A follow-up question about any step</li>
+  <li>{_tl("A typed answer or question — in English or Spanish","Una respuesta o pregunta escrita — en inglés o español")}</li>
+  <li>{_tl("A photo of your handwritten work","Una foto de tu trabajo escrito a mano")}</li>
+  <li>{_tl("A follow-up question about any step","Una pregunta de seguimiento sobre cualquier paso")}</li>
 </ul>
 </div>
 <div class="feature-block">
-<span class="feature-label">Weekly limit.</span>
-Six hours per week keeps this free for every student in the class.
+<span class="feature-label">{_tl("Weekly limit.","Límite semanal.")}</span>
+{_tl("Six hours per week keeps this free for every student in the class.",
+     "Seis horas por semana mantiene esto gratuito para cada estudiante.")}
 </div>
 """, unsafe_allow_html=True)
 
         # Pitch quote
-        st.markdown("""
+        st.markdown(f"""
 <div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
 background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
   <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
   color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
-    "Getting it wrong is part of getting it right.
-    Every incorrect answer comes with an explanation,
-    a full worked solution, and a check on the algebra underneath —
-    so the next attempt starts from a stronger place."
+    "{_tl("Getting it wrong is part of getting it right. Every incorrect answer comes with an explanation, a full worked solution, and a check on the algebra underneath — so the next attempt starts from a stronger place.",
+           "Equivocarse es parte de acertar. Cada respuesta incorrecta viene con una explicación, la solución completa paso a paso, y una revisión del álgebra subyacente — para que el siguiente intento comience desde un lugar más fuerte.")}"
   </p>
 </div>
 """, unsafe_allow_html=True)
 
         # Standards checklist
-        st.markdown('<p class="section-label" style="margin-top:0.2rem;">' +
-                    "Your C-ID MATH 210 Checklist — 25 Standards</p>",
+        st.markdown(f'<p class="section-label" style="margin-top:0.2rem;">' +
+                    f'{_tl("Your C-ID MATH 210 Checklist — 25 Standards","Tu lista C-ID MATH 210 — 25 estándares")}</p>',
                     unsafe_allow_html=True)
         st.markdown(
-            '<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
-            "These 25 standards are California's official Calculus 1 framework. "
-            "They are your checklist — work through them all and you'll know you're ready "
-            "for Calculus 2, Differential Equations, Physics, and beyond.</p>",
+            f'<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
+            _tl("These 25 standards are California's official Calculus 1 framework. "
+                "They are your checklist — work through them all and you'll know you're ready "
+                "for Calculus 2, Differential Equations, Physics, and beyond.",
+                "Estos 25 estándares son el marco oficial de Cálculo 1 de California. "
+                "Son tu lista de verificación — trabájalos todos y sabrás que estás listo "
+                "para Cálculo 2, Ecuaciones Diferenciales, Física y más.") + '</p>',
             unsafe_allow_html=True
         )
-        for unit, name, codes in [
-            ("Unit 1", "Limits & Continuity",        "S-01 – S-05"),
-            ("Unit 2", "Derivatives",                 "S-06 – S-12"),
-            ("Unit 3", "Applications of Derivatives", "S-13 – S-19"),
-            ("Unit 4", "Integration",                 "S-20 – S-23"),
-            ("Unit 5", "Applications of Integration", "S-24 – S-25"),
+        for unit, name_en, name_es, codes in [
+            ("Unit 1", "Limits & Continuity",        "Límites y Continuidad",          "S-01 – S-05"),
+            ("Unit 2", "Derivatives",                 "Derivadas",                       "S-06 – S-12"),
+            ("Unit 3", "Applications of Derivatives", "Aplicaciones de Derivadas",       "S-13 – S-19"),
+            ("Unit 4", "Integration",                 "Integración",                     "S-20 – S-23"),
+            ("Unit 5", "Applications of Integration", "Aplicaciones de Integración",     "S-24 – S-25"),
         ]:
+            name = name_es if lang_top == "Español" else name_en
             st.markdown(
                 f'<div class="unit-row">' +
                 f'<span class="unit-num">{unit}</span>' +
@@ -2273,22 +2346,57 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 
     # ── RIGHT (desktop) / BOTTOM (mobile): sign-in form ──────────────────────
     with col_form:
-        st.markdown('<p class="section-label">Sign in / Iniciar sesión</p>',
-                    unsafe_allow_html=True)
-
-        # 1. Name / ID
-        student_id = st.text_input(
-            "1. Your name or student ID / Tu nombre o ID",
-            placeholder="e.g. Maria G. or 12345",
-            key="welcome_student_id"
+        st.markdown(
+            f'<p class="section-label">{_tl("Sign in","Iniciar sesión")}</p>',
+            unsafe_allow_html=True
         )
 
-        # 2. Language
-        lang_choice = st.selectbox(
-            "2. Language / Idioma",
-            ["Auto-detect", "English", "Español"],
-            key="welcome_lang"
+        # 1. Name / ID with optional geeky username
+        name_mode = st.radio(
+            "name mode",
+            [_tl("Use my name or ID","Usar mi nombre o ID"),
+             _tl("Give me a geeky username 🤓","Dame un nombre geek 🤓")],
+            horizontal=True, key="name_mode", label_visibility="collapsed"
         )
+
+        if name_mode == _tl("Give me a geeky username 🤓","Dame un nombre geek 🤓"):
+            import random as _rnd
+            _adj = ["Quantum","Infinite","Divergent","Continuous","Transcendent",
+                    "Irrational","Fibonacci","Euler","Riemann","Laplace",
+                    "Gradient","Asymptotic","Polar","Tangent","Harmonic"]
+            _nou = ["Integral","Derivative","Limit","Vector","Matrix",
+                    "Theorem","Sigma","Pi","Lambda","Delta",
+                    "Cosine","Cipher","Vertex","Orbit","Kernel"]
+            if "generated_username" not in st.session_state:
+                import random as _r2
+                st.session_state.generated_username = (
+                    f"{_r2.choice(_adj)}{_r2.choice(_nou)}{_r2.randint(42,999)}"
+                )
+            col_un, col_re = st.columns([3,1])
+            with col_un:
+                st.markdown(
+                    f'<div style="padding:0.55rem 0.8rem;background:rgba(0,121,107,0.07);' +
+                    f'border-radius:6px;font-size:0.95rem;font-weight:600;color:#00796b;">' +
+                    f'🤓 {st.session_state.generated_username}</div>',
+                    unsafe_allow_html=True
+                )
+            with col_re:
+                if st.button(_tl("New","Otro"), key="regen_username"):
+                    import random as _r3
+                    st.session_state.generated_username = (
+                        f"{_r3.choice(_adj)}{_r3.choice(_nou)}{_r3.randint(42,999)}"
+                    )
+                    st.rerun()
+            student_id = st.session_state.generated_username
+        else:
+            student_id = st.text_input(
+                _tl("1. Your name or student ID","1. Tu nombre o ID"),
+                placeholder=_tl("e.g. Maria G. or 12345","p.ej. Maria G. o 12345"),
+                key="welcome_student_id"
+            )
+
+        # Language comes from top-of-page selector
+        lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
 
         # 3. Standard
         std_options = ["Random — surprise me"] + [
@@ -2296,7 +2404,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             for code, data in STANDARDS_MAP.items()
         ]
         std_choice = st.selectbox(
-            "3. Learning standard / Estándar",
+            "2. Learning standard / Estándar",
             std_options,
             key="welcome_std"
         )
@@ -2314,7 +2422,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             std_preview = STANDARDS_MAP[selected_code]
             skill_opts  = ["Random — any skill"] + std_preview["skills"]
             skill_choice = st.selectbox(
-                "3b. Specific skill (optional) / Habilidad específica",
+                "2b. Specific skill (optional) / Habilidad específica",
                 skill_opts,
                 key="welcome_skill"
             )
@@ -2329,7 +2437,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 
         # 4. Difficulty
         diff_choice = st.selectbox(
-            "4. Difficulty / Dificultad",
+            "3. Difficulty / Dificultad",
             ["Random — mix it up", "Easy", "Medium", "Hard"],
             index=2,
             key="welcome_diff"
@@ -2337,7 +2445,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 
         # 5. Number of questions
         num_q = st.selectbox(
-            "5. Questions per session / Preguntas por sesión",
+            "4. Questions per session / Preguntas por sesión",
             [1, 2, 3, 4, 5],
             index=2,
             key="welcome_numq"

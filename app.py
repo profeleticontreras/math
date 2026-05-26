@@ -62,7 +62,7 @@ VALID_TAGS = [
 CANNED = {
     "greeting": {
         "en": [
-            "Hi! I am your Calculus 1 tutor. What would you like to work on today?",
+            "Hi! Welcome — this is your Calculus 1 practice space. What would you like to work on today?",
             "Hello! Ready to practice calculus? Ask me anything or type 'challenge' for a problem.",
             "Welcome! What calculus topic can I help you with?"
         ],
@@ -719,7 +719,6 @@ SEMILLA_VALUES = {
     "resilience":    2,   # Retried after a wrong answer
     "consistency":   2,   # Completed a full challenge round
     "time_10min":    1,   # Per 10 minutes of study
-    "vuelo":         5,   # Requested a take-home practice set
 }
 
 # Poetic semilla description — shown permanently in sidebar
@@ -1127,7 +1126,20 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
     try:
         result = json.loads(raw)
     except Exception:
-        result = {"score": 0, "feedback": raw, "algebra_gap": "", "full_solution": ""}
+        # Try to salvage partial JSON — Claude sometimes adds preamble text
+        import re as _re
+        json_match = _re.search(r'\{[\s\S]*\}', raw)
+        if json_match:
+            try:
+                result = json.loads(json_match.group())
+            except Exception:
+                result = {"score": 0, "feedback":
+                    "There was a formatting issue with this response. The worked solution below is still accurate.",
+                    "algebra_gap": "", "full_solution": raw}
+        else:
+            result = {"score": 0, "feedback":
+                "There was a formatting issue with this response. The worked solution below is still accurate.",
+                "algebra_gap": "", "full_solution": raw}
 
     score = result.get("score", 0)
 
@@ -1995,9 +2007,6 @@ def init_session_state():
         "session_semillas":  0,
         "retry_standard":    None,
         "awarded_showed_up": False,
-        "vuelo_html":        None,
-        "vuelo_week":        None,
-        "vuelo_total":       None,
         "showed_semilla_welcome": False,
     }
     for key, val in defaults.items():
@@ -2200,7 +2209,7 @@ elif st.session_state.screen == "welcome":
         )
         st.markdown(
             '<p style="font-size:1.05rem;font-weight:400;color:inherit;' +
-            'opacity:0.78;margin:0 0 0.15rem 0;">Your personal Calc 1 tutor</p>',
+            'opacity:0.78;margin:0 0 0.15rem 0;">Your Calculus 1 learning partner</p>',
             unsafe_allow_html=True
         )
         # Three-line slogan stacked, same visual height as mug
@@ -2308,7 +2317,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
   <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
   color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
     "{_tl("Getting it wrong is part of getting it right. Every incorrect answer comes with an explanation, a full worked solution, and a check on the algebra underneath — so the next attempt starts from a stronger place.",
-           "Equivocarse es parte de acertar. Cada respuesta incorrecta viene con una explicación, la solución completa paso a paso, y una revisión del álgebra subyacente — para que el siguiente intento comience desde un lugar más fuerte.")}"
+           "Equivocarse es parte del proceso. Cada vez que no la haces, recibes una explicación de dónde te perdiste, la solución completa paso a paso, y un repaso del álgebra que necesitas — para que el siguiente intento salga desde un lugar más sólido.")}"
   </p>
 </div>
 """, unsafe_allow_html=True)
@@ -2354,23 +2363,23 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         # 1. Name / ID with optional geeky username
         name_mode = st.radio(
             "name mode",
-            [_tl("Use my name or ID","Usar mi nombre o ID"),
-             _tl("Give me a geeky username 🤓","Dame un nombre geek 🤓")],
+            [_tl("Use my name or student ID","Usar mi nombre o ID de estudiante"),
+             _tl("Generate a fun username","Generar un nombre divertido")],
             horizontal=True, key="name_mode", label_visibility="collapsed"
         )
 
-        if name_mode == _tl("Give me a geeky username 🤓","Dame un nombre geek 🤓"):
+        if name_mode == _tl("Generate a fun username","Generar un nombre divertido"):
             import random as _rnd
-            _adj = ["Quantum","Infinite","Divergent","Continuous","Transcendent",
-                    "Irrational","Fibonacci","Euler","Riemann","Laplace",
-                    "Gradient","Asymptotic","Polar","Tangent","Harmonic"]
-            _nou = ["Integral","Derivative","Limit","Vector","Matrix",
-                    "Theorem","Sigma","Pi","Lambda","Delta",
-                    "Cosine","Cipher","Vertex","Orbit","Kernel"]
+            _adj = ["Rogue","Sneaky","Turbo","Spicy","Cosmic","Rebel","Savage",
+                    "Sleepy","Wobbly","Mysterious","Epic","Tiny","Grumpy",
+                    "Chaotic","Radical"]
+            _nou = ["Integral","Cactus","Sandwich","Theorem","Banana",
+                    "Llama","Penguin","Noodle","Waffle","Burrito",
+                    "Derivative","Taco","Pickle","Pi","Avocado"]
             if "generated_username" not in st.session_state:
                 import random as _r2
                 st.session_state.generated_username = (
-                    f"{_r2.choice(_adj)}{_r2.choice(_nou)}{_r2.randint(42,999)}"
+                    f"{_r2.choice(_adj)}{_r2.choice(_nou)}{_r2.randint(10,99)}"
                 )
             col_un, col_re = st.columns([3,1])
             with col_un:
@@ -2384,7 +2393,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                 if st.button(_tl("New","Otro"), key="regen_username"):
                     import random as _r3
                     st.session_state.generated_username = (
-                        f"{_r3.choice(_adj)}{_r3.choice(_nou)}{_r3.randint(42,999)}"
+                        f"{_r3.choice(_adj)}{_r3.choice(_nou)}{_r3.randint(10,99)}"
                     )
                     st.rerun()
             student_id = st.session_state.generated_username
@@ -2496,19 +2505,19 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     st.session_state.current_lang  = lang
 
                     welcome_msg = (
-                        f"Hi {sid}! I am your Calculus 1 tutor. "
+                        f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
                         f"You have **{format_duration(remaining)}** of study time this week.\n\n"
                         f"- Type **challenge** for a practice problem\n"
                         f"- Ask me **any calculus question**\n"
                         f"- Upload a **photo** of your handwritten work as an answer\n"
-                        f"- Type **bye** when done to see your report and take-home set"
+                        f"- Type **bye** when done to see your session report"
                         if lang == "en" else
-                        f"Hola {sid}! Soy tu tutor de Cálculo 1. "
+                        f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
                         f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
                         f"- Escribe **reto** para un problema de práctica\n"
                         f"- Hazme **cualquier pregunta de cálculo**\n"
                         f"- Sube una **foto** de tu trabajo escrito\n"
-                        f"- Escribe **bye** para terminar y ver tu reporte"
+                        f"- Escribe **bye** para terminar y ver tu reporte de sesión"
                     )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
@@ -2740,21 +2749,34 @@ elif st.session_state.screen == "chat":
             )
 
     # ── Chat header ───────────────────────────────────────────────────────────
-    st.markdown(
-        '<p class="app-title" style="font-size:1.15rem;margin-bottom:0.2rem;">'
-        'Canelita con Profe Contreras</p>',
+    head_left, head_right = st.columns([5, 1])
+    with head_left:
+        st.markdown(
+            '<p class="app-title" style="font-size:1.15rem;margin-bottom:0.2rem;">'
+            'Canelita con Profe Contreras</p>',
         unsafe_allow_html=True
-    )
-    st.markdown(
-        '<p style="font-size:0.82rem;font-weight:400;color:inherit;opacity:0.7;margin:0 0 0.1rem 0;">'
-        'Your personal Calc 1 tutor</p>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        '<p class="app-sub" style="margin-bottom:0.8rem;">'
-        'Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</p>',
-        unsafe_allow_html=True
-    )
+        )
+        st.markdown(
+            '<p style="font-size:0.82rem;font-weight:400;color:inherit;opacity:0.7;margin:0 0 0.1rem 0;">'
+            'Your Calculus 1 learning partner</p>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<p class="app-sub" style="margin-bottom:0.5rem;">'
+            'Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</p>',
+            unsafe_allow_html=True
+        )
+    with head_right:
+        if st.button("🏠 Home", key="home_btn_top", use_container_width=True,
+                     help="Return to home screen"):
+            keep = {k: st.session_state[k] for k in
+                    ["all_usage"] if k in st.session_state}
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            for k, v in keep.items():
+                st.session_state[k] = v
+            st.session_state.screen = "welcome"
+            st.rerun()
 
     # ── Semillitas welcome banner — always visible at top of chat ───────────
     lang_now  = st.session_state.get("current_lang","en")
@@ -2967,9 +2989,7 @@ elif st.session_state.screen == "chat":
                         )
 
     # ── Session ended: report ─────────────────────────────────────────────────
-    if st.session_state.session_ended and (
-        not st.session_state.usage_saved or st.session_state.get("vuelo_html")
-    ):
+    if st.session_state.session_ended and not st.session_state.usage_saved:
         if not st.session_state.usage_saved:
             record = saved_record.copy()
             record["minutes_used"] = used_saved + elapsed_min
@@ -3052,88 +3072,6 @@ elif st.session_state.screen == "chat":
             f'</div>',
             unsafe_allow_html=True
         )
-
-        # ── Semillas de Vuelo — take-home practice set ────────────────────
-        st.divider()
-        standards_done = st.session_state.session_standards
-        if standards_done:
-            vuelo_label = (
-                "🌱 Llevar Semillas a Casa — Get my take-home practice set"
-                if lang == "es" else
-                "🌱 Semillas de Vuelo — Take these seeds home"
-            )
-            vuelo_caption = (
-                "Generate a fresh set of similar questions for every standard you practiced today. "
-                "Print it, save it as PDF, and keep growing away from the screen."
-                if lang == "en" else
-                "Genera un nuevo conjunto de preguntas similares para cada estándar que practicaste hoy. "
-                "Imprímelo, guárdalo como PDF, y sigue creciendo lejos de la pantalla."
-            )
-            st.markdown(
-                f'<p style="font-size:0.88rem;line-height:1.6;margin-bottom:0.5rem;">'
-                f'{vuelo_caption}</p>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                '<p style="font-size:0.78rem;color:#00796b;font-weight:600;'
-                'margin-bottom:0.5rem;">+5 Semillas de Vuelo for taking your learning home</p>',
-                unsafe_allow_html=True
-            )
-
-            if not st.session_state.get("vuelo_html"):
-                if st.button(vuelo_label, type="primary", use_container_width=True,
-                             key="vuelo_btn"):
-                    practice_html = None
-                    with st.spinner("Preparing your practice set..." if lang == "en"
-                                    else "Preparando tu conjunto de práctica..."):
-                        try:
-                            practice_html = generate_practice_set_html(
-                                standards_practiced=standards_done,
-                                difficulty=st.session_state.difficulty,
-                                language=lang,
-                                student_name=st.session_state.student_id
-                            )
-                        except Exception as e:
-                            st.error(f"Could not generate practice set: {e}")
-
-                    if practice_html:
-                        # Store in session state — no rerun, download renders immediately
-                        st.session_state.vuelo_html  = practice_html
-                        st.session_state.vuelo_week  = get_current_week()
-                        au = st.session_state.get("all_usage", {})
-                        sid_v = st.session_state.get("student_id", "guest")
-                        au, vuelo_total = award_semillas(
-                            sid_v, "vuelo", SEMILLA_VALUES["vuelo"], au
-                        )
-                        st.session_state.all_usage        = au
-                        st.session_state.vuelo_total      = vuelo_total
-                        st.session_state.session_semillas += SEMILLA_VALUES["vuelo"]
-                        # No st.rerun() — let Streamlit re-render naturally
-                        # The download button renders below on the same pass
-
-            # Download button — always rendered when vuelo_html is set
-            if st.session_state.get("vuelo_html"):
-                vuelo_total = st.session_state.get("vuelo_total", "")
-                st.markdown(
-                    f'<div style="margin:0.4rem 0;padding:0.5rem 0.9rem;'
-                    f'background:rgba(0,121,107,0.08);border-radius:6px;">'
-                    f'<span style="font-size:0.95rem;font-weight:600;color:#00796b;">'
-                    f'🌱🌱🌱🌱🌱 +5 Semillas de Vuelo · Total: {vuelo_total}</span>'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
-                st.download_button(
-                    label="⬇  Download practice set — open in browser, then Print → Save as PDF",
-                    data=st.session_state.vuelo_html,
-                    file_name=f"practice_set_{st.session_state.get('vuelo_week', get_current_week())}.html",
-                    mime="text/html",
-                    key="vuelo_download",
-                    use_container_width=True
-                )
-        else:
-            st.caption("Complete at least one challenge to unlock your take-home set."
-                       if lang == "en" else
-                       "Completa al menos un reto para desbloquear tu conjunto de práctica.")
 
         if st.button("Start a new session"):
             for key in list(st.session_state.keys()):

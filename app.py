@@ -1037,22 +1037,11 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"Question:"
     )
 
-    # Build conversation history for context (last 6 turns)
-    api_messages = []
-    if history:
-        for h in history[-6:]:
-            role    = h.get("role", "user")
-            content = h.get("content", "")
-            # Only pass plain text turns — skip grading objects
-            if isinstance(content, str) and content.strip():
-                api_messages.append({"role": role, "content": content[:800]})
-    api_messages.append({"role": "user", "content": prompt})
-
     response = client.messages.create(
         model=SONNET_MODEL,
         max_tokens=500,
         system=CULTURAL_SYSTEM_PROMPT,
-        messages=api_messages
+        messages=[{"role": "user", "content": prompt}]
     )
     question_text = response.content[0].text.strip()
 

@@ -1037,11 +1037,22 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"Question:"
     )
 
+    # Build conversation history for context (last 6 turns)
+    api_messages = []
+    if history:
+        for h in history[-6:]:
+            role    = h.get("role", "user")
+            content = h.get("content", "")
+            # Only pass plain text turns — skip grading objects
+            if isinstance(content, str) and content.strip():
+                api_messages.append({"role": role, "content": content[:800]})
+    api_messages.append({"role": "user", "content": prompt})
+
     response = client.messages.create(
         model=SONNET_MODEL,
-        max_tokens=400,
+        max_tokens=500,
         system=CULTURAL_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}]
+        messages=api_messages
     )
     question_text = response.content[0].text.strip()
 
@@ -1203,7 +1214,7 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
 
 
 # ── AI: open chat tutor response (Sonnet) ─────────────────────────────────────
-def get_chat_response(user_input, intent_tag, language="en"):
+def get_chat_response(user_input, intent_tag, language="en", history=None):
     """Generate a tutoring reply for an open-ended question."""
     # For social turns, use canned responses (no API cost)
     if intent_tag in ["greeting", "goodbye", "thanks"]:
@@ -1225,10 +1236,19 @@ def get_chat_response(user_input, intent_tag, language="en"):
             f"Keep the response to 4-6 sentences. Use LaTeX $...$ for any math."
         )
         try:
+            # Include recent history so follow-up questions have context
+            fb_messages = []
+            if history:
+                for h in (history or [])[-4:]:
+                    role    = h.get("role", "user")
+                    content = h.get("content", "")
+                    if isinstance(content, str) and content.strip():
+                        fb_messages.append({"role": role, "content": content[:600]})
+            fb_messages.append({"role": "user", "content": fallback_prompt})
             resp = client.messages.create(
-                model=SONNET_MODEL, max_tokens=400,
+                model=SONNET_MODEL, max_tokens=500,
                 system=CULTURAL_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": fallback_prompt}]
+                messages=fb_messages
             )
             return resp.content[0].text.strip()
         except Exception:
@@ -1257,11 +1277,22 @@ def get_chat_response(user_input, intent_tag, language="en"):
         f"End with one growth mindset sentence and suggest typing 'quiz' to practice."
     )
 
+    # Build conversation history for context (last 6 turns)
+    api_messages = []
+    if history:
+        for h in history[-6:]:
+            role    = h.get("role", "user")
+            content = h.get("content", "")
+            # Only pass plain text turns — skip grading objects
+            if isinstance(content, str) and content.strip():
+                api_messages.append({"role": role, "content": content[:800]})
+    api_messages.append({"role": "user", "content": prompt})
+
     response = client.messages.create(
         model=SONNET_MODEL,
-        max_tokens=400,
+        max_tokens=500,
         system=CULTURAL_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}]
+        messages=api_messages
     )
     return response.content[0].text.strip()
 
@@ -1981,6 +2012,178 @@ def build_session_report_html(student_name, messages, session_score,
     return html
 
 
+def build_standards_checklist_html(student_name, std_progress, language="en"):
+    """
+    Build a printable HTML checklist of all 25 C-ID MATH 210 standards
+    with subskills and mastery status for the student.
+    """
+    week = get_current_week()
+    title_txt = (f"Standards Checklist — {student_name}"
+                 if language == "en" else
+                 f"Lista de Estándares — {student_name}")
+
+    unit_names = {
+        1: ("Unit 1 — Limits & Continuity",          "Unidad 1 — Límites y Continuidad"),
+        2: ("Unit 2 — Derivatives",                   "Unidad 2 — Derivadas"),
+        3: ("Unit 3 — Applications of Derivatives",   "Unidad 3 — Aplicaciones de Derivadas"),
+        4: ("Unit 4 — Integration",                   "Unidad 4 — Integración"),
+        5: ("Unit 5 — Applications of Integration",   "Unidad 5 — Aplicaciones de Integración"),
+    }
+
+    # Count totals
+    total = len(STANDARDS_MAP)
+    mastered  = sum(1 for v in std_progress.values() if v.get("best_score",0) == 3)
+    attempted = sum(1 for v in std_progress.values() if v.get("best_score",-1) >= 0)
+    pct = round(mastered/total*100) if total else 0
+
+    # Build unit blocks
+    unit_blocks = ""
+    current_unit = 0
+    for code, data in STANDARDS_MAP.items():
+        if data["unit"] != current_unit:
+            if current_unit > 0:
+                unit_blocks += "</div>"
+            current_unit = data["unit"]
+            u_en, u_es = unit_names[current_unit]
+            u_name = u_es if language == "es" else u_en
+            unit_blocks += f'<div class="unit-block"><h3>{u_name}</h3>'
+
+        entry     = std_progress.get(code, {})
+        best      = entry.get("best_score", -1)
+        attempts  = entry.get("attempts", 0)
+
+        if best == 3:
+            status_cls  = "mastered"
+            status_icon = "✓"
+            status_lbl  = "Mastered" if language == "en" else "Dominado"
+        elif best >= 1:
+            status_cls  = "progress"
+            status_icon = "◐"
+            status_lbl  = "In progress" if language == "en" else "En progreso"
+        else:
+            status_cls  = "not-yet"
+            status_icon = "○"
+            status_lbl  = "Not yet" if language == "en" else "Pendiente"
+
+        attempts_txt = (f"{attempts} attempt{'s' if attempts != 1 else ''}"
+                        if language == "en" else
+                        f"{attempts} intento{'s' if attempts != 1 else ''}")
+
+        # Subskills checklist
+        skills_html = ""
+        for skill in data.get("skills", []):
+            skills_html += (f'<li class="skill-item">'
+                            f'<span class="skill-box">□</span> {skill}</li>')
+
+        # Prereqs
+        prereqs_str = ", ".join(data.get("algebra_prereqs", []))
+
+        unit_blocks += f"""
+<div class="std-row {status_cls}">
+  <div class="std-header">
+    <span class="std-badge">{code}</span>
+    <span class="std-topic">{data['topic']}</span>
+    <span class="std-status {status_cls}">{status_icon} {status_lbl}</span>
+    {f'<span class="std-attempts">({attempts_txt})</span>' if attempts > 0 else ''}
+  </div>
+  <div class="prereqs">{'Algebra needed' if language == 'en' else 'Álgebra necesaria'}: {prereqs_str}</div>
+  <ul class="skill-list">{skills_html}</ul>
+</div>"""
+
+    unit_blocks += "</div>"  # close last unit
+
+    poem = SEMILLA_POEM.get(language, SEMILLA_POEM["en"])
+
+    html = f"""<!DOCTYPE html>
+<html lang="{language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title_txt}</title>
+  <style>
+    * {{ box-sizing:border-box; margin:0; padding:0; }}
+    body {{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+            font-size:13px; line-height:1.6; color:#1f2937; background:#fff;
+            max-width:800px; margin:0 auto; padding:1.5rem 1.25rem 3rem; }}
+    header {{ border-bottom:2px solid #00796b; padding-bottom:0.75rem; margin-bottom:1rem; }}
+    .app-name {{ font-size:1.1rem; font-weight:600; color:#00796b; }}
+    .app-sub {{ font-size:0.75rem; color:#6b7280; margin-top:0.1rem; }}
+    .summary {{ display:flex; gap:1.5rem; margin:0.75rem 0 1.25rem;
+               background:#f0fdf9; border-radius:8px; padding:0.7rem 1rem; }}
+    .stat {{ text-align:center; }}
+    .stat-val {{ font-size:1.2rem; font-weight:600; color:#00796b; }}
+    .stat-lbl {{ font-size:0.65rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; }}
+    .progress-bar {{ background:#e5e7eb; border-radius:4px; height:8px; margin:0.5rem 0 1.25rem; }}
+    .progress-fill {{ background:#00796b; border-radius:4px; height:8px; width:{pct}%; }}
+    .unit-block {{ margin-bottom:1.5rem; page-break-inside:avoid; }}
+    h3 {{ font-size:0.85rem; font-weight:700; color:#00796b; text-transform:uppercase;
+          letter-spacing:0.07em; border-bottom:1px solid #e5e7eb;
+          padding-bottom:0.3rem; margin-bottom:0.6rem; }}
+    .std-row {{ border:1px solid #e5e7eb; border-radius:6px; padding:0.6rem 0.8rem;
+               margin-bottom:0.5rem; page-break-inside:avoid; }}
+    .std-row.mastered {{ border-left:3px solid #00796b; background:#f0fdf9; }}
+    .std-row.progress {{ border-left:3px solid #F59E0B; background:#fffbeb; }}
+    .std-row.not-yet  {{ border-left:3px solid #e5e7eb; }}
+    .std-header {{ display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }}
+    .std-badge {{ font-size:0.68rem; font-weight:700; color:#00796b;
+                 background:#f0fdf9; border:1px solid #99f6e4;
+                 border-radius:4px; padding:1px 5px; flex-shrink:0; }}
+    .std-topic {{ font-size:0.82rem; font-weight:600; color:#1f2937; flex:1; }}
+    .std-status {{ font-size:0.72rem; font-weight:600; flex-shrink:0; }}
+    .std-status.mastered {{ color:#00796b; }}
+    .std-status.progress {{ color:#92400e; }}
+    .std-status.not-yet  {{ color:#9ca3af; }}
+    .std-attempts {{ font-size:0.68rem; color:#9ca3af; }}
+    .prereqs {{ font-size:0.7rem; color:#6b7280; margin:0.3rem 0 0.2rem; }}
+    .skill-list {{ list-style:none; padding:0; margin:0.2rem 0 0 0.5rem; }}
+    .skill-item {{ font-size:0.75rem; color:#374151; display:flex;
+                  align-items:baseline; gap:0.4rem; margin-bottom:0.1rem; }}
+    .skill-box {{ font-size:0.9rem; color:#9ca3af; flex-shrink:0; }}
+    .semilla-card {{ margin:1.5rem 0; padding:0.9rem 1.1rem;
+                    background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));
+                    border-radius:10px; border:1px solid rgba(0,121,107,0.2); }}
+    .semilla-poem {{ font-size:0.83rem; font-style:italic; color:#065f46; line-height:1.7; }}
+    footer {{ margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb;
+              font-size:0.68rem; color:#9ca3af; text-align:center; line-height:1.8; }}
+    @media print {{
+      body {{ padding:0.5rem; font-size:11px; }}
+      .std-row {{ page-break-inside:avoid; }}
+      .unit-block {{ page-break-inside:avoid; }}
+    }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="app-name">Canelita con Profe Contreras</div>
+    <div class="app-sub">C-ID MATH 210 — 25 Standards &nbsp;·&nbsp; {student_name} &nbsp;·&nbsp; {week}</div>
+  </header>
+
+  <div class="summary">
+    <div class="stat"><div class="stat-val">{mastered}/{total}</div><div class="stat-lbl">{'Mastered' if language=='en' else 'Dominados'}</div></div>
+    <div class="stat"><div class="stat-val">{attempted}</div><div class="stat-lbl">{'Attempted' if language=='en' else 'Intentados'}</div></div>
+    <div class="stat"><div class="stat-val">{total - attempted}</div><div class="stat-lbl">{'Not yet' if language=='en' else 'Pendientes'}</div></div>
+    <div class="stat"><div class="stat-val">{pct}%</div><div class="stat-lbl">{'Complete' if language=='en' else 'Completo'}</div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill"></div></div>
+
+  {unit_blocks}
+
+  <div class="semilla-card">
+    <div class="semilla-poem">🌱 {poem}</div>
+  </div>
+
+  <footer>
+    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {student_name}<br>
+    <strong>{'Save as PDF' if language=='en' else 'Guardar como PDF'}:</strong>
+    {'iPhone/iPad: Share → Print → pinch to zoom | Mac/PC: File → Print → Save as PDF'
+     if language=='en' else
+     'iPhone/iPad: Compartir → Imprimir → pellizcar vista previa | Mac/PC: Archivo → Imprimir → Guardar como PDF'}
+  </footer>
+</body>
+</html>"""
+    return html
+
+
 def init_session_state():
     """Initialize all Streamlit session state variables on first load."""
     defaults = {
@@ -2452,13 +2655,24 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             key="welcome_diff"
         )
 
-        # 5. Number of questions
-        num_q = st.selectbox(
-            "4. Questions per session / Preguntas por sesión",
-            [1, 2, 3, 4, 5],
-            index=2,
-            key="welcome_numq"
+        # 4. Session mode — challenge or tutor chat, with question count if challenge
+        session_mode_choice = st.selectbox(
+            _tl("4. What would you like to do?", "4. ¿Qué quieres hacer?"),
+            [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
+             _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas")],
+            key="welcome_mode_choice"
         )
+        tutor_chat_mode = session_mode_choice.startswith(_tl("Tutor", "Chat"))
+
+        if not tutor_chat_mode:
+            num_q = st.selectbox(
+                _tl("   How many questions?", "   ¿Cuántas preguntas?"),
+                [1, 2, 3, 4, 5],
+                index=2,
+                key="welcome_numq"
+            )
+        else:
+            num_q = 0
 
         st.write("")
         start_clicked = st.button(
@@ -2504,21 +2718,31 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     lang = "es" if st.session_state.language == "es" else "en"
                     st.session_state.current_lang  = lang
 
-                    welcome_msg = (
-                        f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
-                        f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                        f"- Type **challenge** for a practice problem\n"
-                        f"- Ask me **any calculus question**\n"
-                        f"- Upload a **photo** of your handwritten work as an answer\n"
-                        f"- Type **bye** when done to see your session report"
-                        if lang == "en" else
-                        f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
-                        f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                        f"- Escribe **reto** para un problema de práctica\n"
-                        f"- Hazme **cualquier pregunta de cálculo**\n"
-                        f"- Sube una **foto** de tu trabajo escrito\n"
-                        f"- Escribe **bye** para terminar y ver tu reporte de sesión"
-                    )
+                    if tutor_chat_mode:
+                        welcome_msg = (
+                            f"Hi {sid}! Ask me anything about Calculus 1 — "
+                            f"concepts, worked examples, or where you're stuck. "
+                            f"You have **{format_duration(remaining)}** this week. What's on your mind?"
+                            if lang == "en" else
+                            f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
+                            f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
+                        )
+                    else:
+                        welcome_msg = (
+                            f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
+                            f"You have **{format_duration(remaining)}** of study time this week.\n\n"
+                            f"- Type **challenge** for a practice problem\n"
+                            f"- Ask me **any calculus question**\n"
+                            f"- Upload a **photo** of your handwritten work as an answer\n"
+                            f"- Type **bye** when done to see your session report"
+                            if lang == "en" else
+                            f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
+                            f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
+                            f"- Escribe **reto** para un problema de práctica\n"
+                            f"- Hazme **cualquier pregunta de cálculo**\n"
+                            f"- Sube una **foto** de tu trabajo escrito\n"
+                            f"- Escribe **bye** para terminar y ver tu reporte de sesión"
+                        )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
                     })
@@ -2671,6 +2895,47 @@ elif st.session_state.screen == "chat":
                 st.caption(f"· {t.replace('_',' ').title()}")
         if st.session_state.session_standards:
             st.caption("Standards: " + ", ".join(st.session_state.session_standards))
+
+        # ── Standards mastery tracker ──────────────────────────────────────
+        st.divider()
+        all_usage_sb  = st.session_state.get("all_usage", {})
+        sid_sb        = st.session_state.get("student_id", "")
+        std_prog      = all_usage_sb.get(f"{sid_sb}_standards", {})
+        total_stds    = len(STANDARDS_MAP)
+        mastered_n    = sum(1 for v in std_prog.values() if v.get("best_score",0) == 3)
+        attempted_n   = len(std_prog)
+
+        st.caption(f"📊 {mastered_n}/{total_stds} standards mastered")
+        st.progress(mastered_n / total_stds if total_stds else 0)
+
+        dot_html = '<div style="display:flex;flex-wrap:wrap;gap:3px;margin:0.3rem 0;">'
+        for code in STANDARDS_MAP.keys():
+            entry = std_prog.get(code, {})
+            best  = entry.get("best_score", -1)
+            if best == 3:
+                color, title = "#00796b", f"{code} ✓"
+            elif best >= 1:
+                color, title = "#F59E0B", f"{code} in progress"
+            else:
+                color, title = "#e5e7eb", f"{code}"
+            dot_html += (f'<div title="{title}" style="width:10px;height:10px;' +
+                          f'border-radius:2px;background:{color};flex-shrink:0;"></div>')
+        dot_html += ('</div><div style="font-size:0.62rem;color:inherit;opacity:0.5;margin-top:0.1rem;">' +
+                      '<span style="color:#00796b;">■</span> mastered &nbsp;' +
+                      '<span style="color:#F59E0B;">■</span> in progress &nbsp;' +
+                      '<span style="color:#e5e7eb;">■</span> not yet</div>')
+        st.markdown(dot_html, unsafe_allow_html=True)
+
+        if std_prog:
+            lang_cb = st.session_state.get("current_lang","en")
+            st.download_button(
+                label="📋 My standards checklist",
+                data=build_standards_checklist_html(sid_sb, std_prog, lang_cb),
+                file_name=f"standards_checklist_{sid_sb}.html",
+                mime="text/html",
+                key="checklist_dl",
+                use_container_width=True
+            )
 
         st.divider()
         st.caption("Settings")
@@ -3316,7 +3581,8 @@ elif st.session_state.screen == "chat":
                                           "fallback","challenge_request"] and \
                        intent_tag not in st.session_state.session_topics:
                         st.session_state.session_topics.append(intent_tag)
-                    response = get_chat_response(user_input, intent_tag, lang)
+                    response = get_chat_response(user_input, intent_tag, lang,
+                                                    history=st.session_state.messages)
                     st.session_state.session_calls += 1
                     st.session_state.messages.append({
                         "role":"assistant", "type":"chat", "content": response

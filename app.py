@@ -1043,17 +1043,12 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
 def _parse_grading_json(raw):
     """
     Parse the {score, feedback, algebra_gap, full_solution} JSON Claude returns
-    when grading an answer. LaTeX in full_solution (\\frac, \\cdot, \\int, ...)
-    sometimes reaches us with single, un-doubled backslashes, which is not valid
-    JSON string escaping and makes json.loads fail on the first try.
-
-    When that happens we retry after doubling every backslash in the text --
-    this round-trips any raw LaTeX backslash back to exactly what it was
-    (whether or not it happened to collide with a JSON escape letter like
-    f/n/r/t/b/u, which ordinary LaTeX macros such as \\frac, \\tan, \\theta,
-    \\nabla, \\rho, \\upsilon, \\binom all do). Only if that still fails do we
-    fall back to pulling each field out by hand -- so a parsing hiccup never
-    shows the student a raw, unformatted JSON blob where their worked
+    when grading an answer. LaTeX in full_solution sometimes reaches us with
+    single, un-doubled backslashes, which is not valid JSON string escaping and
+    makes json.loads fail on the first try. We retry after doubling every
+    backslash (round-trips raw LaTeX like \\frac, \\tan, \\theta back to exactly
+    what it was), and only as a last resort pull each field out by hand -- so a
+    parsing hiccup never shows the student a raw JSON blob where their worked
     solution should be.
     """
     import re as _re
@@ -1067,12 +1062,10 @@ def _parse_grading_json(raw):
         except Exception:
             return None
 
-    # 1) Well-formed responses parse here -- real newlines stay real newlines.
     result = _try(raw)
     if isinstance(result, dict):
         return result
 
-    # 2) Repair raw LaTeX backslashes and retry.
     candidate = raw
     match = _re.search(r'\{[\s\S]*\}', raw)
     if match:
@@ -1080,8 +1073,6 @@ def _parse_grading_json(raw):
     result = _try(_double_backslashes(candidate))
     repaired = isinstance(result, dict)
 
-    # 3) Last resort: extract each field directly with regex so the student
-    # only ever sees the intended text, never the surrounding JSON syntax.
     if not repaired:
         def _field(name, stop_pattern):
             m = _re.search(rf'"{name}"\s*:\s*"(.*?)"\s*{stop_pattern}', raw, _re.DOTALL)
@@ -1097,8 +1088,6 @@ def _parse_grading_json(raw):
             "full_solution": _field("full_solution", r'"\s*\}') or fallback_note,
         }
 
-    # In both repair paths, any real paragraph breaks the model intended as
-    # "\n" survived as literal two-character text -- restore them for display.
     for key in ("feedback", "full_solution"):
         if isinstance(result.get(key), str):
             result[key] = result[key].replace("\\n", "\n").replace('\\"', '"')
@@ -1264,11 +1253,11 @@ def get_chat_response(user_input, intent_tag, language="en", history=None):
             # Include recent history so follow-up questions have context
             fb_messages = []
             if history:
-                for h in (history or [])[-4:]:
+                for h in (history or [])[-10:]:
                     role    = h.get("role", "user")
                     content = h.get("content", "")
                     if isinstance(content, str) and content.strip():
-                        fb_messages.append({"role": role, "content": content[:600]})
+                        fb_messages.append({"role": role, "content": content[:1000]})
             fb_messages.append({"role": "user", "content": fallback_prompt})
             resp = client.messages.create(
                 model=SONNET_MODEL, max_tokens=500,
@@ -1302,15 +1291,15 @@ def get_chat_response(user_input, intent_tag, language="en", history=None):
         f"End with one growth mindset sentence and suggest typing 'quiz' to practice."
     )
 
-    # Build conversation history for context (last 6 turns)
+    # Build conversation history for context (last 12 turns)
     api_messages = []
     if history:
-        for h in history[-6:]:
+        for h in history[-12:]:
             role    = h.get("role", "user")
             content = h.get("content", "")
             # Only pass plain text turns — skip grading objects
             if isinstance(content, str) and content.strip():
-                api_messages.append({"role": role, "content": content[:800]})
+                api_messages.append({"role": role, "content": content[:1000]})
     api_messages.append({"role": "user", "content": prompt})
 
     response = client.messages.create(
@@ -1320,6 +1309,103 @@ def get_chat_response(user_input, intent_tag, language="en", history=None):
         messages=api_messages
     )
     return response.content[0].text.strip()
+
+
+# ── AI: support conversation on the current question (no grading) ─────────────
+def get_support_response(mode, user_input, q_dict, language="en", history=None):
+    """
+    Ungraded help on the current challenge question.
+      mode "chat":  the student is invited to ask anything; the tutor explains
+                    clearly and keeps inviting the next question.
+      mode "guide": Socratic scaffolding -- the tutor breaks the problem into
+                    small steps, asks ONE small question at a time, and gives
+                    warm, specific feedback on each reply.
+    Passes a generous slice of conversation history so the tutor remembers
+    what has already been discussed.
+    """
+    lang_word = "Spanish" if language == "es" else "English"
+    q_dict    = q_dict or {}
+    question  = q_dict.get("question", "")
+    std_code  = q_dict.get("standard_code", "")
+    topic     = q_dict.get("topic", "")
+    prereqs   = ", ".join(q_dict.get("algebra_prereqs", []))
+
+    if mode == "guide":
+        role_instructions = (
+            "You are guiding the student through this problem step by step, Socratic style.\n"
+            "- Break the problem into small steps and work on ONE small step at a time.\n"
+            "- Ask the student ONE small, answerable question per turn -- never more.\n"
+            "- When they reply, give warm, specific feedback first: name what is right in "
+            "their thinking before addressing anything off track. Then either confirm the "
+            "step and ask the next small question, or rephrase your question even smaller.\n"
+            "- Never solve a step for them when a smaller hint would let them do it.\n"
+            "- If they are stuck after two tries on the same step, show just that one step, "
+            "celebrate the persistence, and hand the next small piece back to them.\n"
+            "- Keep each turn short: 2-4 sentences plus your one question.\n"
+        )
+    else:
+        role_instructions = (
+            "You are having an open, pressure-free conversation about this problem.\n"
+            "- Warmly encourage the student to ask anything -- no question is too small.\n"
+            "- Answer what they ask with clear, complete explanations and tiny examples.\n"
+            "- Connect each idea back to the current problem so the conversation builds "
+            "toward it naturally.\n"
+            "- End most turns by inviting the next question; when the student seems ready, "
+            "gently remind them they can try the problem whenever they like -- and that you "
+            "can also guide them through it step by step if they prefer.\n"
+            "- Keep each turn conversational: 3-6 sentences.\n"
+        )
+
+    prompt = (
+        f"You are a warm, encouraging Calculus 1 tutor. Respond entirely in {lang_word}.\n\n"
+        f"The student is working on this challenge question ({std_code} -- {topic}):\n"
+        f"{question}\n\n"
+        f"Algebra prerequisites: {prereqs}\n\n"
+        f"{role_instructions}"
+        f"\nUse LaTeX $...$ for math. Do NOT give away the final answer to the challenge "
+        f"question itself -- your job is to help the student reach it themselves, and to "
+        f"make sure they always feel you are there to guide them and scaffold the help as "
+        f"much as they need.\n\n"
+        f"Student's latest message: \"{user_input}\""
+    )
+
+    # Generous memory window: last 16 turns, longer excerpts
+    api_messages = []
+    if history:
+        for h in history[-16:]:
+            role    = h.get("role", "user")
+            content = h.get("content", "")
+            if isinstance(content, str) and content.strip():
+                api_messages.append({"role": role, "content": content[:1200]})
+    api_messages.append({"role": "user", "content": prompt})
+
+    # The API wants the first turn to be from the user, and consecutive
+    # same-role turns merged
+    while api_messages and api_messages[0]["role"] != "user":
+        api_messages.pop(0)
+    merged = []
+    for m_turn in api_messages:
+        if merged and merged[-1]["role"] == m_turn["role"]:
+            merged[-1]["content"] += "\n\n" + m_turn["content"]
+        else:
+            merged.append(dict(m_turn))
+
+    try:
+        response = client.messages.create(
+            model=SONNET_MODEL,
+            max_tokens=700,
+            system=CULTURAL_SYSTEM_PROMPT,
+            messages=merged
+        )
+        return response.content[0].text.strip()
+    except Exception:
+        return (
+            "I'm right here with you -- my connection just hiccuped for a moment. "
+            "Ask me that again, or tap \"I'm ready to try the problem\" whenever you like."
+            if language == "en" else
+            "Aquí estoy contigo -- mi conexión falló un momento. "
+            "Pregúntame otra vez, o toca \"Estoy listo\" cuando quieras."
+        )
 
 
 # ── Session state initialization ──────────────────────────────────────────────
@@ -2275,6 +2361,8 @@ def init_session_state():
         "retry_standard":    None,
         "awarded_showed_up": False,
         "showed_semilla_welcome": False,
+        "support_mode":      None,   # None | "chat" | "guide"
+        "difficulty_plan":   ["easy", "medium", "hard"],
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -2715,32 +2803,24 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                 unsafe_allow_html=True
             )
 
-        # 4. Difficulty
-        diff_choice = st.selectbox(
-            "3. Difficulty / Dificultad",
-            ["Random — mix it up", "Easy", "Medium", "Hard"],
-            index=2,
-            key="welcome_diff"
+        # Every session is a challenge round on the chosen standard:
+        # 3 questions of varying difficulty without replacement
+        # (easy -> medium -> hard), with worked examples, open chat,
+        # and step-by-step guidance available on every question.
+        num_q = 3
+        st.markdown(
+            '<p style="font-size:0.85rem;color:inherit;opacity:0.78;'
+            'line-height:1.6;margin:0.4rem 0 0.5rem;">' +
+            _tl("You'll get <strong>3 questions</strong> — one easy, one medium, "
+                "one hard. On every question you can see a worked example, chat "
+                "about the idea, or have me guide you step by step. "
+                "You're never on your own here.",
+                "Tendrás <strong>3 preguntas</strong> — una fácil, una media y una "
+                "difícil. En cada pregunta puedes ver un ejemplo resuelto, platicar "
+                "sobre la idea, o dejar que te guíe paso a paso. "
+                "Nunca estás sola o solo aquí.") + '</p>',
+            unsafe_allow_html=True
         )
-
-        # 4. Session mode — challenge or tutor chat, with question count if challenge
-        session_mode_choice = st.selectbox(
-            _tl("4. What would you like to do?", "4. ¿Qué quieres hacer?"),
-            [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
-             _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas")],
-            key="welcome_mode_choice"
-        )
-        tutor_chat_mode = session_mode_choice.startswith(_tl("Tutor", "Chat"))
-
-        if not tutor_chat_mode:
-            num_q = st.selectbox(
-                _tl("   How many questions?", "   ¿Cuántas preguntas?"),
-                [1, 2, 3, 4, 5],
-                index=2,
-                key="welcome_numq"
-            )
-        else:
-            num_q = 0
 
         st.write("")
         start_clicked = st.button(
@@ -2772,45 +2852,45 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     )
                 else:
                     lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
-                    diff_map = {
-                        "Random — mix it up": random.choice(["easy","medium","hard"]),
-                        "Easy": "easy", "Medium": "medium", "Hard": "hard"
-                    }
+                    # Three questions of varying difficulty, without
+                    # replacement: one easy, one medium, one hard — in that
+                    # order, so each question builds on the last.
+                    st.session_state.difficulty_plan = ["easy", "medium", "hard"]
 
                     st.session_state.student_id    = sid
                     st.session_state.language      = lang_map[lang_choice]
-                    st.session_state.difficulty    = diff_map[diff_choice]
+                    st.session_state.difficulty    = st.session_state.difficulty_plan[0]
                     st.session_state.num_questions = num_q
                     st.session_state.session_start = time.time()
                     st.session_state.screen        = "chat"
                     lang = "es" if st.session_state.language == "es" else "en"
                     st.session_state.current_lang  = lang
 
-                    if tutor_chat_mode:
-                        welcome_msg = (
-                            f"Hi {sid}! Ask me anything about Calculus 1 — "
-                            f"concepts, worked examples, or where you're stuck. "
-                            f"You have **{format_duration(remaining)}** this week. What's on your mind?"
-                            if lang == "en" else
-                            f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
-                            f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
-                        )
-                    else:
-                        welcome_msg = (
-                            f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
-                            f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                            f"- Type **challenge** for a practice problem\n"
-                            f"- Ask me **any calculus question**\n"
-                            f"- Upload a **photo** of your handwritten work as an answer\n"
-                            f"- Type **bye** when done to see your session report"
-                            if lang == "en" else
-                            f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
-                            f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                            f"- Escribe **reto** para un problema de práctica\n"
-                            f"- Hazme **cualquier pregunta de cálculo**\n"
-                            f"- Sube una **foto** de tu trabajo escrito\n"
-                            f"- Escribe **bye** para terminar y ver tu reporte de sesión"
-                        )
+                    welcome_msg = (
+                        f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
+                        f"You have **{format_duration(remaining)}** of study time this week.\n\n"
+                        f"Here's how today works: **3 questions** — one easy, one medium, "
+                        f"one hard. And I'm right here with you the whole way. "
+                        f"On any question you can:\n\n"
+                        f"- **See a worked example** if you'd like a model to follow\n"
+                        f"- **Chat about it** — ask me anything about the idea first\n"
+                        f"- **Be guided step by step** — we'll break it into small pieces together\n"
+                        f"- Upload a **photo** of your handwritten work as an answer\n"
+                        f"- Type **bye** when done to see your session report\n\n"
+                        f"Ready? Here comes your first question — you've got this."
+                        if lang == "en" else
+                        f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
+                        f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
+                        f"Así funciona hoy: **3 preguntas** — una fácil, una media y una "
+                        f"difícil. Y aquí estoy contigo en todo momento. "
+                        f"En cualquier pregunta puedes:\n\n"
+                        f"- **Ver un ejemplo resuelto** si quieres un modelo a seguir\n"
+                        f"- **Platicar sobre la idea** — pregúntame lo que sea primero\n"
+                        f"- **Dejarte guiar paso a paso** — lo partimos en pedacitos juntos\n"
+                        f"- Subir una **foto** de tu trabajo escrito\n"
+                        f"- Escribir **bye** para terminar y ver tu reporte\n\n"
+                        f"¿Todo listo? Aquí viene tu primera pregunta — tú puedes."
+                    )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
                     })
@@ -3436,14 +3516,115 @@ elif st.session_state.screen == "chat":
                 if st.button("Submit photo as answer", type="primary"):
                     image_submitted = True
 
-        help_clicked = False
-        if st.session_state.quiz_state is not None:
-            _help_lang = st.session_state.get("current_lang", "en")
-            help_clicked = st.button(
-                "Help: I'd like to see a worked example" if _help_lang == "en"
-                else "Ayuda: quiero ver un ejemplo resuelto",
-                key=f"help_{len(st.session_state.messages)}"
+        help_clicked  = False
+        chat_clicked  = False
+        guide_clicked = False
+        ready_clicked = False
+        _sup_lang = st.session_state.get("current_lang", "en")
+        _sup_mode = st.session_state.get("support_mode")
+
+        if st.session_state.quiz_state is not None and _sup_mode is None:
+            st.markdown(
+                '<p class="img-hint">'
+                + ("However you'd like to work on this one, I've got you:"
+                   if _sup_lang == "en" else
+                   "Como quieras trabajar esta pregunta, aquí estoy:")
+                + '</p>',
+                unsafe_allow_html=True
             )
+            _hcol, _ccol, _gcol = st.columns(3)
+            with _hcol:
+                help_clicked = st.button(
+                    "Help: I'd like to see a worked example" if _sup_lang == "en"
+                    else "Ayuda: quiero ver un ejemplo resuelto",
+                    key=f"help_{len(st.session_state.messages)}",
+                    use_container_width=True
+                )
+            with _ccol:
+                chat_clicked = st.button(
+                    "Let's chat about it" if _sup_lang == "en"
+                    else "Platiquemos sobre esto",
+                    key=f"chat_{len(st.session_state.messages)}",
+                    use_container_width=True
+                )
+            with _gcol:
+                guide_clicked = st.button(
+                    "Guide me" if _sup_lang == "en" else "Guíame paso a paso",
+                    key=f"guide_{len(st.session_state.messages)}",
+                    use_container_width=True
+                )
+        elif st.session_state.quiz_state is not None and _sup_mode is not None:
+            st.markdown(
+                '<p class="img-hint">'
+                + ("We're talking it through — the question will wait for you, no rush."
+                   if _sup_lang == "en" else
+                   "Lo estamos platicando — la pregunta te espera, sin prisa.")
+                + '</p>',
+                unsafe_allow_html=True
+            )
+            ready_clicked = st.button(
+                "I'm ready to try the problem" if _sup_lang == "en"
+                else "Estoy listo para intentar el problema",
+                key=f"ready_{len(st.session_state.messages)}",
+                use_container_width=True
+            )
+
+        if chat_clicked or guide_clicked:
+            st.session_state.support_mode = "chat" if chat_clicked else "guide"
+            _q_now = (st.session_state.quiz_state or {}).get("current_question", {})
+            if chat_clicked:
+                _invite = (
+                    "Good thinking — talking it through first is a strong way to work. "
+                    "Ask me anything about this problem or the idea behind it: what a "
+                    "symbol means, why a method works, where to even begin. "
+                    "No question is too small. What would you like to know first?"
+                    if _sup_lang == "en" else
+                    "Buena idea — platicarlo primero es una gran forma de trabajar. "
+                    "Pregúntame lo que sea sobre este problema o la idea detrás: qué "
+                    "significa un símbolo, por qué funciona un método, por dónde empezar. "
+                    "Ninguna pregunta es pequeña. ¿Qué te gustaría saber primero?"
+                )
+                st.session_state.messages.append({
+                    "role": "assistant", "type": "chat", "content": _invite
+                })
+            else:
+                _first_guide = get_support_response(
+                    "guide",
+                    ("Please guide me through this problem step by step."
+                     if _sup_lang == "en" else
+                     "Por favor guíame paso a paso en este problema."),
+                    _q_now, language=_sup_lang,
+                    history=st.session_state.messages,
+                )
+                st.session_state.session_calls += 1
+                _intro = (
+                    "You've got a guide — we'll take this one small step at a time, "
+                    "together. Here we go:\n\n"
+                    if _sup_lang == "en" else
+                    "Ya tienes guía — vamos paso a pasito, juntos. Empezamos:\n\n"
+                )
+                st.session_state.messages.append({
+                    "role": "assistant", "type": "chat",
+                    "content": _intro + _first_guide
+                })
+            st.rerun()
+
+        if ready_clicked:
+            st.session_state.support_mode = None
+            _back_msg = (
+                "That's the spirit — you've done the thinking, now trust it. "
+                "The question is right above: type your answer or upload a photo "
+                "of your work whenever you're ready. And if you'd like to talk more "
+                "first, just tap one of the help options again. You've got this."
+                if _sup_lang == "en" else
+                "Así se hace — ya pensaste, ahora confía. La pregunta está arriba: "
+                "escribe tu respuesta o sube una foto de tu trabajo cuando quieras. "
+                "Y si quieres platicar más, vuelve a tocar una opción de ayuda. Tú puedes."
+            )
+            st.session_state.messages.append({
+                "role": "assistant", "type": "chat", "content": _back_msg
+            })
+            st.rerun()
 
         text_input = st.chat_input(
             "Type your answer, a question, or 'quiz' / 'bye'"
@@ -3457,11 +3638,11 @@ elif st.session_state.screen == "chat":
             user_input = "[Photo answer submitted]"
             from_image = True
         elif help_clicked:
-            # Treat like a pass/blank turn so the supportive "no problem" path
-            # runs and the full worked solution is generated and shown.
+            # Low-pressure path: treated like a pass so the supportive
+            # "no problem" messaging and full worked solution appear.
             user_input = "skip"
-            _help_lang = st.session_state.get("current_lang", "en")
-            display_override = ("Asked to see a worked example" if _help_lang == "en"
+            display_override = ("Asked to see a worked example"
+                                 if _sup_lang == "en"
                                  else "Pidió ver un ejemplo resuelto")
         elif text_input:
             user_input = text_input
@@ -3489,8 +3670,26 @@ elif st.session_state.screen == "chat":
                 "role":"user", "content": display_content, "type":"chat"
             })
 
+            # ── Support conversation (Let's chat / Guide me) ─────────────────
+            if (st.session_state.get("support_mode")
+                    and st.session_state.quiz_state is not None
+                    and not from_image):
+                qs_sup = st.session_state.quiz_state
+                support_reply = get_support_response(
+                    st.session_state.support_mode,
+                    user_input,
+                    qs_sup.get("current_question", {}),
+                    language=lang,
+                    history=st.session_state.messages,
+                )
+                st.session_state.session_calls += 1
+                st.session_state.messages.append({
+                    "role": "assistant", "type": "chat", "content": support_reply
+                })
+
             # ── Quiz answer (text or photo) ───────────────────────────────────
-            if st.session_state.quiz_state is not None or from_image:
+            elif st.session_state.quiz_state is not None or from_image:
+                st.session_state.support_mode = None
                 qs = st.session_state.quiz_state
                 if qs is None:
                     st.rerun()
@@ -3594,8 +3793,14 @@ elif st.session_state.screen == "chat":
                         pool  = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
                                  if topic else list(STANDARDS_MAP.keys()))
                         next_code = random.choice(pool)
+                    # Difficulty plan: 3 questions of varying difficulty
+                    # without replacement (easy -> medium -> hard)
+                    plan = st.session_state.get("difficulty_plan",
+                                                 ["easy", "medium", "hard"])
+                    next_diff = plan[min(qs["q_num"] - 1, len(plan) - 1)]
+                    st.session_state.difficulty = next_diff
                     next_q = quiz_by_standard(
-                        next_code, st.session_state.difficulty, lang
+                        next_code, next_diff, lang
                     )
                     st.session_state.session_calls += 1
                     qs["current_question"] = next_q
@@ -3642,8 +3847,11 @@ elif st.session_state.screen == "chat":
                     pool       = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
                                   if topic else list(STANDARDS_MAP.keys()))
                     first_code = random.choice(pool)
+                    # Fresh round: new 3-question difficulty plan
+                    st.session_state.difficulty_plan = ["easy", "medium", "hard"]
+                    st.session_state.difficulty      = "easy"
                     first_q    = quiz_by_standard(
-                        first_code, st.session_state.difficulty, lang
+                        first_code, "easy", lang
                     )
                     st.session_state.session_calls += 1
                     nq = st.session_state.num_questions

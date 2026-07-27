@@ -2418,6 +2418,25 @@ st.markdown("""
     }
     .time-label { font-size:0.78rem; color:#6b7280; line-height:1.5; }
     .img-hint { font-size:0.78rem; color:#6b7280; font-style:italic; margin-top:0.25rem; }
+    /* Back-and-forth chat: student bubbles on the right, tutor on the left */
+    div[data-testid="stChatMessage"] {
+        border-radius: 14px;
+        padding: 0.55rem 0.85rem;
+        margin-bottom: 0.35rem;
+    }
+    div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        flex-direction: row-reverse;
+        background: rgba(0,121,107,0.10);
+        margin-left: 18%;
+    }
+    div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"])
+        [data-testid="stMarkdownContainer"] {
+        text-align: right;
+    }
+    div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background: rgba(128,128,128,0.05);
+        margin-right: 6%;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3401,6 +3420,22 @@ elif st.session_state.screen == "chat":
                             use_container_width=True
                         )
 
+    # ── Auto-scroll: keep the newest exchange in view ────────────────────────
+    if st.session_state.messages:
+        import streamlit.components.v1 as _components
+        _components.html(
+            '<script>'
+            'const _doc = window.parent.document;'
+            'const _msgs = _doc.querySelectorAll(\'[data-testid="stChatMessage"]\');'
+            'if (_msgs.length > 0) {'
+            '  setTimeout(function () {'
+            '    _msgs[_msgs.length - 1].scrollIntoView({behavior: "smooth", block: "end"});'
+            '  }, 150);'
+            '}'
+            '</script>',
+            height=0,
+        )
+
     # ── Session ended: report ─────────────────────────────────────────────────
     if st.session_state.session_ended and not st.session_state.usage_saved:
         if not st.session_state.usage_saved:
@@ -3648,6 +3683,18 @@ elif st.session_state.screen == "chat":
             user_input = text_input
 
         if user_input:
+            # Echo the student's message right away so it stays visible
+            # while the tutor writes back, with a typing indicator below.
+            _echo_lang = st.session_state.get("current_lang", "en")
+            _echo_text = ("📷 Handwritten answer submitted" if from_image
+                          else display_override if display_override
+                          else user_input)
+            with st.chat_message("user"):
+                st.markdown(_echo_text)
+            with st.chat_message("assistant"):
+                st.markdown("💭 *Thinking...*" if _echo_lang == "en"
+                            else "💭 *Pensando...*")
+
             if st.session_state.language == "auto":
                 lang, intent_tag = detect_language_and_intent(user_input)
             elif st.session_state.language == "es":

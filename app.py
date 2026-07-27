@@ -3438,9 +3438,10 @@ elif st.session_state.screen == "chat":
 
         help_clicked = False
         if st.session_state.quiz_state is not None:
+            _help_lang = st.session_state.get("current_lang", "en")
             help_clicked = st.button(
-                _tl("Help: I'd like to see a worked example",
-                    "Ayuda: quiero ver un ejemplo resuelto"),
+                "Help: I'd like to see a worked example" if _help_lang == "en"
+                else "Ayuda: quiero ver un ejemplo resuelto",
                 key=f"help_{len(st.session_state.messages)}"
             )
 
@@ -3459,8 +3460,9 @@ elif st.session_state.screen == "chat":
             # Treat like a pass/blank turn so the supportive "no problem" path
             # runs and the full worked solution is generated and shown.
             user_input = "skip"
-            display_override = _tl("Asked to see a worked example",
-                                    "Pidió ver un ejemplo resuelto")
+            _help_lang = st.session_state.get("current_lang", "en")
+            display_override = ("Asked to see a worked example" if _help_lang == "en"
+                                 else "Pidió ver un ejemplo resuelto")
         elif text_input:
             user_input = text_input
 

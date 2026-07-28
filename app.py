@@ -2437,6 +2437,47 @@ st.markdown("""
         background: rgba(128,128,128,0.05);
         margin-right: 6%;
     }
+    /* Gentle, safe animations — CSS only, no JS, no performance cost.
+       Every animated element also gets a reduced-motion fallback below. */
+    @keyframes canelitaFadeSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes canelitaPopIn {
+        0%   { opacity: 0; transform: scale(0.85); }
+        60%  { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes canelitaBounceDot {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40%           { transform: translateY(-5px); opacity: 1; }
+    }
+    div[data-testid="stChatMessage"] {
+        animation: canelitaFadeSlideIn 0.35s ease-out;
+    }
+    .score-3, .score-2, .score-1, .score-0 {
+        display: inline-block;
+        animation: canelitaPopIn 0.4s ease-out;
+    }
+    .semilla-award {
+        animation: canelitaPopIn 0.45s ease-out;
+    }
+    .typing-dots { display: inline-flex; gap: 4px; vertical-align: middle; margin-left: 4px; }
+    .typing-dots span {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #00796b; opacity: 0.6;
+        animation: canelitaBounceDot 1.1s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @media (prefers-reduced-motion: reduce) {
+        div[data-testid="stChatMessage"],
+        .score-3, .score-2, .score-1, .score-0,
+        .semilla-award,
+        .typing-dots span {
+            animation: none !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3293,7 +3334,7 @@ elif st.session_state.screen == "chat":
                 # Semilla award
                 if semilla_note:
                     st.markdown(
-                        f'<div style="margin:0.5rem 0;padding:0.5rem 0.9rem;'
+                        f'<div class="semilla-award" style="margin:0.5rem 0;padding:0.5rem 0.9rem;'
                         f'background:rgba(0,121,107,0.06);border-radius:6px;'
                         f'display:inline-block;">'
                         f'<span style="font-size:0.95rem;font-weight:600;'
@@ -3692,8 +3733,12 @@ elif st.session_state.screen == "chat":
             with st.chat_message("user"):
                 st.markdown(_echo_text)
             with st.chat_message("assistant"):
-                st.markdown("💭 *Thinking...*" if _echo_lang == "en"
-                            else "💭 *Pensando...*")
+                _thinking_label = "Thinking" if _echo_lang == "en" else "Pensando"
+                st.markdown(
+                    f'💭 *{_thinking_label}...* '
+                    '<span class="typing-dots"><span></span><span></span><span></span></span>',
+                    unsafe_allow_html=True
+                )
 
             if st.session_state.language == "auto":
                 lang, intent_tag = detect_language_and_intent(user_input)

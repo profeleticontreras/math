@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.DS_Store
+student_usage.json
+.streamlit/secrets.toml

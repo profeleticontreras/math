@@ -109,7 +109,7 @@ CANNED = {
 }
 
 # ── C-ID MATH 210 Learning Standards Map ─────────────────────────────────────
-# All 25 standards with skills, prerequisites, and 8 field connections each
+# All 24 standards with skills, prerequisites, and 8 field connections each
 STANDARDS_MAP = {
     "S-01": {
         "intent_tag": "limits", "unit": 1, "unit_name": "Limits & Continuity",
@@ -1511,14 +1511,14 @@ def build_explanation_html(title, std_code, score_label, question,
       padding: 1.25rem 1rem 3rem;
     }}
     header {{
-      border-bottom: 2px solid #00796b;
+      border-bottom: 2px solid #1e3a5f;
       padding-bottom: 0.75rem;
       margin-bottom: 1.5rem;
     }}
     .app-name {{
       font-size: 1.3rem;
       font-weight: 600;
-      color: #00796b;
+      color: #1e3a5f;
       letter-spacing: -0.01em;
     }}
     .app-sub {{
@@ -1540,9 +1540,9 @@ def build_explanation_html(title, std_code, score_label, question,
       display: inline-block;
       font-size: 0.78rem;
       font-weight: 500;
-      color: #00796b;
-      background: #f0fdf9;
-      border: 1px solid #99f6e4;
+      color: #1e3a5f;
+      background: #fdf3e3;
+      border: 1px solid #e0b988;
       border-radius: 4px;
       padding: 2px 8px;
       margin-left: 0.5rem;
@@ -1572,8 +1572,8 @@ def build_explanation_html(title, std_code, score_label, question,
       overflow-x: auto;
     }}
     .feedback-box {{
-      background: #f0fdf9;
-      border-left: 3px solid #00796b;
+      background: #fdf3e3;
+      border-left: 3px solid #1e3a5f;
       border-radius: 4px;
       padding: 0.75rem 0.9rem;
       white-space: pre-wrap;
@@ -1598,7 +1598,7 @@ def build_explanation_html(title, std_code, score_label, question,
       margin: 0.75rem 0;
     }}
     .mindset {{
-      background: #f0fdf9;
+      background: #fdf3e3;
       border-radius: 6px;
       padding: 0.75rem 1rem;
       font-size: 0.9rem;
@@ -1627,7 +1627,7 @@ def build_explanation_html(title, std_code, score_label, question,
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</div>
+    <div class="app-sub">Your Math, Your Pace, Your Place. &nbsp;·&nbsp; C-ID MATH 210</div>
   </header>
 
   <div>
@@ -1685,13 +1685,13 @@ def build_tutor_html(content):
       max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 3rem;
     }}
     header {{
-      border-bottom: 2px solid #00796b;
+      border-bottom: 2px solid #1e3a5f;
       padding-bottom: 0.75rem; margin-bottom: 1.5rem;
     }}
-    .app-name {{ font-size: 1.2rem; font-weight: 600; color: #00796b; }}
+    .app-name {{ font-size: 1.2rem; font-weight: 600; color: #1e3a5f; }}
     .app-sub {{ font-size: 0.8rem; color: #6b7280; margin-top: 0.1rem; }}
     .response {{
-      background: #f9fafb; border-left: 3px solid #00796b;
+      background: #f9fafb; border-left: 3px solid #1e3a5f;
       border-radius: 4px; padding: 1rem 1.2rem;
       white-space: pre-wrap; margin-top: 1rem;
     }}
@@ -1706,7 +1706,7 @@ def build_tutor_html(content):
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place.</div>
+    <div class="app-sub">Your Math, Your Pace, Your Place.</div>
   </header>
   <div class="response">{content}</div>
   <footer>
@@ -1808,15 +1808,15 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
       padding: 1.5rem 1.25rem 3rem;
     }}
     header {{
-      border-bottom: 2px solid #00796b;
+      border-bottom: 2px solid #1e3a5f;
       padding-bottom: 0.75rem;
       margin-bottom: 1.25rem;
     }}
-    .app-name {{ font-size: 1.15rem; font-weight: 600; color: #00796b; }}
+    .app-name {{ font-size: 1.15rem; font-weight: 600; color: #1e3a5f; }}
     .app-sub  {{ font-size: 0.78rem; color: #6b7280; margin-top: 0.1rem; }}
     .intro {{
-      background: rgba(0,121,107,0.07);
-      border-left: 3px solid #00796b;
+      background: rgba(30,58,95,0.07);
+      border-left: 3px solid #1e3a5f;
       border-radius: 4px;
       padding: 0.7rem 0.9rem;
       font-size: 0.88rem;
@@ -1826,7 +1826,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
     }}
     .semilla-note {{
       font-size: 0.82rem;
-      color: #00796b;
+      color: #1e3a5f;
       font-weight: 600;
       margin-bottom: 1.25rem;
     }}
@@ -1846,7 +1846,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
     .q-num {{
       font-size: 0.75rem;
       font-weight: 700;
-      background: #00796b;
+      background: #1e3a5f;
       color: #fff;
       border-radius: 50%;
       width: 22px;
@@ -1859,9 +1859,9 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
     .q-std {{
       font-size: 0.72rem;
       font-weight: 600;
-      color: #00796b;
-      background: #f0fdf9;
-      border: 1px solid #99f6e4;
+      color: #1e3a5f;
+      background: #fdf3e3;
+      border: 1px solid #e0b988;
       border-radius: 4px;
       padding: 1px 6px;
     }}
@@ -1910,7 +1910,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">Your Math, Your Pace, Your Place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="intro">{header_note}</div>
@@ -2027,24 +2027,24 @@ def build_session_report_html(student_name, messages, session_score,
     body {{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             font-size:15px; line-height:1.7; color:#1f2937; background:#fff;
             max-width:720px; margin:0 auto; padding:1.5rem 1.25rem 3rem; }}
-    header {{ border-bottom:2px solid #00796b; padding-bottom:0.75rem; margin-bottom:1.25rem; }}
-    .app-name {{ font-size:1.15rem; font-weight:600; color:#00796b; }}
+    header {{ border-bottom:2px solid #1e3a5f; padding-bottom:0.75rem; margin-bottom:1.25rem; }}
+    .app-name {{ font-size:1.15rem; font-weight:600; color:#1e3a5f; }}
     .app-sub {{ font-size:0.78rem; color:#6b7280; margin-top:0.1rem; }}
     .stats {{ display:flex; gap:1.5rem; margin:1rem 0 1.5rem;
-              background:#f0fdf9; border-radius:8px; padding:0.8rem 1rem; }}
+              background:#fdf3e3; border-radius:8px; padding:0.8rem 1rem; }}
     .stat {{ text-align:center; }}
-    .stat-val {{ font-size:1.3rem; font-weight:600; color:#00796b; }}
+    .stat-val {{ font-size:1.3rem; font-weight:600; color:#1e3a5f; }}
     .stat-lbl {{ font-size:0.7rem; color:#6b7280; text-transform:uppercase;
                  letter-spacing:0.06em; }}
     .q-block {{ border:1px solid #e5e7eb; border-radius:8px;
                 padding:1rem 1.1rem; margin-bottom:1.5rem;
                 page-break-inside:avoid; }}
     .q-header {{ display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem; }}
-    .q-num {{ font-size:0.72rem; font-weight:700; background:#00796b; color:#fff;
+    .q-num {{ font-size:0.72rem; font-weight:700; background:#1e3a5f; color:#fff;
               border-radius:50%; width:22px; height:22px; display:flex;
               align-items:center; justify-content:center; flex-shrink:0; }}
-    .q-std {{ font-size:0.72rem; font-weight:600; color:#00796b;
-              background:#f0fdf9; border:1px solid #99f6e4;
+    .q-std {{ font-size:0.72rem; font-weight:600; color:#1e3a5f;
+              background:#fdf3e3; border:1px solid #e0b988;
               border-radius:4px; padding:1px 6px; }}
     .score-badge {{ font-size:0.8rem; font-weight:600; border-radius:12px;
                    padding:2px 9px; }}
@@ -2053,7 +2053,7 @@ def build_session_report_html(student_name, messages, session_score,
     .q-body {{ background:#f9fafb; border-left:3px solid #e5e7eb;
                border-radius:4px; padding:0.65rem 0.8rem;
                word-break:break-word; overflow-x:auto; }}
-    .feedback-box {{ background:#f0fdf9; border-left:3px solid #00796b;
+    .feedback-box {{ background:#fdf3e3; border-left:3px solid #1e3a5f;
                      border-radius:4px; padding:0.65rem 0.8rem;
                      word-break:break-word; }}
     .solution-box {{ background:#fafafa; border:1px solid #e5e7eb;
@@ -2061,12 +2061,12 @@ def build_session_report_html(student_name, messages, session_score,
                      word-break:break-word; overflow-x:auto; line-height:1.85; }}
     .solution-box p {{ margin:0.35rem 0; }}
     .mindset-box {{ margin-top:0.6rem; padding:0.6rem 0.8rem;
-                    background:rgba(0,121,107,0.07); border-radius:6px;
+                    background:rgba(30,58,95,0.07); border-radius:6px;
                     font-style:italic; font-size:0.88rem; color:#065f46; }}
     .semilla-card {{ margin:1.5rem 0; padding:1rem 1.2rem;
-                     background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));
-                     border-radius:10px; border:1px solid rgba(0,121,107,0.2); }}
-    .semilla-count {{ font-size:1.05rem; font-weight:600; color:#00796b;
+                     background:linear-gradient(135deg,rgba(30,58,95,0.10),rgba(30,58,95,0.04));
+                     border-radius:10px; border:1px solid rgba(30,58,95,0.2); }}
+    .semilla-count {{ font-size:1.05rem; font-weight:600; color:#1e3a5f;
                       margin-bottom:0.5rem; }}
     .semilla-poem {{ font-size:0.88rem; font-style:italic; color:#065f46;
                      line-height:1.7; }}
@@ -2079,7 +2079,7 @@ def build_session_report_html(student_name, messages, session_score,
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">Your Math, Your Pace, Your Place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="stats">
@@ -2253,34 +2253,34 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
     body {{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
             font-size:13px; line-height:1.6; color:#1f2937; background:#fff;
             max-width:800px; margin:0 auto; padding:1.5rem 1.25rem 3rem; }}
-    header {{ border-bottom:2px solid #00796b; padding-bottom:0.75rem; margin-bottom:1rem; }}
-    .app-name {{ font-size:1.1rem; font-weight:600; color:#00796b; }}
+    header {{ border-bottom:2px solid #1e3a5f; padding-bottom:0.75rem; margin-bottom:1rem; }}
+    .app-name {{ font-size:1.1rem; font-weight:600; color:#1e3a5f; }}
     .app-sub {{ font-size:0.75rem; color:#6b7280; margin-top:0.1rem; }}
     .summary {{ display:flex; gap:1.5rem; margin:0.75rem 0 1.25rem;
-               background:#f0fdf9; border-radius:8px; padding:0.7rem 1rem; }}
+               background:#fdf3e3; border-radius:8px; padding:0.7rem 1rem; }}
     .stat {{ text-align:center; }}
-    .stat-val {{ font-size:1.2rem; font-weight:600; color:#00796b; }}
+    .stat-val {{ font-size:1.2rem; font-weight:600; color:#1e3a5f; }}
     .stat-lbl {{ font-size:0.65rem; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; }}
     .progress-bar {{ background:#e5e7eb; border-radius:4px; height:8px; margin:0.5rem 0 1.25rem; }}
-    .progress-fill {{ background:#00796b; border-radius:4px; height:8px; width:{pct}%; }}
+    .progress-fill {{ background:#1e3a5f; border-radius:4px; height:8px; width:{pct}%; }}
     .unit-block {{ margin-bottom:1.5rem; page-break-inside:avoid; }}
-    h3 {{ font-size:0.85rem; font-weight:700; color:#00796b; text-transform:uppercase;
+    h3 {{ font-size:0.85rem; font-weight:700; color:#1e3a5f; text-transform:uppercase;
           letter-spacing:0.07em; border-bottom:1px solid #e5e7eb;
           padding-bottom:0.3rem; margin-bottom:0.6rem; }}
     .std-row {{ border:1px solid #e5e7eb; border-radius:6px; padding:0.6rem 0.8rem;
                margin-bottom:0.5rem; page-break-inside:avoid; }}
-    .std-row.mastered {{ border-left:3px solid #00796b; background:#f0fdf9; }}
+    .std-row.mastered {{ border-left:3px solid #1e3a5f; background:#fdf3e3; }}
     .std-row.progress {{ border-left:3px solid #F59E0B; background:#fffbeb; }}
     .std-row.not-yet  {{ border-left:3px solid #e5e7eb; }}
     .std-header {{ display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }}
-    .std-badge {{ font-size:0.68rem; font-weight:700; color:#00796b;
-                 background:#f0fdf9; border:1px solid #99f6e4;
+    .std-badge {{ font-size:0.68rem; font-weight:700; color:#1e3a5f;
+                 background:#fdf3e3; border:1px solid #e0b988;
                  border-radius:4px; padding:1px 5px; flex-shrink:0; }}
     .std-topic {{ font-size:0.82rem; font-weight:600; color:#1f2937; flex:1; }}
     .std-section {{ font-size:0.66rem; font-weight:600; color:#6b7280;
                    background:#f3f4f6; border-radius:4px; padding:1px 5px; }}
     .std-status {{ font-size:0.72rem; font-weight:600; flex-shrink:0; }}
-    .std-status.mastered {{ color:#00796b; }}
+    .std-status.mastered {{ color:#1e3a5f; }}
     .std-status.progress {{ color:#92400e; }}
     .std-status.not-yet  {{ color:#9ca3af; }}
     .std-attempts {{ font-size:0.68rem; color:#9ca3af; }}
@@ -2290,8 +2290,8 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
                   align-items:baseline; gap:0.4rem; margin-bottom:0.1rem; }}
     .skill-box {{ font-size:0.9rem; color:#9ca3af; flex-shrink:0; }}
     .semilla-card {{ margin:1.5rem 0; padding:0.9rem 1.1rem;
-                    background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));
-                    border-radius:10px; border:1px solid rgba(0,121,107,0.2); }}
+                    background:linear-gradient(135deg,rgba(30,58,95,0.10),rgba(30,58,95,0.04));
+                    border-radius:10px; border:1px solid rgba(30,58,95,0.2); }}
     .semilla-poem {{ font-size:0.83rem; font-style:italic; color:#065f46; line-height:1.7; }}
     footer {{ margin-top:1.5rem; padding-top:0.75rem; border-top:1px solid #e5e7eb;
               font-size:0.68rem; color:#9ca3af; text-align:center; line-height:1.8; }}
@@ -2305,7 +2305,7 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">C-ID MATH 210 — 25 Standards &nbsp;·&nbsp; {student_name} &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">C-ID MATH 210 — 24 Standards &nbsp;·&nbsp; {student_name} &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="summary">
@@ -2379,7 +2379,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
     section.main > div { padding-top: 1.5rem; }
     .app-title {
-        font-size: 1.6rem; font-weight: 600; color: #00796b;
+        font-size: 1.6rem; font-weight: 600; color: #1e3a5f;
         letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 0.15rem 0;
     }
     .app-sub {
@@ -2393,13 +2393,13 @@ st.markdown("""
     .feature-block {
         font-size: 0.88rem; color: inherit; line-height: 1.6; margin-bottom: 0.75rem;
     }
-    .feature-label { font-weight: 500; color: #00796b; }
+    .feature-label { font-weight: 500; color: #1e3a5f; }
     .unit-row {
         display: flex; align-items: center;
         padding: 0.26rem 0; font-size: 0.8rem; color: inherit;
         border-bottom: 1px solid rgba(128,128,128,0.2);
     }
-    .unit-num { flex: 0 0 52px; font-weight: 500; color: #00796b; }
+    .unit-num { flex: 0 0 52px; font-weight: 500; color: #1e3a5f; }
     .unit-name { flex: 1 1 auto; text-align: left; padding-right: 0.75rem; }
     .unit-codes { flex: 0 0 150px; color: #9ca3af; font-size: 0.74rem; text-align: right; }
     .score-3 { background:#ecfdf5; color:#065f46; padding:2px 9px;
@@ -2412,7 +2412,7 @@ st.markdown("""
                border-radius:8px; font-size:0.8rem; font-weight:500; }
     .conn-tag {
         display:inline-block; font-size:0.68rem; font-weight:500;
-        color:#00796b; background:#f0fdf9; border:1px solid #99f6e4;
+        color:#1e3a5f; background:#fdf3e3; border:1px solid #e0b988;
         border-radius:4px; padding:1px 6px; letter-spacing:0.04em;
         text-transform:uppercase; margin-bottom:0.35rem;
     }
@@ -2426,7 +2426,7 @@ st.markdown("""
     }
     div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
         flex-direction: row-reverse;
-        background: rgba(0,121,107,0.10);
+        background: rgba(30,58,95,0.10);
         margin-left: 18%;
     }
     div[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"])
@@ -2465,7 +2465,7 @@ st.markdown("""
     .typing-dots { display: inline-flex; gap: 4px; vertical-align: middle; margin-left: 4px; }
     .typing-dots span {
         width: 6px; height: 6px; border-radius: 50%;
-        background: #00796b; opacity: 0.6;
+        background: #1e3a5f; opacity: 0.6;
         animation: canelitaBounceDot 1.1s ease-in-out infinite;
     }
     .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -2625,12 +2625,12 @@ elif st.session_state.screen == "welcome":
         )
         st.markdown(
             '<p style="font-size:1.05rem;font-weight:400;color:inherit;' +
-            'opacity:0.78;margin:0 0 0.15rem 0;">Your Calculus 1 learning partner</p>',
+            'opacity:0.78;margin:0 0 0.15rem 0;">Your Math, Your Pace, Your Place</p>',
             unsafe_allow_html=True
         )
         # Three-line slogan stacked, same visual height as mug
         st.markdown(
-            '<div style="font-size:1.0rem;font-weight:500;color:#00796b;' +
+            '<div style="font-size:1.0rem;font-weight:500;color:#1e3a5f;' +
             'line-height:1.85;margin-top:0.15rem;">' +
             'Your Math.<br>Your Pace.<br>Your Place.</div>',
             unsafe_allow_html=True
@@ -2643,9 +2643,9 @@ elif st.session_state.screen == "welcome":
                                           SEMILLA_POEM["en"])
     st.markdown(
         f'<div style="margin:0.4rem 0 0.9rem;padding:0.9rem 1.1rem;' +
-        f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));' +
-        f'border-radius:10px;border-left:4px solid #00796b;">' +
-        f'<div style="font-size:0.95rem;font-weight:600;color:#00796b;margin-bottom:0.4rem;">' +
+        f'background:linear-gradient(135deg,rgba(30,58,95,0.10),rgba(30,58,95,0.04));' +
+        f'border-radius:10px;border-left:4px solid #1e3a5f;">' +
+        f'<div style="font-size:0.95rem;font-weight:600;color:#1e3a5f;margin-bottom:0.4rem;">' +
         f'🌱 {_tl("What are semillas?", "¿Qué son las semillas?")}</div>' +
         f'<p style="font-size:0.88rem;font-style:italic;color:inherit;' +
         f'line-height:1.7;margin:0;">{semilla_poem_text}</p>' +
@@ -2689,7 +2689,7 @@ elif st.session_state.screen == "welcome":
                 f'<div style="display:flex;justify-content:space-between;' +
                 f'padding:0.22rem 0;font-size:0.83rem;border-bottom:1px solid rgba(128,128,128,0.12);">' +
                 f'<span>{label}</span>' +
-                f'<span style="font-weight:600;color:#00796b;">{pts}</span></div>',
+                f'<span style="font-weight:600;color:#1e3a5f;">{pts}</span></div>',
                 unsafe_allow_html=True
             )
 
@@ -2702,14 +2702,14 @@ elif st.session_state.screen == "welcome":
                     unsafe_allow_html=True)
         st.markdown(f"""
 <div class="feature-block">
-<span class="feature-label">{_tl("Challenge mode.","Modo reto.")}</span>
-{_tl("Original questions aligned to all 25 C-ID MATH 210 standards. Each connects to a real career field — engineering, data science, biology, health, business, or social justice.",
-     "Preguntas originales alineadas a los 25 estándares C-ID MATH 210. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
+<span class="feature-label">{_tl("3 questions, your pace.","3 preguntas, tu ritmo.")}</span>
+{_tl("Pick a C-ID MATH 210 standard — 24 available — and get 3 original questions, one easy, one medium, one hard. Each connects to a real career field: engineering, data science, biology, health, business, or social justice.",
+     "Elige un estándar C-ID MATH 210 — 24 disponibles — y recibe 3 preguntas originales: una fácil, una media, una difícil. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
 </div>
 <div class="feature-block">
-<span class="feature-label">{_tl("Tutor chat.","Chat con tutor.")}</span>
-{_tl("Ask any Calculus 1 question and get a step-by-step explanation with rendered math, in English or Spanish.",
-     "Pregunta cualquier cosa de Cálculo 1 y obtén una explicación paso a paso con notación matemática renderizada.")}
+<span class="feature-label">{_tl("Support, built in.","Apoyo incluido.")}</span>
+{_tl("On every question, choose what helps: see a worked example, chat through the idea first, or be guided step by step with small questions and feedback along the way — in English or Spanish.",
+     "En cada pregunta, elige lo que te ayude: ver un ejemplo resuelto, platicar la idea primero, o dejarte guiar paso a paso con preguntas pequeñas y retroalimentación — en inglés o español.")}
 </div>
 <div class="feature-block" style="margin-bottom:0.5rem;">
 <span class="feature-label">{_tl("What you can send:","Qué puedes enviar:")}</span>
@@ -2729,7 +2729,7 @@ elif st.session_state.screen == "welcome":
         # Pitch quote
         st.markdown(f"""
 <div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
-background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
+background:rgba(30,58,95,0.08);border-left:3px solid #1e3a5f;border-radius:6px;">
   <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
   color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
     "{_tl("Getting it wrong is part of getting it right. Every incorrect answer comes with an explanation, a full worked solution, and a check on the algebra underneath — so the next attempt starts from a stronger place.",
@@ -2803,8 +2803,8 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             col_un, col_re = st.columns([3,1])
             with col_un:
                 st.markdown(
-                    f'<div style="padding:0.55rem 0.8rem;background:rgba(0,121,107,0.07);' +
-                    f'border-radius:6px;font-size:0.95rem;font-weight:600;color:#00796b;">' +
+                    f'<div style="padding:0.55rem 0.8rem;background:rgba(30,58,95,0.07);' +
+                    f'border-radius:6px;font-size:0.95rem;font-weight:600;color:#1e3a5f;">' +
                     f'🤓 {st.session_state.generated_username}</div>',
                     unsafe_allow_html=True
                 )
@@ -3061,9 +3061,9 @@ elif st.session_state.screen == "chat":
 
         st.markdown(
             f'<div style="text-align:center;padding:0.7rem 0.5rem 0.5rem;'
-            f'background:rgba(0,121,107,0.07);border-radius:8px;margin-bottom:0.4rem;">'
+            f'background:rgba(30,58,95,0.07);border-radius:8px;margin-bottom:0.4rem;">'
             f'<div style="font-size:1.6rem;margin-bottom:0.2rem;">🌱</div>'
-            f'<div style="font-size:1.1rem;font-weight:600;color:#00796b;margin-bottom:0.15rem;">'
+            f'<div style="font-size:1.1rem;font-weight:600;color:#1e3a5f;margin-bottom:0.15rem;">'
             f'{total_sem} semillas</div>'
             f'<div style="font-size:0.7rem;color:inherit;opacity:0.65;line-height:1.4;">'
             + (f'+{sess_sem} planted this session' if sess_sem else
@@ -3076,8 +3076,8 @@ elif st.session_state.screen == "chat":
         poem = SEMILLA_POEM.get(lang_now, SEMILLA_POEM["en"])
         st.markdown(
             f'<div style="padding:0.55rem 0.7rem;'
-            f'background:rgba(0,121,107,0.04);border-radius:6px;'
-            f'border-left:2px solid rgba(0,121,107,0.3);margin-bottom:0.3rem;">'
+            f'background:rgba(30,58,95,0.04);border-radius:6px;'
+            f'border-left:2px solid rgba(30,58,95,0.3);margin-bottom:0.3rem;">'
             f'<p style="font-size:0.72rem;line-height:1.6;'
             f'font-style:italic;color:inherit;opacity:0.8;margin:0;">{poem}</p>'
             f'</div>',
@@ -3121,7 +3121,7 @@ elif st.session_state.screen == "chat":
             entry = std_prog.get(code, {})
             best  = entry.get("best_score", -1)
             if best == 3:
-                color, title = "#00796b", f"{code} ✓"
+                color, title = "#1e3a5f", f"{code} ✓"
             elif best >= 1:
                 color, title = "#F59E0B", f"{code} in progress"
             else:
@@ -3129,7 +3129,7 @@ elif st.session_state.screen == "chat":
             dot_html += (f'<div title="{title}" style="width:10px;height:10px;' +
                           f'border-radius:2px;background:{color};flex-shrink:0;"></div>')
         dot_html += ('</div><div style="font-size:0.62rem;color:inherit;opacity:0.5;margin-top:0.1rem;">' +
-                      '<span style="color:#00796b;">■</span> mastered &nbsp;' +
+                      '<span style="color:#1e3a5f;">■</span> mastered &nbsp;' +
                       '<span style="color:#F59E0B;">■</span> in progress &nbsp;' +
                       '<span style="color:#e5e7eb;">■</span> not yet</div>')
         st.markdown(dot_html, unsafe_allow_html=True)
@@ -3236,7 +3236,7 @@ elif st.session_state.screen == "chat":
         )
         st.markdown(
             '<p class="app-sub" style="margin-bottom:0.5rem;">'
-            'Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</p>',
+            'Your Math, Your Pace, Your Place. &nbsp;·&nbsp; C-ID MATH 210</p>',
             unsafe_allow_html=True
         )
     with head_right:
@@ -3265,7 +3265,7 @@ elif st.session_state.screen == "chat":
     )
     st.markdown(
         f'<div style="margin:0 0 0.75rem;padding:0.55rem 0.9rem;'
-        f'background:rgba(0,121,107,0.07);border-left:3px solid #00796b;'
+        f'background:rgba(30,58,95,0.07);border-left:3px solid #1e3a5f;'
         f'border-radius:6px;font-size:0.88rem;color:inherit;line-height:1.6;">'
         f'{semilla_open}</div>',
         unsafe_allow_html=True
@@ -3323,9 +3323,9 @@ elif st.session_state.screen == "chat":
                 if mindset:
                     st.markdown(
                         f'<div style="margin:0.6rem 0;padding:0.75rem 1rem;'
-                        f'background:linear-gradient(135deg,rgba(0,121,107,0.12),rgba(0,121,107,0.05));'
-                        f'border-radius:8px;border-left:3px solid #00796b;">'
-                        f'<p style="font-size:0.97rem;font-weight:500;color:#00796b;'
+                        f'background:linear-gradient(135deg,rgba(30,58,95,0.12),rgba(30,58,95,0.05));'
+                        f'border-radius:8px;border-left:3px solid #1e3a5f;">'
+                        f'<p style="font-size:0.97rem;font-weight:500;color:#1e3a5f;'
                         f'line-height:1.6;margin:0;">{mindset}</p>'
                         f'</div>',
                         unsafe_allow_html=True
@@ -3335,10 +3335,10 @@ elif st.session_state.screen == "chat":
                 if semilla_note:
                     st.markdown(
                         f'<div class="semilla-award" style="margin:0.5rem 0;padding:0.5rem 0.9rem;'
-                        f'background:rgba(0,121,107,0.06);border-radius:6px;'
+                        f'background:rgba(30,58,95,0.06);border-radius:6px;'
                         f'display:inline-block;">'
                         f'<span style="font-size:0.95rem;font-weight:600;'
-                        f'color:#00796b;">{semilla_note}</span>'
+                        f'color:#1e3a5f;">{semilla_note}</span>'
                         f'</div>',
                         unsafe_allow_html=True
                     )
@@ -3543,12 +3543,12 @@ elif st.session_state.screen == "chat":
 
         st.markdown(
             f'<div style="margin:1rem 0;padding:1.1rem 1.3rem;'
-            f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));'
-            f'border-radius:10px;border:1px solid rgba(0,121,107,0.2);">'
+            f'background:linear-gradient(135deg,rgba(30,58,95,0.10),rgba(30,58,95,0.04));'
+            f'border-radius:10px;border:1px solid rgba(30,58,95,0.2);">'
             f'<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">'
             f'<span style="font-size:1.8rem;">🌱</span>'
             f'<div>'
-            f'<div style="font-size:1.05rem;font-weight:600;color:#00796b;">'
+            f'<div style="font-size:1.05rem;font-weight:600;color:#1e3a5f;">'
             f'{"You planted" if lang == "en" else "Plantaste"} '
             f'{sess_sem_report} semilla{"s" if sess_sem_report != 1 else ""} '
             f'{"today" if lang == "en" else "hoy"} · '

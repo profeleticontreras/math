@@ -1008,6 +1008,11 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"- Include [CONNECTION: FieldName] at the start, then one brief context sentence, "
         f"then the mathematical question\n"
         f"- Use LaTeX: $...$ for inline, $$...$$ for display math\n"
+        f"- If the question needs a table (e.g. to estimate a limit numerically), do NOT "
+        f"use LaTeX table syntax like \\begin{{array}} or \\hline -- use a standard Markdown "
+        f"pipe table instead, for example:\\n"
+        f"  | t | C(t) |\\n  |---|---|\\n  | 10 | |\\n  | 100 | |\\n"
+        f"Markdown tables render reliably; LaTeX array/tabular environments often do not.\n"
         f"- Write ONLY the question, nothing else\n"
         f"- IMPORTANT: Do NOT generate questions that require the student to read or "
         f"interpret a graph or diagram that you cannot display. All information the "
@@ -1134,7 +1139,11 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
         f"\"full_solution\": \"complete step-by-step solution with LaTeX $...$ formatting\"}}\n\n"
         f"CRITICAL: the JSON must be valid and parseable. Every backslash used for LaTeX "
         f"inside the string values must be doubled -- write \\\\frac and \\\\cdot, "
-        f"never a single backslash -- or the response cannot be displayed to the student."
+        f"never a single backslash -- or the response cannot be displayed to the student. "
+        f"If full_solution needs a table, do NOT use LaTeX table syntax like \\\\begin{{array}} "
+        f"or \\\\hline -- use a standard Markdown pipe table instead (| col | col |\\\\n"
+        f"|---|---|\\\\n| val | val |). Markdown tables render reliably inside JSON strings; "
+        f"LaTeX array/tabular environments often do not."
     )
 
     # Build message content -- include image if provided
@@ -2618,21 +2627,22 @@ elif st.session_state.screen == "welcome":
             unsafe_allow_html=True
         )
     with title_col:
+        # Line 1 + Line 2: branding twins — identical font, size, and color
         st.markdown(
-            '<p class="app-title" style="margin-bottom:0.4rem;font-size:1.8rem;">' +
+            '<p class="app-title" style="margin-bottom:0.15rem;font-size:1.8rem;">' +
             'Canelita con Profe Contreras</p>',
             unsafe_allow_html=True
         )
         st.markdown(
-            '<p style="font-size:1.05rem;font-weight:400;color:inherit;' +
-            'opacity:0.78;margin:0 0 0.15rem 0;">Your Math, Your Pace, Your Place</p>',
+            '<p class="app-title" style="margin-bottom:0.3rem;font-size:1.8rem;">' +
+            'Your Math, Your Pace, Your Place</p>',
             unsafe_allow_html=True
         )
-        # Three-line slogan stacked, same visual height as mug
+        # Line 3: smaller, italic, muted — a quiet welcome under the two brand lines
         st.markdown(
-            '<div style="font-size:1.0rem;font-weight:500;color:#1e3a5f;' +
-            'line-height:1.85;margin-top:0.15rem;">' +
-            'Your Math.<br>Your Pace.<br>Your Place.</div>',
+            '<p style="font-size:0.95rem;font-weight:400;font-style:italic;' +
+            'color:inherit;opacity:0.62;margin:0;">' +
+            'Welcome to your Calculus 1 learning partner.</p>',
             unsafe_allow_html=True
         )
 
@@ -2779,49 +2789,24 @@ background:rgba(30,58,95,0.08);border-left:3px solid #1e3a5f;border-radius:6px;"
             unsafe_allow_html=True
         )
 
-        # 1. Name / ID with optional geeky username
-        name_mode = st.radio(
-            "name mode",
-            [_tl("Use my name or student ID","Usar mi nombre o ID de estudiante"),
-             _tl("Generate a fun username","Generar un nombre divertido")],
-            horizontal=True, key="name_mode", label_visibility="collapsed"
-        )
-
-        if name_mode == _tl("Generate a fun username","Generar un nombre divertido"):
-            import random as _rnd
-            _adj = ["Rogue","Sneaky","Turbo","Spicy","Cosmic","Rebel","Savage",
-                    "Sleepy","Wobbly","Mysterious","Epic","Tiny","Grumpy",
-                    "Chaotic","Radical"]
-            _nou = ["Integral","Cactus","Sandwich","Theorem","Banana",
-                    "Llama","Penguin","Noodle","Waffle","Burrito",
-                    "Derivative","Taco","Pickle","Pi","Avocado"]
-            if "generated_username" not in st.session_state:
-                import random as _r2
-                st.session_state.generated_username = (
-                    f"{_r2.choice(_adj)}{_r2.choice(_nou)}{_r2.randint(10,99)}"
-                )
-            col_un, col_re = st.columns([3,1])
-            with col_un:
-                st.markdown(
-                    f'<div style="padding:0.55rem 0.8rem;background:rgba(30,58,95,0.07);' +
-                    f'border-radius:6px;font-size:0.95rem;font-weight:600;color:#1e3a5f;">' +
-                    f'🤓 {st.session_state.generated_username}</div>',
-                    unsafe_allow_html=True
-                )
-            with col_re:
-                if st.button(_tl("New","Otro"), key="regen_username"):
-                    import random as _r3
-                    st.session_state.generated_username = (
-                        f"{_r3.choice(_adj)}{_r3.choice(_nou)}{_r3.randint(10,99)}"
-                    )
-                    st.rerun()
-            student_id = st.session_state.generated_username
-        else:
-            student_id = st.text_input(
-                _tl("1. Your name or student ID","1. Tu nombre o ID"),
-                placeholder=_tl("e.g. Maria G. or 12345","p.ej. Maria G. o 12345"),
-                key="welcome_student_id"
+        # 1-2. Sign in: last name + student ID (both required)
+        col_ln, col_id = st.columns(2)
+        with col_ln:
+            last_name = st.text_input(
+                _tl("1. Last name","1. Apellido"),
+                placeholder=_tl("e.g. Garcia","p.ej. García"),
+                key="welcome_last_name"
             )
+        with col_id:
+            student_num = st.text_input(
+                _tl("2. Student ID","2. ID de estudiante"),
+                placeholder=_tl("e.g. 12345","p.ej. 12345"),
+                key="welcome_student_num"
+            )
+        student_id = (
+            f"{last_name.strip()} ({student_num.strip()})"
+            if last_name.strip() and student_num.strip() else ""
+        )
 
         # Language comes from top-of-page selector
         lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
@@ -2832,7 +2817,7 @@ background:rgba(30,58,95,0.08);border-left:3px solid #1e3a5f;border-radius:6px;"
             for code, data in STANDARDS_MAP.items()
         ]
         std_choice = st.selectbox(
-            "2. Learning standard / Estándar",
+            "3. Learning standard / Estándar",
             std_options,
             key="welcome_std"
         )
@@ -2850,7 +2835,7 @@ background:rgba(30,58,95,0.08);border-left:3px solid #1e3a5f;border-radius:6px;"
             std_preview = STANDARDS_MAP[selected_code]
             skill_opts  = ["Random — any skill"] + std_preview["skills"]
             skill_choice = st.selectbox(
-                "2b. Specific skill (optional) / Habilidad específica",
+                "3b. Specific skill (optional) / Habilidad específica",
                 skill_opts,
                 key="welcome_skill"
             )
@@ -2893,7 +2878,8 @@ background:rgba(30,58,95,0.08);border-left:3px solid #1e3a5f;border-radius:6px;"
         if start_clicked:
             sid = student_id.strip()
             if not sid:
-                st.warning("Please enter your name or student ID.")
+                st.warning(_tl("Please enter both your last name and student ID.",
+                                "Por favor ingresa tu apellido y tu ID de estudiante."))
             else:
                 all_usage    = st.session_state.get("all_usage", {})
                 current_week = get_current_week()

@@ -109,463 +109,511 @@ CANNED = {
 }
 
 # ── C-ID MATH 210 Learning Standards Map ─────────────────────────────────────
-# All 25 standards with skills, prerequisites, and 8 field connections each
+# All 24 standards with skills, prerequisites, and 8 field connections each
 STANDARDS_MAP = {
     "S-01": {
-        "intent_tag": "limits", "unit": 1, "unit_name": "Limits & Continuity",
-        "topic": "Limits -- Intuitive Understanding",
-        "skills": ["Estimate limits from graphs and tables",
-                   "Identify one-sided and two-sided limits",
-                   "Recognize when a limit exists vs. does not exist",
-                   "Use correct limit notation: lim(x to a) f(x)"],
-        "algebra_prereqs": ["evaluating functions at a point", "reading coordinate graphs", "substitution"],
+        "intent_tag": 'derivatives', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Measuring Velocity',
+        "skills": [
+                   'Compute average velocity over an interval [a,b] using (s(b)-s(a))/(b-a), with units',
+                   'Interpret average velocity as the slope of a secant line on a position graph',
+                   'Estimate instantaneous velocity from average velocities over shrinking intervals',
+                   'Interpret the sign of velocity as direction of motion, related to tangent slope',
+                  ],
+        "algebra_prereqs": ['evaluating functions at a point', 'slope of a line', 'unit analysis'],
         "field_connections": {
-            "Agriculture":    "Water flow in an irrigation valve approaches maximum capacity as the valve opens -- the limit exists even before full opening.",
-            "Biology":        "A population approaching carrying capacity gets closer to a ceiling without exceeding it -- that ceiling is the limit.",
-            "Engineering":    "Voltage in an RC circuit approaches a steady-state value as time increases -- the limit of voltage as t approaches infinity.",
-            "Coding/ML":      "A loss function approaches its minimum as training progresses -- the limit of loss as training steps increase.",
-            "Social Justice": "Voter turnout approaches a theoretical maximum under increasing mobilization -- the limit models the ceiling of that effort.",
-            "Chemistry":      "Reaction rate approaches a maximum as reactant concentration increases -- the limit captures the saturation behavior.",
-            "Health":         "Drug concentration approaches a therapeutic threshold -- the limit describes the asymptotic behavior.",
-            "Business":       "Revenue approaches market saturation as customer base grows -- the limit models the ceiling of a saturated market."
-        }
+            'Agriculture': "A tractor's position along a field row over time gives its average speed between two markers -- shrink the interval to estimate its speed at one instant.",
+            'Biology': "A migrating bird's position over hours gives average speed between checkpoints; smaller intervals approach its instantaneous speed.",
+            'Engineering': "A drone's altitude readings over time yield average vertical velocity; the limit of these gives instantaneous climb rate.",
+            'Coding/ML': 'A training metric logged each epoch gives an average rate of improvement; finer sampling approaches the instantaneous learning rate.',
+            'Social Justice': 'Census counts over years give an average rate of demographic change; shorter intervals estimate the rate at a specific moment.',
+            'Chemistry': "A reactant's concentration measured over time gives an average reaction rate; shrinking the interval approaches the instantaneous rate.",
+            'Health': "A patient's weight recorded weekly gives an average rate of change; daily readings approach the instantaneous rate.",
+            'Business': 'Revenue tracked monthly gives an average growth rate; finer time steps approach the instantaneous rate of change.',
+        },
     },
     "S-02": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Definition of the Derivative",
-        "skills": ["Write and evaluate the limit definition of the derivative",
-                   "Interpret the derivative as slope of a tangent line",
-                   "Interpret the derivative as instantaneous rate of change",
-                   "Determine where a function is differentiable"],
-        "algebra_prereqs": ["expanding binomials", "simplifying difference quotients", "limits by direct substitution"],
+        "intent_tag": 'limits', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Limits -- Understanding & Computation',
+        "skills": [
+                   'Estimate limits from graphs and tables of values',
+                   'Evaluate limits by direct substitution',
+                   'Resolve indeterminate forms 0/0 by factoring or rationalizing',
+                   'Connect the limiting process to how average velocity approaches instantaneous velocity',
+                  ],
+        "algebra_prereqs": ['factoring polynomials', 'rationalizing expressions', 'evaluating functions'],
         "field_connections": {
-            "Agriculture":    "Instantaneous rate of change of strawberry weight at a specific moment -- not the season average.",
-            "Biology":        "Instantaneous growth rate of a bacterial colony at a specific hour.",
-            "Engineering":    "Instantaneous velocity of a rocket at liftoff -- the derivative of position at the exact moment of launch.",
-            "Coding/ML":      "The gradient is the derivative of the loss function with respect to each weight -- the engine of neural network training.",
-            "Social Justice": "Instantaneous rate of change of unemployment at the onset of a recession.",
-            "Chemistry":      "Instantaneous reaction rate at a specific moment -- not the average over the experiment.",
-            "Health":         "Instantaneous heart rate change during a stress test.",
-            "Business":       "Marginal cost is the derivative of total cost -- the cost of producing exactly one more unit."
-        }
+            'Agriculture': 'Soil moisture approaches a saturation ceiling as irrigation continues -- the value it approaches is the limit.',
+            'Biology': 'A population approaching carrying capacity gets closer to a ceiling without exceeding it -- that ceiling is the limit.',
+            'Engineering': 'Voltage in an RC circuit approaches a steady-state value as time increases -- the limit as t grows large.',
+            'Coding/ML': 'A loss function approaches its minimum as training progresses -- the limit of loss as steps increase.',
+            'Social Justice': 'Voter turnout approaches a theoretical maximum under increasing mobilization -- the limit models that ceiling.',
+            'Chemistry': 'Reaction rate approaches a maximum as reactant concentration rises -- the limit captures saturation behavior.',
+            'Health': 'Drug concentration approaches a therapeutic threshold -- the limit describes its asymptotic behavior.',
+            'Business': 'Revenue approaches market saturation as the customer base grows -- the limit models the ceiling.',
+        },
     },
     "S-03": {
-        "intent_tag": "limits", "unit": 1, "unit_name": "Limits & Continuity",
-        "topic": "Limits -- Algebraic Computation",
-        "skills": ["Apply sum, difference, product, quotient limit laws",
-                   "Evaluate limits by direct substitution",
-                   "Resolve indeterminate forms 0/0 by factoring or rationalizing",
-                   "Compute limits of piecewise functions"],
-        "algebra_prereqs": ["factoring polynomials", "simplifying rational expressions", "piecewise function notation"],
+        "intent_tag": 'derivatives', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Derivative at a Point & as a Function',
+        "skills": [
+                   'Write and evaluate the limit definition of the derivative at a point and as a function',
+                   "Interpret f'(a) as slope of the tangent line and instantaneous rate; distinguish f'(a) from f'(x)",
+                   'Estimate derivative values from graphs or tables',
+                   "Sketch the graph of f' from f and determine where f is differentiable",
+                  ],
+        "algebra_prereqs": ['expanding binomials', 'simplifying difference quotients', 'limits by substitution'],
         "field_connections": {
-            "Agriculture":    "Simplifying a yield-per-acre ratio by canceling common factors before evaluating -- the algebra of limits mirrors unit analysis.",
-            "Biology":        "Resolving a 0/0 form in enzyme kinetics near saturation -- factoring reveals the true limiting rate.",
-            "Engineering":    "Resolving indeterminate forms in stress-strain calculations where numerator and denominator both approach zero.",
-            "Coding/ML":      "Evaluating learning rate decay formulas at initialization where 0/0 appears without simplification.",
-            "Social Justice": "Resolving ambiguous growth rate expressions in demographic models by factoring before taking the limit.",
-            "Chemistry":      "Evaluating a reaction quotient as concentrations approach zero -- factoring removes the indeterminate form.",
-            "Health":         "Computing dosage ratios in pharmacokinetic models where direct substitution gives 0/0.",
-            "Business":       "Resolving a 0/0 marginal cost formula near break-even -- factoring reveals the true marginal cost."
-        }
+            'Agriculture': "The instantaneous rate a crop's height changes on a given day is the derivative of its growth curve at that point.",
+            'Biology': 'The instantaneous rate of enzyme activity at a specific substrate level is the derivative of the reaction curve there.',
+            'Engineering': 'The instantaneous rate a beam deflects under increasing load is the derivative of the deflection curve at that load.',
+            'Coding/ML': 'The gradient of a loss function at the current weights IS a derivative -- the slope that guides each training step.',
+            'Social Justice': 'The instantaneous rate an inequality index changes in a given year is the derivative of the index curve there.',
+            'Chemistry': 'The instantaneous reaction rate at a specific time is the derivative of the concentration curve at that point.',
+            'Health': "The instantaneous rate a tumor's size changes on a given day is the derivative of its growth curve there.",
+            'Business': 'Marginal cost -- the instantaneous rate cost rises with one more unit -- is the derivative of the cost function.',
+        },
     },
     "S-04": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Higher-Order Derivatives",
-        "skills": ["Compute f''(x), f'''(x) by repeated differentiation",
-                   "Interpret f''(x) as acceleration",
-                   "Connect higher derivatives to concavity",
-                   "Use Leibniz notation d^2y/dx^2"],
-        "algebra_prereqs": ["applying derivative rules multiple times", "polynomial differentiation", "interpreting rate language"],
+        "intent_tag": 'derivatives', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Interpreting, Estimating & Using the Derivative',
+        "skills": [
+                   "Interpret the meaning of f'(x) in an applied context (population, depreciation, temperature)",
+                   "Determine the units of f'(x) as (units of f) per (unit of x)",
+                   "Estimate f'(x) from tabular data using average rates / central differences",
+                   "Use f'(x) to predict how f changes for a one-unit change in x",
+                  ],
+        "algebra_prereqs": ['average rate of change', 'unit analysis', 'reading tables of data'],
         "field_connections": {
-            "Agriculture":    "The second derivative of yield over time tells whether growth is accelerating or slowing.",
-            "Biology":        "The second derivative of a population decline -- is the crash speeding up or leveling off?",
-            "Engineering":    "Jerk -- the third derivative of position -- determines ride comfort and structural stress.",
-            "Coding/ML":      "Second-order optimizers like Newton's method use the second derivative of the loss function.",
-            "Social Justice": "The second derivative of a Gini index -- is income inequality accelerating or beginning to decrease?",
-            "Chemistry":      "The second derivative of a titration curve identifies the exact equivalence point.",
-            "Health":         "The second derivative of a tumor growth model -- is the growth rate itself increasing or decelerating?",
-            "Business":       "The second derivative of the profit function tells whether marginal profit is increasing or decreasing."
-        }
+            'Agriculture': 'If yield is measured in bushels per acre, its derivative gives bushels per acre per unit of fertilizer -- the payoff of one more unit.',
+            'Biology': 'If a population is in thousands, its derivative gives thousands of individuals per year -- the growth rate with units.',
+            'Engineering': 'If temperature is in degrees, its derivative gives degrees per second -- the rate of heating with meaningful units.',
+            'Coding/ML': 'If accuracy is a percentage, its derivative gives percent improvement per training epoch -- the marginal gain.',
+            'Social Justice': 'If median income is in dollars, its derivative gives dollars per year -- the rate of economic change with units.',
+            'Chemistry': 'If concentration is in mol/L, its derivative gives mol/L per second -- the reaction rate with proper units.',
+            'Health': 'If blood pressure is in mmHg, its derivative gives mmHg per minute -- the rate of change with clinical units.',
+            'Business': 'If profit is in dollars, its derivative gives dollars per unit sold -- the marginal profit with units.',
+        },
     },
     "S-05": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Concavity & Inflection Points",
-        "skills": ["Determine concavity from the sign of f''(x)",
-                   "Find inflection points where f'' changes sign",
-                   "Apply the Second Derivative Test for local extrema",
-                   "Sketch curves using f, f', and f''"],
-        "algebra_prereqs": ["computing second derivatives", "sign chart for f''", "interpreting concave up/down geometrically"],
+        "intent_tag": 'derivatives', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Higher-Order Derivatives',
+        "skills": [
+                   "Compute f''(x), f'''(x) using repeated differentiation",
+                   "Interpret f''(x) as acceleration in motion problems",
+                   "Determine concavity from the sign of f''(x)",
+                   'Use Leibniz notation for higher-order derivatives: d^2y/dx^2',
+                  ],
+        "algebra_prereqs": ['applying derivative rules repeatedly', 'polynomial differentiation', 'interpreting rate language'],
         "field_connections": {
-            "Agriculture":    "Concave up means yield growth is accelerating; concave down means it is slowing -- the inflection point marks the reversal.",
-            "Biology":        "The inflection point of a logistic growth curve is when growth rate is fastest.",
-            "Engineering":    "Concavity of a beam's deflection curve tells engineers where bending stress is greatest.",
-            "Coding/ML":      "The inflection point of a training loss curve is where learning transitions from rapid to slow convergence.",
-            "Social Justice": "An inflection point in an incarceration rate curve marks when the policy trend reversed.",
-            "Chemistry":      "The inflection point of a titration curve is the exact equivalence point.",
-            "Health":         "The inflection point of an epidemic curve is when new case growth peaks and begins to slow.",
-            "Business":       "The inflection point of a revenue curve marks where returns begin to diminish."
-        }
+            'Agriculture': "The rate at which a crop's growth rate itself changes -- speeding up or slowing down -- is the second derivative of the growth curve.",
+            'Biology': 'Acceleration of population growth (whether the growth rate is rising or falling) is the second derivative of the population curve.',
+            'Engineering': 'Acceleration is the second derivative of position -- how quickly velocity itself changes in a moving system.',
+            'Coding/ML': 'The curvature of a loss surface, captured by second derivatives, tells an optimizer how sharply the gradient is changing.',
+            'Social Justice': 'Whether the rate of change of an inequality measure is accelerating or decelerating is its second derivative.',
+            'Chemistry': 'The second derivative of concentration shows whether a reaction is speeding up or slowing down over time.',
+            'Health': 'Acceleration of tumor growth -- whether the growth rate itself is rising -- is the second derivative of size.',
+            'Business': 'Whether marginal cost is rising or falling with scale is captured by the second derivative of the cost function.',
+        },
     },
     "S-06": {
-        "intent_tag": "limits", "unit": 1, "unit_name": "Limits & Continuity",
-        "topic": "Limits at Infinity & Asymptotes",
-        "skills": ["Compute limits at infinity for rational functions",
-                   "Identify horizontal asymptotes from limit behavior",
-                   "Identify vertical asymptotes from infinite limits",
-                   "Sketch end behavior from limit analysis"],
-        "algebra_prereqs": ["dividing polynomials", "comparing degrees of polynomials", "fraction simplification"],
+        "intent_tag": 'continuity', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Continuity',
+        "skills": [
+                   'Evaluate one-sided limits and determine whether a two-sided limit exists, including piecewise',
+                   'State and apply the three conditions for continuity at a point',
+                   'Identify removable, jump, and infinite discontinuities; determine intervals of continuity',
+                   'Apply the Intermediate Value Theorem (IVT)',
+                  ],
+        "algebra_prereqs": ['piecewise functions', 'evaluating one-sided limits', 'graphing basic functions'],
         "field_connections": {
-            "Agriculture":    "Crop yield plateaus no matter how much fertilizer is added -- the horizontal asymptote models that maximum.",
-            "Biology":        "A logistic growth curve levels off at carrying capacity -- the horizontal asymptote is the population ceiling.",
-            "Engineering":    "Terminal velocity is a horizontal asymptote -- drag balances gravity and speed stops increasing.",
-            "Coding/ML":      "The sigmoid activation has horizontal asymptotes at 0 and 1 -- it can approach but never reach pure 0 or 1.",
-            "Social Justice": "Diminishing returns on incarceration as a crime deterrent -- the asymptote shows the limit of that policy.",
-            "Chemistry":      "Reactant concentration asymptotically approaches zero as a reaction nears completion.",
-            "Health":         "Antibiotic resistance approaches 100% over generations -- a horizontal asymptote the model approaches from below.",
-            "Business":       "Long-run average cost approaches minimum efficient scale -- the horizontal asymptote of the cost curve."
-        }
+            'Agriculture': 'A pricing schedule that jumps at a bulk threshold has a jump discontinuity -- the price function is not continuous there.',
+            'Biology': 'A dosage curve with a sudden drop when medication is stopped shows a discontinuity in the concentration function.',
+            'Engineering': 'A signal that jumps when a switch flips is discontinuous at the switching instant -- a jump discontinuity.',
+            'Coding/ML': 'A step activation function is discontinuous at its threshold, which is why smooth alternatives are often used instead.',
+            'Social Justice': 'A tax bracket system creates jump discontinuities in the tax function at each bracket boundary.',
+            'Chemistry': "A phase-change temperature marks a discontinuity in a substance's state function as it jumps from solid to liquid.",
+            'Health': 'A treatment protocol that changes abruptly at a diagnostic cutoff creates a discontinuity in the response function.',
+            'Business': 'A shipping cost that jumps at a weight threshold has a jump discontinuity -- the cost function breaks there.',
+        },
     },
     "S-07": {
-        "intent_tag": "continuity", "unit": 1, "unit_name": "Limits & Continuity",
-        "topic": "Continuity",
-        "skills": ["State the three conditions for continuity at a point",
-                   "Identify removable, jump, and infinite discontinuities",
-                   "Apply the Intermediate Value Theorem (IVT)",
-                   "Determine continuity of composite and piecewise functions"],
-        "algebra_prereqs": ["piecewise functions", "evaluating functions", "graphing basic functions"],
+        "intent_tag": 'derivatives', "unit": 1, "unit_name": 'Understanding the Derivative',
+        "topic": 'Tangent Lines & Linear Approximation',
+        "skills": [
+                   "Find the equation of a tangent line: y = f(a) + f'(a)(x-a)",
+                   'Use the tangent line as a local linear approximation',
+                   "Compute differentials: dy = f'(x)dx",
+                   'Estimate function values using linearization',
+                  ],
+        "algebra_prereqs": ['point-slope form of a line', 'evaluating functions and derivatives', 'solving for y'],
         "field_connections": {
-            "Agriculture":    "A frost event creates a jump discontinuity in crop growth data -- continuous growth is suddenly interrupted.",
-            "Biology":        "A missing data year creates a removable discontinuity in a population dataset.",
-            "Engineering":    "A circuit breaker trips and creates a jump discontinuity in current flow.",
-            "Coding/ML":      "A step function activation has a jump discontinuity at the threshold -- why smooth activations replaced it.",
-            "Social Justice": "The IVT guarantees that if a poverty rate was 12% in 2010 and 18% in 2020, it hit exactly 15% at some point.",
-            "Chemistry":      "A phase transition creates a discontinuity in density vs. temperature.",
-            "Health":         "A missed medication dose creates a jump discontinuity in blood drug concentration.",
-            "Business":       "A tax bracket system creates jump discontinuities in effective tax rate."
-        }
+            'Agriculture': 'Near a known yield, the tangent line predicts how yield changes for a small change in rainfall -- a quick linear estimate.',
+            'Biology': 'Near a measured population size, the tangent line linearly approximates the next short interval of growth.',
+            'Engineering': "Linear approximation estimates a bridge's small deflection under a slightly increased load without re-solving the full model.",
+            'Coding/ML': 'A first-order Taylor (tangent-line) approximation underlies how gradient descent predicts the effect of a small weight change.',
+            'Social Justice': 'Near current data, the tangent line linearly projects a short-term change in an economic indicator.',
+            'Chemistry': 'Linear approximation estimates a small change in reaction rate for a slight temperature increase near a known point.',
+            'Health': 'Near a measured value, the tangent line linearly estimates how a biomarker changes over a short interval.',
+            'Business': 'Near current output, the tangent line approximates the change in cost from producing a few more units.',
+        },
     },
     "S-08": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Tangent Lines & Linear Approximation",
-        "skills": ["Find the equation of a tangent line: y = f(a) + f'(a)(x-a)",
-                   "Use the tangent line as local linear approximation",
-                   "Compute differentials: dy = f'(x)dx",
-                   "Estimate function values using linearization"],
-        "algebra_prereqs": ["point-slope form of a line", "evaluating functions and derivatives", "solving for y"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Differentiation Rules',
+        "skills": [
+                   'Apply the power rule for integer and rational exponents',
+                   'Differentiate sums, differences, and constant multiples',
+                   'Differentiate polynomial functions efficiently',
+                   'Differentiate rational functions using algebra + power rule',
+                  ],
+        "algebra_prereqs": ['exponent rules', 'negative and fractional exponents', 'polynomial arithmetic'],
         "field_connections": {
-            "Agriculture":    "Estimating harvest weight from a small sample -- close enough to plan without measuring every row.",
-            "Biology":        "Linearizing a nonlinear growth model near an equilibrium for analysis.",
-            "Engineering":    "The small-angle approximation sin(x) is approximately x used in pendulum and optics problems.",
-            "Coding/ML":      "Taylor expansion and linearization underlie many optimization approximations -- gradient descent is a first-order linear approximation.",
-            "Social Justice": "Estimating a demographic trend near a policy change using the tangent line as a local model.",
-            "Chemistry":      "Linearizing the Arrhenius equation near a known temperature to estimate rates at nearby temperatures.",
-            "Health":         "Estimating a patient's lab value change over a short time interval using the tangent line.",
-            "Business":       "Marginal cost as linear approximation -- estimating total cost for a small production increase."
-        }
+            'Agriculture': 'A polynomial yield model differentiates term by term to reveal how yield responds to each input level.',
+            'Biology': 'A polynomial growth model differentiates cleanly to give the growth rate at any population size.',
+            'Engineering': 'A polynomial stress model differentiates term by term to give the rate stress changes with load.',
+            'Coding/ML': 'Polynomial feature terms in a model differentiate with the power rule when computing gradients.',
+            'Social Justice': 'A polynomial trend fit to social data differentiates to show the rate of change at any point in time.',
+            'Chemistry': 'A polynomial rate law differentiates term by term to give the instantaneous reaction rate.',
+            'Health': 'A polynomial dose-response model differentiates to show sensitivity at any dosage level.',
+            'Business': 'A polynomial cost model differentiates term by term to give marginal cost at any output.',
+        },
     },
     "S-09": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Differentiation Rules",
-        "skills": ["Apply the power rule for integer and rational exponents",
-                   "Differentiate sums, differences, and constant multiples",
-                   "Differentiate polynomial functions efficiently",
-                   "Differentiate rational functions using algebra + power rule"],
-        "algebra_prereqs": ["exponent rules", "negative and fractional exponents", "polynomial arithmetic"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Derivatives of Transcendental Functions',
+        "skills": [
+                   'Differentiate sin x and cos x',
+                   'Differentiate tan x and the reciprocal trigonometric functions',
+                   'Differentiate the natural exponential function e^x',
+                   'Differentiate exponential functions a^x using the factor ln(a)',
+                  ],
+        "algebra_prereqs": ['unit circle / trig values', 'properties of exponentials', 'logarithm basics'],
         "field_connections": {
-            "Agriculture":    "Differentiating a polynomial yield model to find when growth is fastest.",
-            "Biology":        "Finding the instantaneous growth rate of a polynomial population model.",
-            "Engineering":    "Differentiating a polynomial position function to get velocity.",
-            "Coding/ML":      "Computing gradients of polynomial loss functions -- the power rule is the first tool every ML engineer internalizes.",
-            "Social Justice": "Finding the rate of change of a polynomial model of income inequality over time.",
-            "Chemistry":      "Differentiating a polynomial concentration model to find instantaneous reaction rate.",
-            "Health":         "Differentiating a polynomial dosage-response curve to find the dose where response changes fastest.",
-            "Business":       "Marginal revenue and marginal cost are the power rule derivatives of revenue and cost functions."
-        }
+            'Agriculture': 'Seasonal temperature cycles modeled by sine functions differentiate to give the rate of seasonal change.',
+            'Biology': 'Exponential population growth differentiates to a rate proportional to the population itself -- the signature of e^x.',
+            'Engineering': 'Oscillating signals modeled with sine and cosine differentiate to give their instantaneous rate of change.',
+            'Coding/ML': 'The exponential in a softmax or sigmoid differentiates neatly, which is why e^x is central to neural network math.',
+            'Social Justice': 'Exponential models of compounding disparity differentiate to a rate proportional to the current gap.',
+            'Chemistry': 'Radioactive decay modeled as e^(-kt) differentiates to a rate proportional to the amount remaining.',
+            'Health': 'Exponential drug elimination differentiates to a clearance rate proportional to current concentration.',
+            'Business': 'Continuously compounded growth modeled with e^x differentiates to a rate proportional to the balance.',
+        },
     },
     "S-10": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Derivatives of Transcendental Functions",
-        "skills": ["Differentiate sin x, cos x, tan x and reciprocals",
-                   "Differentiate e^x, a^x, ln x, and log_a x",
-                   "Differentiate inverse trig: arcsin, arccos, arctan",
-                   "Combine with chain, product, and quotient rules"],
-        "algebra_prereqs": ["unit circle / trig values", "properties of logarithms", "exponential function behavior"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Product & Quotient Rules',
+        "skills": [
+                   "State and apply the product rule: (fg)' = f'g + fg'",
+                   "State and apply the quotient rule: (f/g)' = (f'g - fg')/g^2",
+                   'Differentiate products and quotients of polynomial and rational functions',
+                   'Differentiate and simplify products/quotients involving trig and exponential functions',
+                  ],
+        "algebra_prereqs": ['multiplying polynomials', 'simplifying complex fractions', 'combining like terms'],
         "field_connections": {
-            "Agriculture":    "Seasonal daylight follows a sinusoidal model -- its derivative gives the rate of change of sunlight for photosynthesis.",
-            "Biology":        "Population growth follows e^(rt) -- its derivative is the instantaneous growth rate.",
-            "Engineering":    "AC voltage follows sin(wt) -- the derivative gives current, which leads voltage by 90 degrees.",
-            "Coding/ML":      "Sigmoid and tanh are standard activations -- their derivatives are used in backpropagation.",
-            "Social Justice": "Viral spread of information follows exponential models -- derivatives give the rate of peak spread.",
-            "Chemistry":      "Radioactive decay follows e^(-kt) -- its derivative gives the instantaneous decay rate.",
-            "Health":         "Circadian hormone rhythms follow sinusoidal models -- derivatives identify peak hormone release moments.",
-            "Business":       "Continuous compound interest uses A = Pe^(rt) -- its derivative gives instantaneous rate of return."
-        }
+            'Agriculture': 'Revenue as price times quantity, where both change, needs the product rule to find how revenue responds.',
+            'Biology': 'Total biomass as density times area, both changing over time, needs the product rule for its rate.',
+            'Engineering': 'Power as voltage times current, where both vary, requires the product rule to find the rate of change.',
+            'Coding/ML': 'The product rule appears throughout backpropagation when composed factors both depend on the weights.',
+            'Social Justice': 'A weighted index (rate times population), both changing, needs the product rule for its trend.',
+            'Chemistry': 'Rate as concentration times a temperature-dependent factor, both changing, needs the product rule.',
+            'Health': 'Total drug load as concentration times volume, both changing, needs the product rule for its rate.',
+            'Business': 'Revenue as units times price per unit, both varying, requires the product rule for marginal revenue.',
+        },
     },
     "S-11": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Product & Quotient Rules",
-        "skills": ["State and apply the product rule: (fg)' = f'g + fg'",
-                   "State and apply the quotient rule: (f'g - fg')/g^2",
-                   "Differentiate combinations of polynomial and rational functions",
-                   "Simplify derivatives after applying these rules"],
-        "algebra_prereqs": ["multiplying polynomials", "simplifying complex fractions", "combining like terms"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Chain Rule',
+        "skills": [
+                   'Identify inner and outer functions in a composition',
+                   "Apply the chain rule: d/dx[f(g(x))] = f'(g(x))g'(x)",
+                   'Differentiate functions like sin(x^2), e^(3x), (x^2+1)^5',
+                   'Apply the chain rule repeatedly for nested compositions',
+                  ],
+        "algebra_prereqs": ['function composition notation', 'recognizing f(g(x)) structure', 'basic derivative rules'],
         "field_connections": {
-            "Agriculture":    "Revenue = price x quantity. If both change over a season, the product rule gives the instantaneous revenue rate.",
-            "Biology":        "Population density = population / area. If both change, the quotient rule gives the rate of density change.",
-            "Engineering":    "Power = force x velocity. If both vary, the product rule gives the rate at which power is delivered.",
-            "Coding/ML":      "Attention scores in transformers are dot products of vectors -- derivatives of these products use the product rule.",
-            "Social Justice": "The Gini coefficient involves a ratio of areas -- the quotient rule handles its rate of change.",
-            "Chemistry":      "Rate laws multiply concentrations of two reactants -- differentiating requires the product rule.",
-            "Health":         "Drug efficacy = absorbed dose / body weight. As weight changes, the quotient rule gives efficacy rate of change.",
-            "Business":       "Profit margin = profit / revenue. As both change with production, the quotient rule gives the instantaneous margin rate."
-        }
+            'Agriculture': "If yield depends on moisture and moisture depends on time, the chain rule links yield's rate directly to time.",
+            'Biology': 'If enzyme activity depends on temperature and temperature depends on time, the chain rule connects the rates.',
+            'Engineering': 'If stress depends on load and load depends on time, the chain rule gives how stress changes with time.',
+            'Coding/ML': 'Backpropagation IS the chain rule -- applied layer by layer to link each weight to the final loss.',
+            'Social Justice': 'If an outcome depends on policy and policy intensity depends on time, the chain rule links their rates.',
+            'Chemistry': 'If rate depends on concentration and concentration depends on time, the chain rule connects them.',
+            'Health': 'If risk depends on a biomarker and the biomarker depends on dosage, the chain rule links risk to dosage.',
+            'Business': 'If cost depends on volume and volume depends on time, the chain rule gives how cost changes with time.',
+        },
     },
     "S-12": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Chain Rule",
-        "skills": ["Identify inner and outer functions in a composition",
-                   "Apply the chain rule: d/dx[f(g(x))] = f'(g(x)) g'(x)",
-                   "Differentiate sin(x^2), e^(3x), (x^2+1)^5",
-                   "Apply chain rule repeatedly for nested compositions"],
-        "algebra_prereqs": ["function composition notation", "recognizing f(g(x)) structure", "basic derivative rules"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Derivatives of Inverse Functions',
+        "skills": [
+                   "Apply the inverse function derivative rule: g'(x) = 1/f'(g(x)) when g is the inverse of f",
+                   'Derive and use derivatives of ln x and log_a x from inverse relationships',
+                   'Differentiate arcsin x, arccos x, and arctan x',
+                   'Differentiate compositions with inverse functions using the chain rule (arctan(3x), ln(x^2+1))',
+                  ],
+        "algebra_prereqs": ['inverse function concept', 'logarithm properties', 'chain rule'],
         "field_connections": {
-            "Agriculture":    "Temperature affects humidity which affects pest pressure -- each link is a derivative, and the chain rule connects them.",
-            "Biology":        "A drug dose affects blood concentration which affects cellular response -- the chain rule gives the full rate.",
-            "Engineering":    "Strain depends on stress which depends on applied load -- the chain rule propagates the rate through each layer.",
-            "Coding/ML":      "Backpropagation IS the chain rule -- applied layer by layer through a neural network to compute how each weight affects the final loss.",
-            "Social Justice": "A policy change affects employment rate which affects poverty rate -- the chain rule quantifies the full ripple.",
-            "Chemistry":      "Reaction rate depends on temperature which depends on time -- the chain rule connects rates through both layers.",
-            "Health":         "Oxygen delivery depends on heart rate which depends on exercise intensity.",
-            "Business":       "Profit depends on market share which depends on advertising spend -- the chain rule gives marginal return on advertising."
-        }
+            'Agriculture': 'Logarithmic models of diminishing yield response differentiate to show shrinking marginal returns to inputs.',
+            'Biology': 'The natural log in a pH or growth model differentiates to a rate that reflects proportional change.',
+            'Engineering': 'The arctangent describing a phase angle differentiates to give how the angle responds to a changing input.',
+            'Coding/ML': 'Log-loss (cross-entropy) relies on the derivative of ln, central to how classifiers are trained.',
+            'Social Justice': 'A logarithmic scale for income differentiates to reflect proportional rather than absolute change.',
+            'Chemistry': 'The natural log in the integrated first-order rate law differentiates back to the reaction rate.',
+            'Health': 'A log-transformed dose scale differentiates to capture proportional sensitivity across dose ranges.',
+            'Business': 'Log utility models differentiate to marginal utility that reflects proportional gains in wealth.',
+        },
     },
     "S-13": {
-        "intent_tag": "derivatives", "unit": 2, "unit_name": "Derivatives",
-        "topic": "Implicit Differentiation",
-        "skills": ["Differentiate both sides with respect to x",
-                   "Solve for dy/dx after differentiating",
-                   "Find slope of tangent line to an implicit curve",
-                   "Apply to relations like x^2 + y^2 = r^2"],
-        "algebra_prereqs": ["solving equations for a variable", "chain rule", "treating y as a function of x"],
+        "intent_tag": 'derivatives', "unit": 2, "unit_name": 'Computing Derivatives',
+        "topic": 'Implicit Differentiation',
+        "skills": [
+                   'Differentiate both sides of an implicit equation with respect to x',
+                   'Solve for dy/dx after differentiating',
+                   'Find the slope of a tangent line to an implicit curve at a point',
+                   'Apply implicit differentiation to relations like x^2 + y^2 = r^2',
+                  ],
+        "algebra_prereqs": ['solving equations for a variable', 'chain rule', 'treating y as a function of x'],
         "field_connections": {
-            "Agriculture":    "Water pressure and pipe diameter related by an implicit equation -- implicit differentiation finds the rate.",
-            "Biology":        "A membrane pressure-volume relationship defined implicitly -- implicit differentiation gives dP/dV.",
-            "Engineering":    "A circle equation describes a wheel cross-section -- implicit differentiation finds the slope at any point.",
-            "Coding/ML":      "Loss surfaces defined by network constraints are often implicit -- implicit differentiation finds gradients.",
-            "Social Justice": "Supply and demand equilibrium where both price and quantity are implicitly related.",
-            "Chemistry":      "The van der Waals equation relates P and V implicitly -- implicit differentiation finds dP/dV.",
-            "Health":         "Cardiac output equations relating stroke volume and heart rate implicitly.",
-            "Business":       "Isoprofit curves where price and quantity combinations yield equal profit -- implicit differentiation gives the trade-off rate."
-        }
+            'Agriculture': 'A field boundary described by an implicit curve needs implicit differentiation to find the slope at any point.',
+            'Biology': 'A predator-prey relationship given implicitly needs implicit differentiation to find how one rate ties to the other.',
+            'Engineering': 'A circular machine cross-section given by x^2+y^2=r^2 needs implicit differentiation for its tangent slope.',
+            'Coding/ML': 'Implicit differentiation underlies training through constraints where variables are related implicitly.',
+            'Social Justice': 'A tradeoff curve between two social goods, given implicitly, needs implicit differentiation for its slope.',
+            'Chemistry': 'An equilibrium relationship linking two concentrations implicitly needs implicit differentiation for sensitivity.',
+            'Health': 'A relationship between two biomarkers given implicitly needs implicit differentiation to relate their rates.',
+            'Business': 'An implicit demand-price relationship needs implicit differentiation to find the marginal tradeoff.',
+        },
     },
     "S-14": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Related Rates",
-        "skills": ["Identify all quantities that change with time",
-                   "Write an equation relating the quantities",
-                   "Differentiate implicitly with respect to t",
-                   "Substitute known values to find the unknown rate"],
-        "algebra_prereqs": ["implicit differentiation", "geometry formulas (area, volume, Pythagorean theorem)", "solving for an unknown"],
+        "intent_tag": 'applications_derivatives', "unit": 3, "unit_name": 'Using Derivatives',
+        "topic": 'Related Rates',
+        "skills": [
+                   'Identify all quantities that change with time',
+                   'Write an equation relating the quantities',
+                   'Differentiate implicitly with respect to t',
+                   'Substitute known values to find the unknown rate',
+                  ],
+        "algebra_prereqs": ['implicit differentiation', 'geometry formulas (area, volume, Pythagorean)', 'solving for an unknown'],
         "field_connections": {
-            "Agriculture":    "A conical irrigation tank drains at a known rate -- how fast is the water level dropping when depth is 5 feet?",
-            "Biology":        "A spherical tumor grows at a known volume rate -- how fast is its radius increasing?",
-            "Engineering":    "A ladder slides down a wall at a known rate -- how fast is the top descending?",
-            "Coding/ML":      "In a real-time system, model size grows with training data -- how fast is prediction latency increasing?",
-            "Social Justice": "Urban area expands at a measured rate -- how fast is green space per capita decreasing?",
-            "Chemistry":      "A gas expands in a cylinder at a known volume rate -- how fast is pressure dropping?",
-            "Health":         "Blood flows through a narrowing artery -- how fast is flow velocity changing as the radius decreases?",
-            "Business":       "Units sold and price both change over time -- how fast is total revenue changing at a specific moment?"
-        }
+            'Agriculture': "As a circular irrigation zone's radius grows, related rates link the expanding radius to the rate the watered area increases.",
+            'Biology': "As a cell's radius grows, related rates connect the radius rate to the rate its volume increases.",
+            'Engineering': 'As a tank fills, related rates connect the rising water level to the constant inflow rate through the geometry.',
+            'Coding/ML': 'Related rates connect how quickly one changing metric drives another through their governing equation.',
+            'Social Justice': 'As a served population grows, related rates connect its rate to the rate resource demand rises.',
+            'Chemistry': 'As a spherical droplet evaporates, related rates connect its shrinking radius to the rate volume is lost.',
+            'Health': 'As a spherical tumor grows, related rates link the radius rate to the rate its volume increases.',
+            'Business': 'As demand shifts over time, related rates connect the rate of demand change to the rate revenue changes.',
+        },
     },
     "S-15": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
+        "intent_tag": 'applications_derivatives', "unit": 3, "unit_name": 'Using Derivatives',
         "topic": "L'Hopital's Rule",
-        "skills": ["Identify indeterminate forms: 0/0, inf/inf, 0*inf, inf-inf",
-                   "Apply L'Hopital's Rule (differentiate numerator and denominator separately)",
-                   "Apply the rule repeatedly when needed",
-                   "Rewrite products/differences before applying"],
-        "algebra_prereqs": ["recognizing indeterminate forms", "differentiation rules", "limit evaluation"],
+        "skills": [
+                   'Identify indeterminate forms: 0/0, inf/inf, 0*inf, inf-inf, 1^inf, 0^0',
+                   "Apply L'Hopital's Rule correctly (differentiate numerator and denominator separately)",
+                   'Apply the rule repeatedly when needed',
+                   'Rewrite indeterminate products and differences before applying the rule',
+                  ],
+        "algebra_prereqs": ['recognizing indeterminate forms', 'differentiation rules', 'limit evaluation'],
         "field_connections": {
-            "Agriculture":    "Evaluating a soil moisture model's limit as saturation approaches zero -- direct substitution gives 0/0.",
-            "Biology":        "Evaluating a per-capita growth rate expression near extinction where 0/0 appears.",
-            "Engineering":    "Evaluating thermodynamic efficiency limits where both numerator and denominator approach zero.",
-            "Coding/ML":      "Evaluating softmax probability behavior as logits grow very large -- the inf/inf form is resolved with L'Hopital's.",
-            "Social Justice": "Evaluating limiting ratios in demographic models where two subgroup sizes approach equality.",
-            "Chemistry":      "Evaluating limiting concentration ratios in equilibrium expressions as both terms approach zero.",
-            "Health":         "Evaluating limiting drug absorption ratios in pharmacokinetic models at very low doses.",
-            "Business":       "Evaluating limiting profit margin expressions as fixed costs become negligible relative to revenue."
-        }
+            'Agriculture': "The limiting efficiency of two competing growth processes, an indeterminate ratio, resolves with L'Hopital's Rule.",
+            'Biology': "A ratio of two decaying populations, indeterminate as time grows, is evaluated with L'Hopital's Rule.",
+            'Engineering': "A gain ratio that becomes 0/0 at a resonance point is resolved cleanly using L'Hopital's Rule.",
+            'Coding/ML': "A ratio of two vanishing gradients, indeterminate in form, can be evaluated with L'Hopital's Rule.",
+            'Social Justice': "A ratio of two shrinking gaps, indeterminate at the limit, is resolved with L'Hopital's Rule.",
+            'Chemistry': "A ratio of two reaction rates that both approach zero is evaluated with L'Hopital's Rule.",
+            'Health': "A ratio of two declining risk measures, indeterminate at the limit, resolves with L'Hopital's Rule.",
+            'Business': "A ratio of two costs both approaching zero at scale, an indeterminate form, uses L'Hopital's Rule.",
+        },
     },
     "S-16": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Mean Value Theorem",
-        "skills": ["State hypotheses and conclusion of the MVT",
-                   "Find values of c satisfying the MVT",
+        "intent_tag": 'applications_derivatives', "unit": 3, "unit_name": 'Using Derivatives',
+        "topic": 'Mean Value Theorem',
+        "skills": [
+                   'State the hypotheses and conclusion of the MVT',
+                   'Find values of c satisfying the MVT on a given interval',
                    "Apply Rolle's Theorem as a special case of MVT",
-                   "Use MVT to argue about function behavior"],
-        "algebra_prereqs": ["average rate of change", "continuity and differentiability", "solving f'(c) = average slope"],
+                   'Use MVT to argue about function behavior (e.g., uniqueness of zeros)',
+                  ],
+        "algebra_prereqs": ['average rate of change', 'continuity and differentiability', "solving f'(c) = average slope"],
         "field_connections": {
-            "Agriculture":    "If total water usage increased over a season, at some moment the instantaneous rate equaled the seasonal average.",
-            "Biology":        "If a population grew from 1000 to 5000 over 10 years, at some moment growth was exactly 400 per year.",
-            "Engineering":    "If a vehicle traveled 300 miles in 5 hours, at some moment the speedometer read exactly 60 mph.",
-            "Coding/ML":      "MVT justifies convergence arguments -- if loss decreased over an interval, the gradient was zero somewhere in it.",
-            "Social Justice": "If poverty rate changed between two census years, the MVT guarantees an exact instantaneous rate at some point.",
-            "Chemistry":      "If concentration changed over a reaction interval, the instantaneous rate equaled that average at some moment.",
-            "Health":         "If blood pressure changed over a hospital stay, the MVT guarantees a moment of exact average rate.",
-            "Business":       "If quarterly revenue grew by a known amount, at some moment the instantaneous rate equaled the quarterly average."
-        }
+            'Agriculture': "If a field's average moisture rose at a known rate over a week, the MVT guarantees a moment it changed at exactly that rate.",
+            'Biology': "If a population's average growth over a season is known, the MVT guarantees an instant it grew at exactly that rate.",
+            'Engineering': 'A speed camera uses the MVT: average speed over a segment guarantees the vehicle hit that exact speed at some instant.',
+            'Coding/ML': 'The MVT underlies error bounds in numerical methods used to train and evaluate models.',
+            'Social Justice': "If an index's average change over a decade is known, the MVT guarantees a year it changed at exactly that rate.",
+            'Chemistry': "If a reaction's average rate over an interval is known, the MVT guarantees an instant it proceeded at exactly that rate.",
+            'Health': "If a biomarker's average change over a month is known, the MVT guarantees a day it changed at exactly that rate.",
+            'Business': 'If average revenue growth over a quarter is known, the MVT guarantees a moment it grew at exactly that rate.',
+        },
     },
     "S-17": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Monotonicity & Critical Points",
-        "skills": ["Find critical numbers by solving f'(x) = 0",
-                   "Apply the First Derivative Test for local extrema",
-                   "Determine intervals of increase and decrease",
-                   "Identify local maxima and minima"],
-        "algebra_prereqs": ["solving polynomial equations", "sign analysis on a number line", "interpreting f' positive/negative"],
+        "intent_tag": 'applications_derivatives', "unit": 3, "unit_name": 'Using Derivatives',
+        "topic": 'Monotonicity, Critical Points & Concavity',
+        "skills": [
+                   'Find critical numbers and determine intervals where f is increasing or decreasing',
+                   'Apply the First and Second Derivative Tests to identify and classify local extrema',
+                   "Determine concavity and find inflection points where f'' changes sign",
+                   "Sketch curves using information from f, f', and f''",
+                  ],
+        "algebra_prereqs": ['solving polynomial equations', 'sign analysis on a number line', "interpreting f' and f'' signs"],
         "field_connections": {
-            "Agriculture":    "Critical points in a yield model identify when output switches from growing to declining.",
-            "Biology":        "The critical point of a predator-prey model identifies when prey population peaks before declining.",
-            "Engineering":    "The critical point of a projectile height function is the exact moment of maximum height.",
-            "Coding/ML":      "Finding where a loss function stops decreasing -- that critical point is the trained model configuration.",
-            "Social Justice": "Identifying the year when a social indicator switches from improving to worsening.",
-            "Chemistry":      "The critical point of a reaction rate model identifies when the rate begins to slow.",
-            "Health":         "The critical point of a drug concentration curve is when blood levels peak.",
-            "Business":       "The critical point of a profit function is the production level that maximizes profit."
-        }
+            'Agriculture': 'Finding the fertilizer level that maximizes yield uses critical points and the sign of the second derivative.',
+            'Biology': 'Locating the fastest-growth phase of a population uses critical points of the growth rate and concavity.',
+            'Engineering': "Finding where a beam's deflection is greatest uses critical points and concavity of the deflection curve.",
+            'Coding/ML': 'Identifying minima of a loss surface uses critical points and second-derivative (curvature) tests.',
+            'Social Justice': 'Finding when an inequality trend peaks or turns uses critical points and inflection analysis.',
+            'Chemistry': 'Locating the temperature of maximum reaction rate uses critical points and concavity.',
+            'Health': 'Finding when a treatment response peaks uses critical points and the concavity of the response curve.',
+            'Business': 'Finding the output that maximizes profit uses critical points and the second-derivative test.',
+        },
     },
     "S-18": {
-        "intent_tag": "applications_derivatives", "unit": 3, "unit_name": "Applications of Differentiation",
-        "topic": "Optimization",
-        "skills": ["Set up an objective function from a word problem",
-                   "Use constraint equations to reduce to one variable",
-                   "Find critical points using the Closed Interval Method",
-                   "Verify maximum or minimum"],
-        "algebra_prereqs": ["setting up equations from word problems", "solving systems of equations", "substitution to reduce variables"],
+        "intent_tag": 'applications_derivatives', "unit": 3, "unit_name": 'Using Derivatives',
+        "topic": 'Optimization',
+        "skills": [
+                   'Set up an objective function from a word problem',
+                   'Use constraint equations to reduce to one variable',
+                   'Find critical points on a closed interval using the Closed Interval Method',
+                   'Verify that the critical point is a maximum or minimum',
+                  ],
+        "algebra_prereqs": ['setting up equations from word problems', 'solving systems', 'substitution to reduce variables'],
         "field_connections": {
-            "Agriculture":    "Minimize fencing to enclose maximum field area. Maximize yield given a fixed water budget.",
-            "Biology":        "Optimal foraging theory: find the strategy that maximizes energy intake per unit time.",
-            "Engineering":    "Minimize material in a structural beam while maintaining load capacity.",
-            "Coding/ML":      "Training a neural network IS optimization. Minimizing a loss function over millions of parameters.",
-            "Social Justice": "Maximizing social benefit subject to budget constraints -- the mathematics of resource allocation in public policy.",
-            "Chemistry":      "Find the temperature that maximizes reaction yield subject to safety constraints.",
-            "Health":         "Find the drug dosage that maximizes therapeutic efficacy while keeping toxicity below a safety threshold.",
-            "Business":       "Maximize profit given production constraints. Minimize cost given an output target."
-        }
+            'Agriculture': "Maximizing an enclosed field's area with a fixed length of fencing is a classic constrained optimization problem.",
+            'Biology': 'Finding the foraging strategy that maximizes energy intake per effort is a real optimization problem.',
+            'Engineering': 'Designing a container of minimum material for a required volume is a constrained optimization problem.',
+            'Coding/ML': 'Training a model is optimization: minimizing a loss objective subject to the structure of the network.',
+            'Social Justice': 'Allocating a fixed budget to maximize people served is a constrained optimization problem.',
+            'Chemistry': 'Finding the temperature that maximizes yield while respecting a safety constraint is optimization.',
+            'Health': 'Finding the dose that maximizes benefit while minimizing side effects is a real optimization tradeoff.',
+            'Business': 'Setting the price that maximizes profit given a demand constraint is a core optimization problem.',
+        },
     },
     "S-19": {
-        "intent_tag": "integrals", "unit": 4, "unit_name": "Integration",
-        "topic": "Riemann Sums & Definite Integrals",
-        "skills": ["Write left, right, and midpoint Riemann sums",
-                   "Express the definite integral as lim(n to inf) Sum f(xi*)Dx",
-                   "Interpret the definite integral as net area under a curve",
-                   "Use basic properties of definite integrals"],
-        "algebra_prereqs": ["summation notation", "area of rectangles", "evaluating functions at evenly spaced points"],
+        "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
+        "topic": 'Riemann Sums & Definite Integrals',
+        "skills": [
+                   'Write left, right, and midpoint Riemann sum approximations',
+                   'Express the definite integral as lim(n->inf) sum f(x_i*)dx',
+                   'Interpret the definite integral as net area under a curve',
+                   'Use basic properties of definite integrals (linearity, interval splitting)',
+                  ],
+        "algebra_prereqs": ['summation notation', 'area of rectangles', 'evaluating functions at points'],
         "field_connections": {
-            "Agriculture":    "Estimating total harvest by weighing each row separately -- the more rows measured, the more accurate the total.",
-            "Biology":        "Estimating total energy consumed by summing discrete metabolic rate measurements.",
-            "Engineering":    "Estimating total work done by a variable force by summing over small intervals.",
-            "Coding/ML":      "The trapezoidal rule and Simpson's rule used in AUC computation are Riemann sum approximations.",
-            "Social Justice": "Estimating total exposure to an environmental hazard by summing concentration levels over time.",
-            "Chemistry":      "Estimating total moles of gas produced by summing rate measurements over discrete time intervals.",
-            "Health":         "Estimating total drug exposure (AUC in pharmacokinetics) from discrete blood sample measurements.",
-            "Business":       "Estimating total revenue from discrete sales data -- Riemann sums approximate the area under a demand curve."
-        }
+            'Agriculture': 'Total water delivered over a day, from a varying flow rate, is a definite integral -- a sum of thin time slices.',
+            'Biology': 'Total offspring produced over a season, from a varying birth rate, is the definite integral of that rate.',
+            'Engineering': 'Total distance traveled from a varying velocity is the definite integral -- the accumulated area under the curve.',
+            'Coding/ML': 'Area under a precision-recall or ROC curve is a definite integral summarizing model performance.',
+            'Social Justice': 'Total people affected over time, from a varying rate, is the definite integral of that rate.',
+            'Chemistry': 'Total product formed over a reaction, from a varying rate, is the definite integral of the rate curve.',
+            'Health': 'Total drug exposure (area under the concentration curve) is a definite integral used in dosing.',
+            'Business': 'Total revenue over a period, from a varying sales rate, is the definite integral of the rate.',
+        },
     },
     "S-20": {
-        "intent_tag": "integrals", "unit": 5, "unit_name": "Applications of Integration",
-        "topic": "Average Value of a Function",
-        "skills": ["Apply the average value formula: f_avg = (1/(b-a)) * integral from a to b of f(x) dx",
-                   "State and apply the Mean Value Theorem for Integrals",
-                   "Interpret average value in context (temperature, velocity)",
-                   "Find c where f(c) equals the average value"],
-        "algebra_prereqs": ["evaluating definite integrals", "dividing by an interval length", "solving f(c) = constant"],
+        "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
+        "topic": 'Average Value of a Function',
+        "skills": [
+                   'Apply the average value formula: f_avg = (1/(b-a)) integral of f(x) dx',
+                   'State and apply the Mean Value Theorem for Integrals',
+                   'Interpret average value in applied contexts (average temperature, velocity)',
+                   'Find the value(s) of c where f(c) equals the average value',
+                  ],
+        "algebra_prereqs": ['evaluating definite integrals', 'dividing by an interval length', 'solving f(c) = constant'],
         "field_connections": {
-            "Agriculture":    "Average temperature over a growing season -- the single constant that delivers the same total heat units.",
-            "Biology":        "Average metabolic rate over a 24-hour period -- accounts for peaks during activity and lows during rest.",
-            "Engineering":    "Average power delivered by a variable force over a distance.",
-            "Coding/ML":      "Mean loss over an epoch is the average value of the loss function -- the key metric for tracking model improvement.",
-            "Social Justice": "Average pollutant exposure over a year -- used in environmental justice litigation to establish legal threshold violations.",
-            "Chemistry":      "Average reaction rate over a time interval -- bridges instantaneous rate (derivative) and total yield (integral).",
-            "Health":         "Average blood glucose over 90 days is exactly what an A1C test measures.",
-            "Business":       "Average revenue per unit over a production run -- connects to pricing strategy and break-even analysis."
-        }
+            'Agriculture': 'The average soil temperature over a growing day is the integral of temperature divided by the length of the day.',
+            'Biology': 'The average population over a season is the integral of the population curve divided by the season length.',
+            'Engineering': 'The average power delivered over a cycle is the integral of instantaneous power divided by the period.',
+            'Coding/ML': 'The average loss over a dataset is the integral (or sum) of loss divided by the number of samples.',
+            'Social Justice': 'The average income over a region is the integral of the income distribution divided by its range.',
+            'Chemistry': 'The average reaction rate over an interval is the integral of the rate divided by the time span.',
+            'Health': 'The average concentration over a dosing interval is the integral divided by the interval length.',
+            'Business': 'The average daily revenue over a quarter is the integral of the revenue curve divided by the days.',
+        },
     },
     "S-21": {
-        "intent_tag": "integrals", "unit": 4, "unit_name": "Integration",
-        "topic": "Fundamental Theorem of Calculus",
-        "skills": ["State FTC Part 1: d/dx[integral from a to x of f(t) dt] = f(x)",
-                   "State FTC Part 2: integral from a to b of f(x) dx = F(b) - F(a)",
-                   "Evaluate definite integrals using antiderivatives",
-                   "Differentiate integral-defined functions using FTC Part 1"],
-        "algebra_prereqs": ["antiderivatives", "evaluating expressions at bounds", "understanding accumulation"],
+        "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
+        "topic": 'Antiderivatives & the Fundamental Theorem of Calculus',
+        "skills": [
+                   'Reverse the power rule and integrate basic trig, exponential, and 1/x functions',
+                   'Write the general antiderivative F(x)+C and find a particular one from an initial condition',
+                   'State the FTC: integral from a to b of f(x) dx = F(b) - F(a)',
+                   'Evaluate definite integrals using antiderivatives',
+                  ],
+        "algebra_prereqs": ['power rule in reverse', 'exponent rules', 'evaluating expressions at bounds'],
         "field_connections": {
-            "Agriculture":    "Total rainfall accumulated equals the area under the rainfall rate curve -- the FTC connects rate to total.",
-            "Biology":        "Total population growth equals the area under the instantaneous growth rate curve.",
-            "Engineering":    "Total displacement equals the area under the velocity curve -- the FTC makes this computable.",
-            "Coding/ML":      "The FTC underpins automatic differentiation libraries like PyTorch and TensorFlow.",
-            "Social Justice": "Total cumulative pollutant exposure equals the area under the concentration-over-time curve.",
-            "Chemistry":      "Total moles of product formed equals the area under the reaction rate curve.",
-            "Health":         "Total drug exposure (AUC) equals the area under the concentration-time curve -- computed using FTC Part 2.",
-            "Business":       "Total revenue over a period equals the area under the marginal revenue curve."
-        }
+            'Agriculture': 'Total growth from a known growth-rate function is found by antidifferentiating and evaluating with the FTC.',
+            'Biology': 'Total population added over time, from a known rate, is found by antidifferentiating and applying the FTC.',
+            'Engineering': 'Total displacement from a velocity function is recovered by antidifferentiating and evaluating via the FTC.',
+            'Coding/ML': 'Accumulated reward from a reward-rate function is found by antidifferentiation and the FTC.',
+            'Social Justice': 'Total impact accumulated from an effort-rate function is found by antidifferentiating and using the FTC.',
+            'Chemistry': 'Total product from a reaction-rate function is recovered by antidifferentiating and applying the FTC.',
+            'Health': 'Total drug delivered from an infusion-rate function is found by antidifferentiation and the FTC.',
+            'Business': 'Total profit accumulated from a marginal-profit function is found by antidifferentiating and the FTC.',
+        },
     },
     "S-22": {
-        "intent_tag": "integrals", "unit": 4, "unit_name": "Integration",
-        "topic": "Antiderivatives & Indefinite Integrals",
-        "skills": ["Reverse the power rule: integral of x^n dx",
-                   "Integrate basic trig, exponential, and 1/x functions",
-                   "Write the general antiderivative F(x) + C",
-                   "Find a particular antiderivative using an initial condition"],
-        "algebra_prereqs": ["power rule for derivatives (in reverse)", "exponent rules", "evaluating expressions at a point"],
+        "intent_tag": 'integrals', "unit": 5, "unit_name": 'Evaluating Integrals',
+        "topic": 'The Second Fundamental Theorem of Calculus',
+        "skills": [
+                   'Construct an accumulation function A(x) = integral from a to x of f(t) dt',
+                   "Apply the Second FTC to differentiate accumulation functions: A'(x) = f(x)",
+                   'Relate properties of f (sign, increasing/decreasing, concavity) to properties of A',
+                   'Explain how the Second FTC and antiderivative evaluation both express the inverse of differentiation and integration',
+                  ],
+        "algebra_prereqs": ['definite integrals as accumulation', 'the first FTC', 'reading rate-vs-accumulation graphs'],
         "field_connections": {
-            "Agriculture":    "Given a rate of water flow, integration recovers total water used over a period.",
-            "Biology":        "Given an instantaneous growth rate function, integration recovers total population added.",
-            "Engineering":    "Given velocity, integration recovers position. Given acceleration, integration recovers velocity.",
-            "Coding/ML":      "Numerical integration underlies AUC metrics -- one of the most used evaluation metrics in machine learning.",
-            "Social Justice": "Given a rate of change of a social indicator, integration recovers cumulative change over a policy period.",
-            "Chemistry":      "Given a reaction rate function, integration recovers total moles of product formed.",
-            "Health":         "Given a drug absorption rate, integration recovers total drug accumulated in the bloodstream.",
-            "Business":       "Given a marginal cost function, integration recovers total cost. Given marginal revenue, recovers total revenue."
-        }
+            'Agriculture': 'Accumulated rainfall A(x) up to day x has derivative equal to the daily rainfall rate -- the Second FTC in action.',
+            'Biology': 'Cumulative population A(x) up to time x has derivative equal to the instantaneous birth rate at x.',
+            'Engineering': 'Accumulated charge A(x) up to time x has derivative equal to the current -- the Second FTC linking them.',
+            'Coding/ML': 'Cumulative reward A(x) has derivative equal to the instantaneous reward rate, connecting the two by the Second FTC.',
+            'Social Justice': 'Cumulative people served A(x) has derivative equal to the current service rate -- the Second FTC.',
+            'Chemistry': 'Accumulated product A(x) up to time x has derivative equal to the instantaneous reaction rate.',
+            'Health': 'Cumulative drug delivered A(x) has derivative equal to the current infusion rate -- the Second FTC.',
+            'Business': 'Cumulative revenue A(x) up to time x has derivative equal to the instantaneous sales rate.',
+        },
     },
     "S-23": {
-        "intent_tag": "integrals", "unit": 4, "unit_name": "Integration",
-        "topic": "u-Substitution",
-        "skills": ["Choose an appropriate substitution u = g(x)",
-                   "Rewrite the integral entirely in terms of u",
-                   "Apply substitution to indefinite and definite integrals",
-                   "Handle limits of integration correctly in definite integrals"],
-        "algebra_prereqs": ["chain rule (in reverse)", "differentials du = g'(x)dx", "changing variables in an expression"],
+        "intent_tag": 'integrals', "unit": 5, "unit_name": 'Evaluating Integrals',
+        "topic": 'u-Substitution',
+        "skills": [
+                   'Choose an appropriate substitution u = g(x)',
+                   'Rewrite the integral entirely in terms of u',
+                   'Apply substitution to both indefinite and definite integrals',
+                   'Handle limits of integration correctly when substituting in definite integrals',
+                  ],
+        "algebra_prereqs": ['chain rule in reverse', "differentials du = g'(x)dx", 'changing variables'],
         "field_connections": {
-            "Agriculture":    "Substituting u = soil moisture function to simplify a nested rate integral.",
-            "Biology":        "Substituting u = drug concentration to evaluate a nested pharmacokinetic integral.",
-            "Engineering":    "Substituting u = angular displacement to simplify rotational dynamics integrals.",
-            "Coding/ML":      "Change of variables in probability distributions is the continuous analog of u-substitution.",
-            "Social Justice": "Substituting a composite demographic variable to simplify a Lorenz curve integral.",
-            "Chemistry":      "Substituting u = temperature function to evaluate Arrhenius rate integrals.",
-            "Health":         "Substituting u = concentration function to evaluate drug clearance integrals.",
-            "Business":       "Substituting u = composite cost function to evaluate nested total cost integrals."
-        }
+            'Agriculture': 'An accumulated-growth integral whose integrand is a composition simplifies with a well-chosen u-substitution.',
+            'Biology': 'A population integral with a composed exponential rate resolves cleanly with u-substitution.',
+            'Engineering': 'A signal-energy integral with a composed inner function is evaluated by u-substitution.',
+            'Coding/ML': 'Change-of-variable in an integral mirrors the substitution used in probability transformations for models.',
+            'Social Justice': 'A cumulative-impact integral with a composed rate simplifies through u-substitution.',
+            'Chemistry': 'A reaction-progress integral with a composed rate law is evaluated using u-substitution.',
+            'Health': 'A total-exposure integral with a composed concentration function resolves with u-substitution.',
+            'Business': 'A cumulative-revenue integral with a composed growth term is evaluated by u-substitution.',
+        },
     },
     "S-24": {
-        "intent_tag": "integrals", "unit": 5, "unit_name": "Applications of Integration",
-        "topic": "Area Between Curves",
-        "skills": ["Find intersection points of two curves",
-                   "Set up integral of [f(x) - g(x)] dx for area between curves",
-                   "Handle cases where curves switch which is on top",
-                   "Compute area using vertical or horizontal slicing"],
-        "algebra_prereqs": ["solving equations to find intersections", "evaluating definite integrals", "determining which function is larger"],
+        "intent_tag": 'integrals', "unit": 6, "unit_name": 'Using Definite Integrals',
+        "topic": 'Area Between Curves',
+        "skills": [
+                   'Find intersection points of two curves',
+                   'Set up integral of [f(x) - g(x)] dx for area between curves',
+                   'Handle cases where curves switch which is on top',
+                   'Compute area using vertical or horizontal slicing as appropriate',
+                  ],
+        "algebra_prereqs": ['solving equations to find intersections', 'evaluating definite integrals', 'determining which function is larger'],
         "field_connections": {
-            "Agriculture":    "The area between projected and actual yield curves measures cumulative shortfall over a season.",
-            "Biology":        "The area between two competing population curves measures which species has a net advantage.",
-            "Engineering":    "The area between force-displacement curves for loading and unloading measures energy lost to hysteresis.",
-            "Coding/ML":      "The AUC (area under the ROC curve) is the area between the ROC curve and the diagonal -- the standard measure of classifier quality.",
-            "Social Justice": "The Gini coefficient IS the area between the Lorenz curve and the line of equality -- a direct integration.",
-            "Chemistry":      "The area between two concentration curves measures net accumulation of a product relative to a baseline.",
-            "Health":         "The area between drug concentration curves for two formulations measures comparative bioavailability.",
-            "Business":       "The area between revenue and cost curves over a production range is total profit."
-        }
+            'Agriculture': 'The area between two yield curves (with vs. without a treatment) is the integral of their difference -- the gain from the treatment.',
+            'Biology': 'The area between two population curves measures the cumulative difference between two growth scenarios.',
+            'Engineering': 'The area between a load curve and a capacity curve represents accumulated margin or overload.',
+            'Coding/ML': 'The area between two model performance curves quantifies the cumulative advantage of one over the other.',
+            'Social Justice': 'The area between two policy outcome curves measures the cumulative difference the policy made over time.',
+            'Chemistry': 'The area between two concentration curves measures the cumulative difference between two reaction conditions.',
+            'Health': 'The area between treated and untreated response curves measures the cumulative treatment benefit.',
+            'Business': 'The area between a revenue curve and a cost curve represents accumulated profit over the interval.',
+        },
     },
 }
 
@@ -982,6 +1030,12 @@ def extract_topic_from_input(user_input):
 
 
 # ── AI: quiz question generation (Sonnet + cultural prompt) ──────────────────
+def pick_difficulty():
+    """Randomly rotate difficulty each question so the session finds the student's
+    starting place, rather than labeling any single problem as easy/medium/hard."""
+    return random.choice(["easy", "medium", "hard"])
+
+
 def generate_worked_example(standard_code, difficulty="medium", language="en"):
     """
     Generate a fully worked example of a DIFFERENT problem on the same standard,
@@ -2117,19 +2171,19 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
     # Active Calculus sections that teach each standard.
     # Some standards span several sections; some sections serve several standards.
     tb_section = {
-        "S-01":"1.1, 1.2",      "S-02":"1.3, 1.4, 1.5", "S-03":"1.2, 1.7",
-        "S-04":"1.6",           "S-05":"1.6, 3.4",      "S-06":"1.7",
-        "S-07":"1.7",           "S-08":"1.8",           "S-09":"2.1",
-        "S-10":"2.2, 2.4, 2.6", "S-11":"2.3",           "S-12":"2.5",
+        "S-01":"1.1",           "S-02":"1.2",           "S-03":"1.3, 1.4",
+        "S-04":"1.5",           "S-05":"1.6",           "S-06":"1.7",
+        "S-07":"1.8",           "S-08":"2.1",           "S-09":"2.2, 2.4",
+        "S-10":"2.3",           "S-11":"2.5",           "S-12":"2.6",
         "S-13":"2.7",           "S-14":"3.1",           "S-15":"3.2",
         "S-16":"3.3",           "S-17":"3.3, 3.4",      "S-18":"3.5, 3.6",
-        "S-19":"4.1, 4.2, 4.3", "S-20":"4.3",           "S-21":"4.4, 5.2",
-        "S-22":"5.1",           "S-23":"5.3",           "S-24":"6.1",
+        "S-19":"4.1, 4.2, 4.3", "S-20":"4.3",           "S-21":"4.4, 5.1",
+        "S-22":"5.2",           "S-23":"5.3",           "S-24":"6.1",
     }
     # Textbook chapter each standard belongs to
     tb_chapter = {
-        "S-01":1,"S-02":1,"S-03":1,"S-04":1,"S-05":1,"S-06":1,"S-07":1,"S-08":1,
-        "S-09":2,"S-10":2,"S-11":2,"S-12":2,"S-13":2,
+        "S-01":1,"S-02":1,"S-03":1,"S-04":1,"S-05":1,"S-06":1,"S-07":1,
+        "S-08":2,"S-09":2,"S-10":2,"S-11":2,"S-12":2,"S-13":2,
         "S-14":3,"S-15":3,"S-16":3,"S-17":3,"S-18":3,
         "S-19":4,"S-20":4,"S-21":4,
         "S-22":5,"S-23":5,
@@ -2617,8 +2671,8 @@ elif st.session_state.screen == "welcome":
         st.markdown(f"""
 <div class="feature-block">
 <span class="feature-label">{_tl("Challenge mode.","Modo reto.")}</span>
-{_tl("Original questions aligned to all 25 C-ID MATH 210 standards. Each connects to a real career field — engineering, data science, biology, health, business, or social justice.",
-     "Preguntas originales alineadas a los 25 estándares C-ID MATH 210. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
+{_tl("Original questions aligned to all 24 C-ID MATH 210 standards. Each connects to a real career field — engineering, data science, biology, health, business, or social justice.",
+     "Preguntas originales alineadas a los 24 estándares C-ID MATH 210. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
 </div>
 <div class="feature-block">
 <span class="feature-label">{_tl("Tutor chat.","Chat con tutor.")}</span>
@@ -2669,11 +2723,11 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             unsafe_allow_html=True
         )
         for ch, name_en, name_es, codes in [
-            ("Ch. 1", "Understanding the Derivative", "Entendiendo la Derivada",       "S-01 – S-08"),
-            ("Ch. 2", "Computing Derivatives",        "Calculando Derivadas",          "S-09 – S-13"),
-            ("Ch. 3", "Using Derivatives",            "Usando Derivadas",              "S-05, S-14 – S-18"),
+            ("Ch. 1", "Understanding the Derivative", "Entendiendo la Derivada",       "S-01 – S-07"),
+            ("Ch. 2", "Computing Derivatives",        "Calculando Derivadas",          "S-08 – S-13"),
+            ("Ch. 3", "Using Derivatives",            "Usando Derivadas",              "S-14 – S-18"),
             ("Ch. 4", "The Definite Integral",        "La Integral Definida",          "S-19 – S-21"),
-            ("Ch. 5", "Evaluating Integrals",         "Evaluando Integrales",          "S-21 – S-23"),
+            ("Ch. 5", "Evaluating Integrals",         "Evaluando Integrales",          "S-22 – S-23"),
             ("Ch. 6", "Using Definite Integrals",     "Usando Integrales Definidas",   "S-24"),
         ]:
             name = name_es if lang_top == "Español" else name_en
@@ -2740,54 +2794,94 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         # Language comes from top-of-page selector
         lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
 
-        # 3. Standard
-        std_options = ["Random — surprise me"] + [
-            f"{code}: {data['topic']}"
-            for code, data in STANDARDS_MAP.items()
-        ]
-        std_choice = st.selectbox(
-            "2. Learning standard / Estándar",
-            std_options,
-            key="welcome_std"
+        # 2. Learning standard — chapter-grouped buttons (no dropdown)
+        st.markdown(
+            f'<p style="font-size:0.95rem;font-weight:600;color:inherit;'
+            f'margin:0.6rem 0 0.2rem;">'
+            f'{_tl("2. Pick a standard to practice", "2. Elige un estándar para practicar")}'
+            f'</p>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f'<p style="font-size:0.8rem;color:inherit;opacity:0.6;margin:0 0 0.5rem;">'
+            f'{_tl("Or leave it on Random to be surprised.", "O déjalo en Aleatorio para sorprenderte.")}'
+            f'</p>',
+            unsafe_allow_html=True
         )
 
-        selected_code = None
-        if std_choice != "Random — surprise me":
-            selected_code = std_choice.split(":")[0].strip()
-            st.session_state.selected_standard = selected_code
-        else:
-            st.session_state.selected_standard = None
-            st.session_state.selected_skill    = None
+        # Chapter grouping for the buttons
+        _tb_chapter = {
+            "S-01":1,"S-02":1,"S-03":1,"S-04":1,"S-05":1,"S-06":1,"S-07":1,
+            "S-08":2,"S-09":2,"S-10":2,"S-11":2,"S-12":2,"S-13":2,
+            "S-14":3,"S-15":3,"S-16":3,"S-17":3,"S-18":3,
+            "S-19":4,"S-20":4,"S-21":4,
+            "S-22":5,"S-23":5,
+            "S-24":6,
+        }
+        _ch_titles = {
+            1: _tl("Chapter 1 · Understanding the Derivative", "Capítulo 1 · Entendiendo la Derivada"),
+            2: _tl("Chapter 2 · Computing Derivatives",        "Capítulo 2 · Calculando Derivadas"),
+            3: _tl("Chapter 3 · Using Derivatives",            "Capítulo 3 · Usando Derivadas"),
+            4: _tl("Chapter 4 · The Definite Integral",        "Capítulo 4 · La Integral Definida"),
+            5: _tl("Chapter 5 · Evaluating Integrals",         "Capítulo 5 · Evaluando Integrales"),
+            6: _tl("Chapter 6 · Using Definite Integrals",     "Capítulo 6 · Usando Integrales Definidas"),
+        }
 
-        # 3b. Subskill — only when a specific standard is chosen
+        # Currently selected standard (from a prior button click this session)
+        selected_code = st.session_state.get("selected_standard")
+
+        # Random button at the top
+        random_selected = (selected_code is None)
+        rand_label = ("🎲 Random — surprise me  ✓" if random_selected
+                      else "🎲 Random — surprise me")
+        if st.button(rand_label, key="std_random", use_container_width=True,
+                     type="primary" if random_selected else "secondary"):
+            st.session_state.selected_standard = None
+            st.session_state.selected_skill = None
+            st.rerun()
+
+        # One expander per chapter, buttons inside
+        for ch_num in [1, 2, 3, 4, 5, 6]:
+            ch_codes = [c for c in STANDARDS_MAP if _tb_chapter.get(c) == ch_num]
+            if not ch_codes:
+                continue
+            # Expand the chapter that holds the current selection, else collapse
+            expand = any(c == selected_code for c in ch_codes)
+            with st.expander(_ch_titles[ch_num], expanded=expand):
+                for code in ch_codes:
+                    topic = STANDARDS_MAP[code]["topic"]
+                    is_sel = (code == selected_code)
+                    label = f"{code} · {topic}" + ("  ✓" if is_sel else "")
+                    if st.button(label, key=f"stdbtn_{code}",
+                                 use_container_width=True,
+                                 type="primary" if is_sel else "secondary"):
+                        st.session_state.selected_standard = code
+                        st.session_state.selected_skill = None  # always practice all skills
+                        st.rerun()
+
+        # Show which standard is active (or Random) as a confirmation line
         if selected_code and selected_code in STANDARDS_MAP:
-            std_preview = STANDARDS_MAP[selected_code]
-            skill_opts  = ["Random — any skill"] + std_preview["skills"]
-            skill_choice = st.selectbox(
-                "2b. Specific skill (optional) / Habilidad específica",
-                skill_opts,
-                key="welcome_skill"
-            )
-            st.session_state.selected_skill = (
-                skill_choice if skill_choice != "Random — any skill" else None
-            )
             st.markdown(
-                f'<p style="font-size:0.75rem;color:inherit;opacity:0.55;margin:0.1rem 0 0.5rem;">' +
-                f'Algebra needed: {", ".join(std_preview["algebra_prereqs"])}</p>',
+                f'<div style="margin:0.4rem 0;padding:0.5rem 0.8rem;'
+                f'background:rgba(0,121,107,0.08);border-radius:6px;'
+                f'font-size:0.85rem;">'
+                f'{_tl("Practicing", "Practicando")}: '
+                f'<strong style="color:#00796b;">{selected_code} · '
+                f'{STANDARDS_MAP[selected_code]["topic"]}</strong><br>'
+                f'<span style="font-size:0.76rem;opacity:0.7;">'
+                f'{_tl("Algebra you will use", "Álgebra que usarás")}: '
+                f'{", ".join(STANDARDS_MAP[selected_code]["algebra_prereqs"])}</span>'
+                f'</div>',
                 unsafe_allow_html=True
             )
 
-        # 4. Difficulty
-        diff_choice = st.selectbox(
-            "3. Difficulty / Dificultad",
-            ["Random — mix it up", "Easy", "Medium", "Hard"],
-            index=2,
-            key="welcome_diff"
-        )
+        # Difficulty is chosen automatically — no student-facing selector.
+        # We rotate difficulty so the session finds the student's starting place.
+        diff_choice = "Random — mix it up"
 
-        # 4. Session mode — challenge or tutor chat, with question count if challenge
+        # 3. Session mode — challenge or tutor chat, with question count if challenge
         session_mode_choice = st.selectbox(
-            _tl("4. What would you like to do?", "4. ¿Qué quieres hacer?"),
+            _tl("3. What would you like to do?", "3. ¿Qué quieres hacer?"),
             [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
              _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas")],
             key="welcome_mode_choice"
@@ -2851,27 +2945,33 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     if tutor_chat_mode:
                         welcome_msg = (
                             f"Hi {sid}! Ask me anything about Calculus 1 — "
-                            f"concepts, worked examples, or where you're stuck. "
+                            f"concepts, worked examples, or anything you're curious about. "
                             f"You have **{format_duration(remaining)}** this week. What's on your mind?"
                             if lang == "en" else
                             f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
                             f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
                         )
                     else:
+                        _std_line = ""
+                        _chosen = st.session_state.get("selected_standard")
+                        if _chosen and _chosen in STANDARDS_MAP:
+                            _std_line = (f" on **{_chosen}: {STANDARDS_MAP[_chosen]['topic']}**"
+                                         if lang == "en" else
+                                         f" en **{_chosen}: {STANDARDS_MAP[_chosen]['topic']}**")
                         welcome_msg = (
-                            f"Hi {sid}! Welcome — this is your Calculus 1 practice space. "
-                            f"You have **{format_duration(remaining)}** of study time this week.\n\n"
-                            f"- Type **challenge** for a practice problem\n"
-                            f"- Ask me **any calculus question**\n"
-                            f"- Upload a **photo** of your handwritten work as an answer\n"
-                            f"- Type **bye** when done to see your session report"
+                            f"Hi {sid}! Let's see where you stand{_std_line} and find a good "
+                            f"starting place together. Every answer is useful information — "
+                            f"there are no wrong turns here, just a picture of what you already "
+                            f"know and what we'll build next. Your background knowledge counts.\n\n"
+                            f"You have **{format_duration(remaining)}** of practice time this week. "
+                            f"Type **bye** anytime to see your session report."
                             if lang == "en" else
-                            f"Hola {sid}! Aquí practicamos Cálculo 1 juntos. "
-                            f"Tienes **{format_duration(remaining)}** de tiempo esta semana.\n\n"
-                            f"- Escribe **reto** para un problema de práctica\n"
-                            f"- Hazme **cualquier pregunta de cálculo**\n"
-                            f"- Sube una **foto** de tu trabajo escrito\n"
-                            f"- Escribe **bye** para terminar y ver tu reporte de sesión"
+                            f"¡Hola {sid}! Veamos dónde estás{_std_line} y encontremos juntos un "
+                            f"buen punto de partida. Cada respuesta es información útil — aquí no "
+                            f"hay respuestas equivocadas, solo una imagen de lo que ya sabes y lo "
+                            f"que construiremos. Tu conocimiento previo cuenta.\n\n"
+                            f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
+                            f"Escribe **bye** cuando quieras para ver tu reporte."
                         )
                     st.session_state.messages.append({
                         "role": "assistant", "content": welcome_msg, "type": "chat"
@@ -2882,7 +2982,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 
                     if chosen_std and chosen_std in STANDARDS_MAP:
                         first_q = quiz_by_standard(
-                            chosen_std, st.session_state.difficulty, lang,
+                            chosen_std, pick_difficulty(), lang,
                             skill_focus=chosen_skill
                         )
                         st.session_state.session_calls += 1
@@ -2911,7 +3011,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     else:
                         first_code  = random.choice(list(STANDARDS_MAP.keys()))
                         first_q     = quiz_by_standard(
-                            first_code, st.session_state.difficulty, lang
+                            first_code, pick_difficulty(), lang
                         )
                         st.session_state.session_calls += 1
                         nq = st.session_state.num_questions
@@ -3069,10 +3169,7 @@ elif st.session_state.screen == "chat":
 
         st.divider()
         st.caption("Settings")
-        st.session_state.difficulty = st.selectbox(
-            "Difficulty", ["easy","medium","hard"],
-            index=["easy","medium","hard"].index(st.session_state.difficulty)
-        )
+        # Difficulty is auto-rotated to find the student's starting place -- no manual selector.
         st.session_state.num_questions = st.select_slider(
             "Questions per quiz", [1,2,3,4,5],
             value=st.session_state.num_questions
@@ -3288,7 +3385,7 @@ elif st.session_state.screen == "chat":
                     if st.button(retry_label, key=f"retry_{id(msg)}", type="secondary"):
                         # Generate same standard, award resilience semillas
                         retry_q = quiz_by_standard(
-                            retry_std, st.session_state.difficulty, lang_now
+                            retry_std, pick_difficulty(), lang_now
                         )
                         st.session_state.session_calls += 1
                         all_usage = st.session_state.get("all_usage", {})
@@ -3494,7 +3591,7 @@ elif st.session_state.screen == "chat":
                                 if lang_now == "en" else
                                 "Preparando un ejemplo resuelto para ti..."):
                     example_text = generate_worked_example(
-                        std_code, st.session_state.difficulty, lang_now
+                        std_code, pick_difficulty(), lang_now
                     )
                 st.session_state.session_calls += 1
                 st.session_state.messages.append({
@@ -3662,7 +3759,7 @@ elif st.session_state.screen == "chat":
                                  if topic else list(STANDARDS_MAP.keys()))
                         next_code = random.choice(pool)
                     next_q = quiz_by_standard(
-                        next_code, st.session_state.difficulty, lang
+                        next_code, pick_difficulty(), lang
                     )
                     st.session_state.session_calls += 1
                     qs["current_question"] = next_q
@@ -3710,7 +3807,7 @@ elif st.session_state.screen == "chat":
                                   if topic else list(STANDARDS_MAP.keys()))
                     first_code = random.choice(pool)
                     first_q    = quiz_by_standard(
-                        first_code, st.session_state.difficulty, lang
+                        first_code, pick_difficulty(), lang
                     )
                     st.session_state.session_calls += 1
                     nq = st.session_state.num_questions

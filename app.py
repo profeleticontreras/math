@@ -1213,13 +1213,22 @@ def generate_prereq_example(prereq_code, language="en"):
             system=CULTURAL_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}]
         )
-        return resp.content[0].text.strip()
+        # Gather all text blocks (not just the first) and guard against empty
+        text = "".join(
+            b.text for b in resp.content if getattr(b, "type", "") == "text"
+        ).strip()
+        if text:
+            return text
+        # Empty response — fall through to the friendly fallback below
     except Exception:
-        return ("Here's the idea: take it one step at a time and the pattern becomes "
-                "yours. Give one a try -- you've got the tools for this."
-                if language == "en" else
-                "Aquí está la idea: paso a paso, el patrón se vuelve tuyo. "
-                "Intenta uno -- tienes las herramientas para esto.")
+        pass
+    return (f"Let's sharpen **{pd['topic']}**. {pd['desc']} "
+            f"Try a problem in this skill and I'll walk through it with you — "
+            f"you've got the tools for this."
+            if language == "en" else
+            f"Afinemos **{pd['topic']}**. {pd['desc']} "
+            f"Intenta un problema de esta habilidad y lo resolvemos juntos — "
+            f"tienes las herramientas para esto.")
 
 
 def prereq_practice_question(prereq_code, language="en"):
@@ -1252,9 +1261,17 @@ def prereq_practice_question(prereq_code, language="en"):
             system=CULTURAL_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}]
         )
-        qtext = resp.content[0].text.strip()
+        qtext = "".join(
+            b.text for b in resp.content if getattr(b, "type", "") == "text"
+        ).strip()
+        if not qtext:
+            qtext = (f"Practice this skill — {pd['topic']}: {pd['desc']}"
+                     if language == "en" else
+                     f"Practica esta habilidad — {pd['topic']}: {pd['desc']}")
     except Exception:
-        qtext = pd["desc"]
+        qtext = (f"Practice this skill — {pd['topic']}: {pd['desc']}"
+                 if language == "en" else
+                 f"Practica esta habilidad — {pd['topic']}: {pd['desc']}")
     return {
         "question": qtext,
         "topic": pd["topic"],
@@ -1313,13 +1330,18 @@ def generate_worked_example(standard_code, difficulty="medium", language="en"):
             system=CULTURAL_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}]
         )
-        return resp.content[0].text.strip()
-    except Exception as e:
-        return ("Here's the idea: work through the pattern one step at a time, and it "
-                "becomes yours. Give your problem a try — you've got the tools for this."
-                if language == "en" else
-                "Aquí está la idea: trabaja el patrón paso a paso y se vuelve tuyo. "
-                "Intenta tu problema — tienes las herramientas para esto.")
+        text = "".join(
+            b.text for b in resp.content if getattr(b, "type", "") == "text"
+        ).strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    return ("Here's the idea: work through the pattern one step at a time, and it "
+            "becomes yours. Give your problem a try — you've got the tools for this."
+            if language == "en" else
+            "Aquí está la idea: trabaja el patrón paso a paso y se vuelve tuyo. "
+            "Intenta tu problema — tienes las herramientas para esto.")
 
 
 def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_focus=None):
@@ -3307,14 +3329,27 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             })
 
             if action == "example":
-                ex = generate_prereq_example(pcode, lang)
+                with st.spinner("Preparing a worked example for you..."
+                                if lang == "en" else
+                                "Preparando un ejemplo resuelto para ti..."):
+                    ex = generate_prereq_example(pcode, lang)
                 st.session_state.session_calls += 1
+                if not (ex or "").strip():
+                    ex = (f"Let's sharpen **{pd.get('topic','this skill')}**. "
+                          f"Ask me for an example or type a problem and I'll walk "
+                          f"through it with you."
+                          if lang == "en" else
+                          f"Afinemos **{pd.get('topic','esta habilidad')}**. "
+                          f"Pídeme un ejemplo o escribe un problema y lo resolvemos juntos.")
                 st.session_state.messages.append({
                     "role": "assistant", "type": "chat",
                     "content": ex, "intent_type": "explanation"
                 })
             else:  # practice
-                q = prereq_practice_question(pcode, lang)
+                with st.spinner("Preparing a practice problem..."
+                                if lang == "en" else
+                                "Preparando un problema de práctica..."):
+                    q = prereq_practice_question(pcode, lang)
                 st.session_state.session_calls += 1
                 st.session_state.messages.append({
                     "role": "assistant", "type": "question",

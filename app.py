@@ -741,6 +741,36 @@ for _pcode, _pdata in PREREQ_SKILLS.items():
         STANDARD_TO_PREREQS.setdefault(_scode, []).append(_pcode)
 
 
+# Per-standard method boundaries — what technique each standard should use,
+# and which later techniques to forbid so questions/examples stay in scope.
+METHOD_BOUNDARIES = {
+    "S-01": 'Use ONLY average rate of change: (s(b)-s(a))/(b-a), and estimating instantaneous velocity by shrinking the interval. Do NOT use derivative rules (power rule, etc.) -- the derivative has not been introduced yet at this standard. Velocity here comes from average rates and limits of average rates, not from differentiation.',
+    "S-02": "Use ONLY limit evaluation: direct substitution, factoring, rationalizing, tables, and graphs. Do NOT use derivatives or L'Hopital's Rule.",
+    "S-03": "Use ONLY the limit definition of the derivative: f'(a) = lim(h->0) [f(a+h)-f(a)]/h. The whole point is to compute the derivative FROM the definition. Do NOT use shortcut differentiation rules (power rule, product rule, etc.) -- those come in a later standard.",
+    "S-04": "Focus on INTERPRETING and ESTIMATING the derivative: meaning, units, and estimating f'(x) from tables via average rates. Do NOT require computing derivatives with rules; this standard is about interpretation and estimation.",
+    "S-05": "Use repeated differentiation to find f'', f''' and interpret them (acceleration, concavity). Standard differentiation rules ARE allowed here.",
+    "S-06": 'Use one-sided limits, the three continuity conditions, discontinuity types, and the IVT. Do NOT require derivatives.',
+    "S-07": "Use the tangent line formula y = f(a)+f'(a)(x-a) and linear approximation. You may use a given or previously-found derivative value; keep the algebra clean.",
+    "S-08": 'Use ONLY basic differentiation rules: power rule, constant multiple, sum/difference, on polynomials and simple rationals. Do NOT require product rule, quotient rule, or chain rule -- those are later standards.',
+    "S-09": 'Differentiate sin, cos, tan, e^x, a^x. Keep to these transcendental derivatives; combine with basic rules only.',
+    "S-10": 'Use the product rule and quotient rule. Do NOT require the chain rule as the main technique.',
+    "S-11": 'Use the chain rule for compositions. This is the focus; basic rules may support it.',
+    "S-12": 'Differentiate inverse functions: ln x, log_a x, arcsin, arccos, arctan, and the inverse-function derivative rule.',
+    "S-13": 'Use implicit differentiation. Differentiate both sides with respect to x, then solve for dy/dx.',
+    "S-14": 'Use related rates: relate quantities, differentiate with respect to time, substitute. Keep geometry clean.',
+    "S-15": "Use L'Hopital's Rule on indeterminate forms. Confirm the form is indeterminate before applying.",
+    "S-16": 'Use the Mean Value Theorem: verify hypotheses, find c. Keep to MVT/Rolle reasoning.',
+    "S-17": 'Use the first and second derivative tests, sign analysis, concavity, and inflection points.',
+    "S-18": 'Set up an objective function, reduce with a constraint, and use the Closed Interval Method. Keep to Calculus 1 optimization.',
+    "S-19": 'Use Riemann sums and the definite integral as net area / a limit of sums. Do NOT require the Fundamental Theorem to evaluate -- this standard is about the sum/area concept.',
+    "S-20": 'Use the average value formula (1/(b-a)) * integral, and the Mean Value Theorem for Integrals.',
+    "S-21": 'Use antiderivatives and the FTC (Part 2): evaluate F(b)-F(a). Keep antiderivatives to Calculus 1 forms (power rule in reverse, e^x, sin, cos, 1/x). Do NOT require integration by parts or trig substitution.',
+    "S-22": "Use the Second FTC: differentiate an accumulation function A(x)=integral from a to x of f(t)dt to get A'(x)=f(x). Focus on the accumulation-derivative relationship.",
+    "S-23": 'Use u-substitution only. Choose u so the integral becomes a basic antiderivative. Do NOT create integrals that then need integration by parts.',
+    "S-24": 'Use area between curves: find intersections, integrate the top-minus-bottom difference. Keep integrands to Calculus 1 forms.',
+}
+
+
 
 # ── Cultural system prompt ────────────────────────────────────────────────────
 CULTURAL_SYSTEM_PROMPT = """
@@ -1202,8 +1232,15 @@ def prereq_practice_question(prereq_code, language="en"):
     diff = random.choice(["easy", "medium"])  # prereqs stay foundational
     prompt = (
         f"You are a warm math tutor. Respond entirely in {lang_word}.\n\n"
-        f"Create ONE {diff}-level practice question for this foundational skill: "
-        f"'{pd['topic']}'.\nDescription: {pd['desc']}\n\n"
+        f"Create ONE {diff}-level practice question that DIRECTLY practices this "
+        f"foundation skill and nothing else:\n\n"
+        f"SKILL: {pd['topic']}\n"
+        f"WHAT IT INVOLVES: {pd['desc']}\n\n"
+        f"CRITICAL: The question must be a pure exercise in '{pd['topic']}' itself — "
+        f"the student practices THIS skill directly, not a calculus problem that happens "
+        f"to use it. For example, if the skill is 'Factoring Polynomials', ask them to "
+        f"factor an expression (e.g. factor $x^2 - 5x + 6$) — do NOT ask a calculus "
+        f"question that merely requires factoring as a step.\n"
         f"- Keep it at pre-calculus / algebra level.\n"
         f"- Make it clear and self-contained with a clean, computable answer.\n"
         f"- Use LaTeX $...$ for math. For dollar amounts in text use '$30' not '\\$30'.\n"
@@ -1238,14 +1275,23 @@ def generate_worked_example(standard_code, difficulty="medium", language="en"):
         standard_code = random.choice(list(STANDARDS_MAP.keys()))
     std_data  = STANDARDS_MAP[standard_code]
     lang_word = "Spanish" if language == "es" else "English"
+    skills_list = "; ".join(std_data["skills"])
+    boundary = METHOD_BOUNDARIES.get(standard_code, "")
 
     prompt = (
         f"You are a warm, encouraging Calculus 1 tutor. Respond entirely in {lang_word}.\n\n"
-        f"Create a fully worked example for the standard '{std_data['topic']}'. "
+        f"Create a fully worked example for the standard '{std_data['topic']}' ({standard_code}). "
         f"This example is for a student who wants to see the method demonstrated before "
         f"trying a problem themselves — a smart, confident study move.\n\n"
+        f"SKILLS THIS STANDARD COVERS: {skills_list}\n"
+        f"METHOD BOUNDARY (critical): {boundary}\n\n"
         f"Requirements:\n"
         f"- Difficulty level: {difficulty}\n"
+        f"- ABSOLUTELY CRITICAL: Solve the example using ONLY the technique in the METHOD "
+        f"BOUNDARY and the skills listed above. Do NOT use a method from a later standard. "
+        f"For example, if this standard is about average rate of change, find the answer using "
+        f"average rates — do NOT take a derivative. The worked solution must match this "
+        f"standard's actual skills exactly.\n"
         f"- Keep it strictly within Calculus 1 scope (no integration by parts, trig "
         f"substitution, or other Calculus 2 methods).\n"
         f"- Start with one warm sentence framing this as a great way to learn (never "
@@ -1311,6 +1357,10 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         if skill_focus else ""
     )
 
+    # Method boundary — keeps the question within this standard's technique scope
+    boundary = METHOD_BOUNDARIES.get(standard_code, "")
+    boundary_line = (f"METHOD BOUNDARY (critical): {boundary}\n" if boundary else "")
+
     prompt = (
         f"You are a Calculus 1 tutor for California community college students -- "
         f"many are first-generation students heading into engineering, data science, "
@@ -1319,6 +1369,7 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"STANDARD: {standard_code} -- {std['topic']}\n"
         f"SKILLS ASSESSED:\n{skills_list}\n"
         f"{skill_focus_line}"
+        f"{boundary_line}"
         f"ALGEBRA PREREQUISITES: {prereqs}\n\n"
         f"AVAILABLE FIELD CONNECTIONS (choose the one that fits most naturally):\n"
         f"{connections_block}\n"
@@ -1340,7 +1391,12 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"integration by parts, trigonometric substitution, partial fractions, or any Calculus 2 "
         f"method. For u-substitution problems, choose integrands where the substitution leads "
         f"directly to a basic antiderivative (power rule, e^u, sin/cos) — never one that then "
-        f"requires a second advanced technique. Every problem must have a clean, computable answer.\n\n"
+        f"requires a second advanced technique. Every problem must have a clean, computable answer.\n"
+        f"- ABSOLUTELY CRITICAL: The question must be solvable using ONLY the technique named in "
+        f"the METHOD BOUNDARY above and the skills listed. Do NOT write a question that needs a "
+        f"technique from a later standard. For example, if the standard is about average rate of "
+        f"change, the question must be answerable with average rates alone -- never by taking a "
+        f"derivative. Match the question exactly to this standard's stated skills.\n\n"
         f"Question:"
     )
 
@@ -3319,24 +3375,22 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                             f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
                         )
                     else:
-                        _std_line = ""
                         _chosen = st.session_state.get("selected_standard")
                         if _chosen and _chosen in STANDARDS_MAP:
-                            _std_line = (f" on **{_chosen}: {STANDARDS_MAP[_chosen]['topic']}**"
-                                         if lang == "en" else
-                                         f" en **{_chosen}: {STANDARDS_MAP[_chosen]['topic']}**")
+                            _std_name = f"{STANDARDS_MAP[_chosen]['topic']} ({_chosen})"
+                        else:
+                            _std_name = ("a mix of standards" if lang == "en"
+                                         else "una mezcla de estándares")
                         welcome_msg = (
-                            f"Hi {sid}! Let's see where you stand{_std_line} and find a good "
-                            f"starting place together. Every answer is useful information — "
-                            f"there are no wrong turns here, just a picture of what you already "
-                            f"know and what we'll build next. Your background knowledge counts.\n\n"
+                            f"Let's see what you already know about **{_std_name}**. "
+                            f"There's no wrong answer — just useful information to help us "
+                            f"find the right starting point together.\n\n"
                             f"You have **{format_duration(remaining)}** of practice time this week. "
                             f"Type **bye** anytime to see your session report."
                             if lang == "en" else
-                            f"¡Hola {sid}! Veamos dónde estás{_std_line} y encontremos juntos un "
-                            f"buen punto de partida. Cada respuesta es información útil — aquí no "
-                            f"hay respuestas equivocadas, solo una imagen de lo que ya sabes y lo "
-                            f"que construiremos. Tu conocimiento previo cuenta.\n\n"
+                            f"Veamos qué ya sabes sobre **{_std_name}**. "
+                            f"No hay respuesta equivocada — solo información útil que nos ayuda "
+                            f"a encontrar juntos el punto de partida correcto.\n\n"
                             f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
                             f"Escribe **bye** cuando quieras para ver tu reporte."
                         )
@@ -4142,30 +4196,47 @@ elif st.session_state.screen == "chat":
 
                 qs["q_num"] += 1
                 if qs["q_num"] <= qs["num_questions"]:
-                    # Respect standard_lock: if a specific standard was chosen,
-                    # ALL questions in this round use that same standard
-                    locked = qs.get("standard_lock")
-                    if locked and locked in STANDARDS_MAP:
-                        next_code = locked
+                    # If this is a foundation-skill (prereq) round, keep generating
+                    # prereq practice questions for the same skill.
+                    if qs.get("is_prereq") and qs.get("prereq_code"):
+                        _pcode = qs["prereq_code"]
+                        next_q = prereq_practice_question(_pcode, lang)
+                        st.session_state.session_calls += 1
+                        qs["current_question"] = next_q
+                        _ptopic = PREREQ_SKILLS.get(_pcode, {}).get("topic", "")
+                        st.session_state.messages.append({
+                            "role": "assistant", "type": "question",
+                            "content": (
+                                f"**Foundation practice · {_ptopic}"
+                                f"  ·  {qs['q_num']} of {qs['num_questions']}**\n\n"
+                                + next_q["question"]
+                            )
+                        })
                     else:
-                        topic = qs.get("topic")
-                        pool  = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
-                                 if topic else list(STANDARDS_MAP.keys()))
-                        next_code = random.choice(pool)
-                    next_q = quiz_by_standard(
-                        next_code, pick_difficulty(), lang
-                    )
-                    st.session_state.session_calls += 1
-                    qs["current_question"] = next_q
-                    st.session_state.messages.append({
-                        "role": "assistant", "type": "question",
-                        "content": (
-                            f"**Question {qs['q_num']} of {qs['num_questions']}"
-                            f" | {next_code}: {next_q['topic']}**\n\n"
-                            f"*Prerequisites: {', '.join(next_q['algebra_prereqs'])}*\n\n"
-                            + next_q["question"]
+                        # Respect standard_lock: if a specific standard was chosen,
+                        # ALL questions in this round use that same standard
+                        locked = qs.get("standard_lock")
+                        if locked and locked in STANDARDS_MAP:
+                            next_code = locked
+                        else:
+                            topic = qs.get("topic")
+                            pool  = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
+                                     if topic else list(STANDARDS_MAP.keys()))
+                            next_code = random.choice(pool)
+                        next_q = quiz_by_standard(
+                            next_code, pick_difficulty(), lang
                         )
-                    })
+                        st.session_state.session_calls += 1
+                        qs["current_question"] = next_q
+                        st.session_state.messages.append({
+                            "role": "assistant", "type": "question",
+                            "content": (
+                                f"**Question {qs['q_num']} of {qs['num_questions']}"
+                                f" | {next_code}: {next_q['topic']}**\n\n"
+                                f"*Prerequisites: {', '.join(next_q['algebra_prereqs'])}*\n\n"
+                                + next_q["question"]
+                            )
+                        })
                 else:
                     total = sum(qs["scores"])
                     max_s = len(qs["scores"]) * 3

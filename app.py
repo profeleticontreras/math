@@ -623,6 +623,124 @@ for _code, _data in STANDARDS_MAP.items():
     _tag = _data["intent_tag"]
     INTENT_TO_STANDARDS.setdefault(_tag, []).append(_code)
 
+PREREQ_SKILLS = {
+    "P-01": {
+        "group": 'Algebra Foundations',
+        "topic": 'Factoring Polynomials',
+        "desc": 'Factor quadratics and higher polynomials (GCF, trinomials, difference of squares) to simplify expressions and solve equations.',
+        "supports": ['S-02', 'S-17'],
+    },
+    "P-02": {
+        "group": 'Algebra Foundations',
+        "topic": 'Exponent Rules',
+        "desc": 'Apply the laws of exponents, including negative and fractional exponents, to rewrite and simplify expressions.',
+        "supports": ['S-08', 'S-21'],
+    },
+    "P-03": {
+        "group": 'Algebra Foundations',
+        "topic": 'Simplifying Rational Expressions & Complex Fractions',
+        "desc": 'Combine, reduce, and simplify fractions with variables, including complex (stacked) fractions and rationalizing.',
+        "supports": ['S-02', 'S-03', 'S-10'],
+    },
+    "P-04": {
+        "group": 'Algebra Foundations',
+        "topic": 'Multiplying & Expanding Polynomials',
+        "desc": 'Expand products and binomials (FOIL and beyond) and combine like terms.',
+        "supports": ['S-03', 'S-08', 'S-10'],
+    },
+    "P-05": {
+        "group": 'Algebra Foundations',
+        "topic": 'Solving Equations & Systems',
+        "desc": 'Solve linear and polynomial equations, solve for a chosen variable, and solve small systems of equations.',
+        "supports": ['S-07', 'S-13', 'S-14', 'S-17', 'S-18', 'S-20', 'S-24'],
+    },
+    "P-06": {
+        "group": 'Functions & Graphs',
+        "topic": 'Evaluating Functions',
+        "desc": 'Substitute values into a function, including at a point and across a table, and interpret the output.',
+        "supports": ['S-01', 'S-02', 'S-19'],
+    },
+    "P-07": {
+        "group": 'Functions & Graphs',
+        "topic": 'Lines: Slope, Point-Slope & Slope-Intercept',
+        "desc": 'Find slope, write equations of lines in point-slope and slope-intercept form, and interpret slope as a rate.',
+        "supports": ['S-01', 'S-07'],
+    },
+    "P-08": {
+        "group": 'Functions & Graphs',
+        "topic": 'Reading & Sketching Graphs',
+        "desc": 'Read values and behavior from a graph, and sketch basic functions and their key features.',
+        "supports": ['S-06', 'S-22'],
+    },
+    "P-09": {
+        "group": 'Functions & Graphs',
+        "topic": 'Piecewise Functions',
+        "desc": 'Evaluate and graph piecewise-defined functions and understand behavior at the boundaries.',
+        "supports": ['S-06'],
+    },
+    "P-10": {
+        "group": 'Functions & Graphs',
+        "topic": 'Function Composition',
+        "desc": 'Recognize and evaluate compositions f(g(x)), and identify inner and outer functions.',
+        "supports": ['S-11'],
+    },
+    "P-11": {
+        "group": 'Functions & Graphs',
+        "topic": 'Inverse Functions',
+        "desc": 'Understand what an inverse function is, find inverses, and use the relationship between a function and its inverse.',
+        "supports": ['S-12'],
+    },
+    "P-12": {
+        "group": 'Pre-Calculus Topics',
+        "topic": 'Trigonometry & the Unit Circle',
+        "desc": 'Know unit-circle values of sine, cosine, and tangent, and the basic trig identities.',
+        "supports": ['S-09'],
+    },
+    "P-13": {
+        "group": 'Pre-Calculus Topics',
+        "topic": 'Exponentials & Logarithms',
+        "desc": 'Work with exponential and logarithmic functions and their properties (product, quotient, power, change of base).',
+        "supports": ['S-09', 'S-12'],
+    },
+    "P-14": {
+        "group": 'Pre-Calculus Topics',
+        "topic": 'Geometry Formulas',
+        "desc": 'Use area, volume, and the Pythagorean theorem to set up relationships in applied problems.',
+        "supports": ['S-14'],
+    },
+    "P-15": {
+        "group": 'Quantitative Reasoning',
+        "topic": 'Rates & Units',
+        "desc": 'Compute average rate of change, track units through a calculation, and interpret a rate in context.',
+        "supports": ['S-01', 'S-04', 'S-16'],
+    },
+    "P-16": {
+        "group": 'Quantitative Reasoning',
+        "topic": 'Sign Analysis on a Number Line',
+        "desc": 'Determine where an expression is positive or negative using a sign chart across critical values.',
+        "supports": ['S-17'],
+    },
+    "P-17": {
+        "group": 'Quantitative Reasoning',
+        "topic": 'Summation Notation & Areas of Rectangles',
+        "desc": 'Read and evaluate sigma notation and compute areas of rectangles (the building blocks of Riemann sums).',
+        "supports": ['S-19'],
+    },
+    "P-18": {
+        "group": 'Quantitative Reasoning',
+        "topic": 'Setting Up Equations from Word Problems',
+        "desc": 'Translate a word problem into an equation or objective function, identifying variables and constraints.',
+        "supports": ['S-14', 'S-18'],
+    },
+}
+
+# Reverse lookup: standard code -> list of prereq codes that support it
+STANDARD_TO_PREREQS = {}
+for _pcode, _pdata in PREREQ_SKILLS.items():
+    for _scode in _pdata['supports']:
+        STANDARD_TO_PREREQS.setdefault(_scode, []).append(_pcode)
+
+
 
 # ── Cultural system prompt ────────────────────────────────────────────────────
 CULTURAL_SYSTEM_PROMPT = """
@@ -1036,6 +1154,80 @@ def pick_difficulty():
     return random.choice(["easy", "medium", "hard"])
 
 
+def generate_prereq_example(prereq_code, language="en"):
+    """A fully worked example of a prerequisite algebra/pre-calc skill.
+    Warm, non-deficit framing: sharpening a tool, not fixing a weakness."""
+    if prereq_code not in PREREQ_SKILLS:
+        return ""
+    pd = PREREQ_SKILLS[prereq_code]
+    lang_word = "Spanish" if language == "es" else "English"
+    prompt = (
+        f"You are a warm, encouraging math tutor. Respond entirely in {lang_word}.\n\n"
+        f"Give a clear worked example of this foundational skill: '{pd['topic']}'.\n"
+        f"Description: {pd['desc']}\n\n"
+        f"Requirements:\n"
+        f"- Open with one warm sentence framing this as sharpening a useful tool "
+        f"(this skill powers later calculus topics).\n"
+        f"- State a clear example problem, then solve it step by step, explaining the "
+        f"reasoning at each step.\n"
+        f"- Use LaTeX $...$ for inline math and $$...$$ for display math.\n"
+        f"- Keep it at a pre-calculus / algebra level -- this is a foundation skill.\n"
+        f"- End by inviting them to try one themselves, framing them as ready.\n"
+        f"- Use empowering, non-deficit language throughout. Never suggest the student "
+        f"is behind, struggling, or lacking. This is proactive skill-building.\n\n"
+        f"Write the worked example now:"
+    )
+    try:
+        resp = client.messages.create(
+            model=SONNET_MODEL, max_tokens=650,
+            system=CULTURAL_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return resp.content[0].text.strip()
+    except Exception:
+        return ("Here's the idea: take it one step at a time and the pattern becomes "
+                "yours. Give one a try -- you've got the tools for this."
+                if language == "en" else
+                "Aquí está la idea: paso a paso, el patrón se vuelve tuyo. "
+                "Intenta uno -- tienes las herramientas para esto.")
+
+
+def prereq_practice_question(prereq_code, language="en"):
+    """Generate ONE practice question for a prerequisite skill, returned as a
+    quiz-style dict so it flows through the same grading path as standards."""
+    if prereq_code not in PREREQ_SKILLS:
+        prereq_code = random.choice(list(PREREQ_SKILLS.keys()))
+    pd = PREREQ_SKILLS[prereq_code]
+    lang_word = "Spanish" if language == "es" else "English"
+    diff = random.choice(["easy", "medium"])  # prereqs stay foundational
+    prompt = (
+        f"You are a warm math tutor. Respond entirely in {lang_word}.\n\n"
+        f"Create ONE {diff}-level practice question for this foundational skill: "
+        f"'{pd['topic']}'.\nDescription: {pd['desc']}\n\n"
+        f"- Keep it at pre-calculus / algebra level.\n"
+        f"- Make it clear and self-contained with a clean, computable answer.\n"
+        f"- Use LaTeX $...$ for math. For dollar amounts in text use '$30' not '\\$30'.\n"
+        f"- Write ONLY the question, no solution.\n\nQuestion:"
+    )
+    try:
+        resp = client.messages.create(
+            model=SONNET_MODEL, max_tokens=300,
+            system=CULTURAL_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        qtext = resp.content[0].text.strip()
+    except Exception:
+        qtext = pd["desc"]
+    return {
+        "question": qtext,
+        "topic": pd["topic"],
+        "standard_code": prereq_code,
+        "algebra_prereqs": [],
+        "field_connection": "Foundation Skill",
+        "is_prereq": True,
+    }
+
+
 def generate_worked_example(standard_code, difficulty="medium", language="en"):
     """
     Generate a fully worked example of a DIFFERENT problem on the same standard,
@@ -1340,11 +1532,30 @@ def grade_with_mindset(q_dict, student_answer, language="en", image_b64=None):
                 algebra_scaffold = hint
                 break
 
+    # Match the algebra gap (or this standard's prereqs) to a foundation skill
+    # that the student can optionally practice. This is offered as a resource,
+    # never as a targeted response to getting something wrong.
+    prereq_suggestion = None
+    _search_terms = gap
+    if standard_code and standard_code in STANDARD_TO_PREREQS:
+        # Prefer a prereq whose topic words overlap the gap; else the first linked one
+        for _pc in STANDARD_TO_PREREQS.get(standard_code, []):
+            _ptopic = PREREQ_SKILLS[_pc]["topic"].lower()
+            if gap and any(w in _ptopic or w in PREREQ_SKILLS[_pc]["desc"].lower()
+                           for w in gap.split() if len(w) > 3):
+                prereq_suggestion = _pc
+                break
+        if prereq_suggestion is None and gap:
+            # Gap named but no topic overlap — offer the first linked prereq
+            linked = STANDARD_TO_PREREQS.get(standard_code, [])
+            prereq_suggestion = linked[0] if linked else None
+
     return {
         "score":            score,
         "feedback":         result.get("feedback", ""),
         "algebra_gap":      gap,
         "algebra_scaffold": algebra_scaffold,
+        "prereq_suggestion": prereq_suggestion,
         "full_solution":    result.get("full_solution", ""),
         "standard_code":    standard_code,
         "mindset_message":  mindset_msg
@@ -2382,6 +2593,9 @@ def init_session_state():
         "usage_saved":      False,
         "selected_standard": None,
         "selected_skill":    None,
+        "prereq_focus":      None,
+        "prereq_action_pending": False,
+        "prereq_start":      None,
         "selected_mode":     "Challenge me",
         "used_connection_fields": [],
         "session_semillas":  0,
@@ -2869,15 +3083,116 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                 f'<strong style="color:#00796b;">{selected_code} · '
                 f'{STANDARDS_MAP[selected_code]["topic"]}</strong><br>'
                 f'<span style="font-size:0.76rem;opacity:0.7;">'
-                f'{_tl("Algebra you will use", "Álgebra que usarás")}: '
+                f'{_tl("Skills that power this topic", "Habilidades que impulsan este tema")}: '
                 f'{", ".join(STANDARDS_MAP[selected_code]["algebra_prereqs"])}</span>'
                 f'</div>',
                 unsafe_allow_html=True
             )
+            # Surface the supporting foundation skills as an available resource --
+            # framed as a good find and an opportunity, never as a gap to fix.
+            _linked_prereqs = STANDARD_TO_PREREQS.get(selected_code, [])
+            if _linked_prereqs:
+                with st.expander(
+                    _tl("✨ Available resources for prerequisite skills",
+                        "✨ Recursos disponibles para habilidades previas"),
+                    expanded=False
+                ):
+                    st.markdown(
+                        f'<p style="font-size:0.8rem;color:inherit;opacity:0.75;'
+                        f'margin:0 0 0.5rem;line-height:1.5;">'
+                        f'{_tl("Nice find — these foundation skills (algebra, trig, "
+                               "functions, and more) connect directly to this topic. "
+                               "Explore any of them whenever you like:",
+                               "Buen hallazgo — estas habilidades base (álgebra, trigonometría, "
+                               "funciones y más) se conectan directamente con este tema. "
+                               "Explóralas cuando quieras:")}'
+                        f'</p>',
+                        unsafe_allow_html=True
+                    )
+                    for _pc in _linked_prereqs:
+                        _pt = PREREQ_SKILLS[_pc]["topic"]
+                        _grp = PREREQ_SKILLS[_pc]["group"]
+                        _c1, _c2 = st.columns([3, 2])
+                        with _c1:
+                            st.markdown(
+                                f'<span style="font-size:0.82rem;">{_pt}</span>'
+                                f'<br><span style="font-size:0.68rem;opacity:0.55;">{_grp}</span>',
+                                unsafe_allow_html=True
+                            )
+                        with _c2:
+                            if st.button(_tl("Explore", "Explorar"),
+                                         key=f"linkedprereq_{selected_code}_{_pc}",
+                                         use_container_width=True):
+                                st.session_state.prereq_focus = _pc
+                                st.session_state.prereq_action_pending = True
+                                st.rerun()
 
         # Difficulty is chosen automatically — no student-facing selector.
         # We rotate difficulty so the session finds the student's starting place.
         diff_choice = "Random — mix it up"
+
+        # ── Sharpen your tools — prerequisite skills ──────────────────────
+        st.markdown(
+            f'<p style="font-size:0.95rem;font-weight:600;color:inherit;'
+            f'margin:0.8rem 0 0.2rem;">'
+            f'{_tl("🔧 Sharpen your tools (optional)", "🔧 Afina tus herramientas (opcional)")}'
+            f'</p>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f'<p style="font-size:0.8rem;color:inherit;opacity:0.6;margin:0 0 0.4rem;">'
+            f'{_tl("Foundation skills — algebra, trig, functions, and more — that power "
+                   "calculus. Pick any one to see an example or try a problem.",
+                   "Habilidades base — álgebra, trigonometría, funciones y más — que "
+                   "impulsan el cálculo. Elige una para ver un ejemplo o intentar un problema.")}'
+            f'</p>',
+            unsafe_allow_html=True
+        )
+
+        _prereq_groups = {}
+        for _pc, _pd in PREREQ_SKILLS.items():
+            _prereq_groups.setdefault(_pd["group"], []).append((_pc, _pd["topic"]))
+        _group_labels = {
+            "Algebra Foundations":    _tl("Algebra Foundations", "Fundamentos de Álgebra"),
+            "Functions & Graphs":     _tl("Functions & Graphs", "Funciones y Gráficas"),
+            "Pre-Calculus Topics":    _tl("Pre-Calculus Topics", "Temas de Pre-Cálculo"),
+            "Quantitative Reasoning": _tl("Quantitative Reasoning", "Razonamiento Cuantitativo"),
+        }
+        for _grp in ["Algebra Foundations", "Functions & Graphs",
+                     "Pre-Calculus Topics", "Quantitative Reasoning"]:
+            with st.expander(_group_labels[_grp], expanded=False):
+                for _pc, _topic in _prereq_groups[_grp]:
+                    if st.button(_topic, key=f"prereqbtn_{_pc}",
+                                 use_container_width=True):
+                        st.session_state.prereq_focus = _pc
+                        st.session_state.prereq_action_pending = True
+                        st.rerun()
+
+        # If a prereq was picked, offer example-or-practice choice
+        if st.session_state.get("prereq_action_pending"):
+            _pc = st.session_state.get("prereq_focus")
+            _pd = PREREQ_SKILLS.get(_pc, {})
+            st.markdown(
+                f'<div style="margin:0.4rem 0;padding:0.6rem 0.9rem;'
+                f'background:rgba(0,121,107,0.08);border-radius:8px;">'
+                f'<strong style="color:#00796b;">{_pd.get("topic","")}</strong><br>'
+                f'<span style="font-size:0.8rem;opacity:0.75;">{_pd.get("desc","")}</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            _pcol1, _pcol2 = st.columns(2)
+            with _pcol1:
+                if st.button(_tl("💡 See a worked example", "💡 Ver un ejemplo resuelto"),
+                             key="prereq_example_btn", use_container_width=True):
+                    st.session_state.prereq_start = ("example", _pc)
+                    st.session_state.prereq_action_pending = False
+                    st.rerun()
+            with _pcol2:
+                if st.button(_tl("✏️ Try a problem", "✏️ Intentar un problema"),
+                             key="prereq_practice_btn", use_container_width=True):
+                    st.session_state.prereq_start = ("practice", _pc)
+                    st.session_state.prereq_action_pending = False
+                    st.rerun()
 
         # 3. Session mode — challenge or tutor chat, with question count if challenge
         session_mode_choice = st.selectbox(
@@ -2905,6 +3220,58 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             use_container_width=True,
             key="start_btn"
         )
+
+        # ── Launch a prerequisite tutoring session ────────────────────────
+        if st.session_state.get("prereq_start"):
+            action, pcode = st.session_state.prereq_start
+            st.session_state.prereq_start = None
+            sid = (student_id.strip() if student_id.strip() else "Guest")
+            lang = "es" if lang_top == "Español" else "en"
+
+            # Set up a light session (prereq practice does not count toward standards)
+            st.session_state.student_id    = sid
+            st.session_state.language      = "es" if lang == "es" else "auto"
+            st.session_state.num_questions = 3
+            st.session_state.session_start = time.time()
+            st.session_state.screen        = "chat"
+            st.session_state.current_lang  = lang
+
+            pd = PREREQ_SKILLS.get(pcode, {})
+            intro = (
+                f"Nice — let's sharpen **{pd.get('topic','this skill')}**. "
+                f"This is one of the tools that powers calculus, and getting comfortable "
+                f"with it now pays off everywhere later. Your background knowledge counts here."
+                if lang == "en" else
+                f"Muy bien — afinemos **{pd.get('topic','esta habilidad')}**. "
+                f"Es una de las herramientas que impulsan el cálculo, y dominarla ahora "
+                f"te ayuda en todo lo que sigue. Tu conocimiento previo cuenta aquí."
+            )
+            st.session_state.messages.append({
+                "role": "assistant", "content": intro, "type": "chat"
+            })
+
+            if action == "example":
+                ex = generate_prereq_example(pcode, lang)
+                st.session_state.session_calls += 1
+                st.session_state.messages.append({
+                    "role": "assistant", "type": "chat",
+                    "content": ex, "intent_type": "explanation"
+                })
+            else:  # practice
+                q = prereq_practice_question(pcode, lang)
+                st.session_state.session_calls += 1
+                st.session_state.messages.append({
+                    "role": "assistant", "type": "question",
+                    "content": (f"**Foundation practice · {pd.get('topic','')}**\n\n"
+                                + q["question"])
+                })
+                st.session_state.quiz_state = {
+                    "current_question": q,
+                    "q_num": 1, "num_questions": 3,
+                    "topic": None, "scores": [],
+                    "is_prereq": True, "prereq_code": pcode,
+                }
+            st.rerun()
 
         if start_clicked:
             sid = student_id.strip()
@@ -3339,6 +3706,29 @@ elif st.session_state.screen == "chat":
                 if solution:
                     with st.expander("Full solution"):
                         st.markdown(solution)
+
+                # Gentle, optional foundation-skill resource (not tied to score)
+                prereq_sug = msg.get("prereq_suggestion")
+                if prereq_sug and prereq_sug in PREREQ_SKILLS:
+                    _pt = PREREQ_SKILLS[prereq_sug]["topic"]
+                    _lang_now = st.session_state.get("current_lang", "en")
+                    _resource_txt = (
+                        f"✨ Good news — **{_pt}** is one of the skills that powers this "
+                        f"topic, and there's a resource ready for it. Find it under "
+                        f"*Available resources* whenever you'd like to explore."
+                        if _lang_now == "en" else
+                        f"✨ Buena noticia — **{_pt}** es una de las habilidades que "
+                        f"impulsan este tema, y hay un recurso listo. Encuéntralo en "
+                        f"*Recursos disponibles* cuando quieras explorar."
+                    )
+                    st.markdown(
+                        f'<div style="margin:0.5rem 0;padding:0.55rem 0.9rem;'
+                        f'background:rgba(107,114,128,0.06);border-radius:6px;'
+                        f'border-left:2px solid rgba(0,121,107,0.4);">'
+                        f'<span style="font-size:0.83rem;color:inherit;opacity:0.85;'
+                        f'line-height:1.5;">{_resource_txt}</span></div>',
+                        unsafe_allow_html=True
+                    )
                 if mindset:
                     st.markdown(
                         f'<div style="margin:0.6rem 0;padding:0.75rem 1rem;'
@@ -3671,7 +4061,9 @@ elif st.session_state.screen == "chat":
                 qs["scores"].append(grading["score"])
 
                 std_code = grading.get("standard_code", "")
-                if std_code and std_code not in st.session_state.session_standards:
+                _is_prereq_q = qs.get("is_prereq", False) or std_code in PREREQ_SKILLS
+                if std_code and not _is_prereq_q and \
+                        std_code not in st.session_state.session_standards:
                     st.session_state.session_standards.append(std_code)
 
                 # ── Award semillas based on score ─────────────────────────
@@ -3706,9 +4098,10 @@ elif st.session_state.screen == "chat":
                 st.session_state.session_semillas += semilla_count + SEMILLA_VALUES["attempted"]
                 st.session_state.all_usage = all_usage
 
-                # Track per-standard progress
-                all_usage = record_standard_attempt(sid, std_code, score, all_usage)
-                st.session_state.all_usage = all_usage
+                # Track per-standard progress (foundation-skill practice is not a standard)
+                if not _is_prereq_q:
+                    all_usage = record_standard_attempt(sid, std_code, score, all_usage)
+                    st.session_state.all_usage = all_usage
 
                 # Pick a wisdom quote to weave in
                 wisdom_pool = (ATOMIC_HABITS_WISDOM.get(lang, ATOMIC_HABITS_WISDOM["en"])
@@ -3738,6 +4131,7 @@ elif st.session_state.screen == "chat":
                     "full_solution": grading["full_solution"],
                     "mindset_message": grading["mindset_message"],
                     "algebra_scaffold": grading.get("algebra_scaffold",""),
+                    "prereq_suggestion": grading.get("prereq_suggestion"),
                     "standard_code": std_code, "from_image": from_image,
                     "question_text": qs["current_question"].get("question",""),
                     "semilla_note": semilla_note,

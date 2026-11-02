@@ -2936,18 +2936,21 @@ def _remember_token_ok(token):
     return _hmac.compare_digest(sig, good)
 
 
-def _write_remember_cookie(value, max_age):
-    import streamlit.components.v1 as _components
-    _components.html(
-        "<script>"
-        "const w = window.parent; const secure = w.location.protocol === 'https:' ? '; Secure' : '';"
-        f"w.document.cookie = '{_REMEMBER_COOKIE}={value}; Max-Age={int(max_age)}; Path=/; SameSite=Lax' + secure;"
-        "</script>",
-        height=0,
-    )
+import os as _os
+import streamlit.components.v1 as _components
+_remember_bridge = _components.declare_component(
+    "canelita_remember",
+    path=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "remember_component"),
+)
 
 
-# A browser this instructor chose to keep signed in goes straight to the dashboard.
+def _grant_instructor():
+    st.session_state.is_instructor = True
+    if st.session_state.get("screen") == "welcome":
+        st.session_state.screen = "professor"
+
+
+# 1) The browser sent the pass along with the page request.
 if not st.session_state.get("is_instructor") and not st.session_state.get("remember_checked"):
     st.session_state.remember_checked = True
     try:
@@ -2955,9 +2958,22 @@ if not st.session_state.get("is_instructor") and not st.session_state.get("remem
     except Exception:  # noqa: BLE001 -- older Streamlit or no cookies
         _saved_pass = None
     if _saved_pass and _remember_token_ok(_saved_pass):
-        st.session_state.is_instructor = True
-        if st.session_state.get("screen") == "welcome":
-            st.session_state.screen = "professor"
+        _grant_instructor()
+
+# 2) The browser reports the saved pass back through a small bridge (works even when the
+#    host does not forward cookies). It runs on every page load, then goes quiet.
+_bridge_args = {}
+if st.session_state.get("pending_cookie") is not None:
+    _value, _age = st.session_state.pop("pending_cookie")
+    _bridge_args = dict(action="set" if _value else "clear", value=_value, max_age=int(_age),
+                        nonce=f"{time.time():.6f}")
+_bridge_value = _remember_bridge(key="remember_bridge", default=None, **_bridge_args)
+if (_bridge_value and not st.session_state.get("is_instructor")
+        and not st.session_state.get("bridge_checked")):
+    st.session_state.bridge_checked = True
+    if _remember_token_ok(_bridge_value.get("token", "")):
+        _grant_instructor()
+        st.rerun()
 
 with st.sidebar:
     if st.session_state.get("screen") not in ["chat"]:
@@ -2997,11 +3013,6 @@ with st.sidebar:
                         st.rerun()
                     else:
                         st.error("Incorrect ID or password.")
-
-# Save or remove the "keep me signed in" pass (runs once, after the rerun above).
-if st.session_state.get("pending_cookie") is not None:
-    _value, _age = st.session_state.pop("pending_cookie")
-    _write_remember_cookie(_value, _age)
 
 if st.session_state.screen == "professor" and not st.session_state.get("is_instructor"):
     st.session_state.screen = "welcome"

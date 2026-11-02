@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body>
+<script>
+  // Tiny two-way bridge for "Keep me signed in". It keeps the signed pass in this
+  // browser's localStorage (and a cookie) and reports it back to the app.
+  var KEY = "canelita_instructor";
+  var lastNonce = null;
+  var lastSent = null;
+  function send(type, data) {
+    window.parent.postMessage(Object.assign({isStreamlitMessage: true, type: type}, data), "*");
+  }
+  function readToken() {
+    var v = "";
+    try { v = window.localStorage.getItem(KEY) || ""; } catch (e) {}
+    if (!v) {
+      try {
+        var m = document.cookie.match(new RegExp("(?:^|; )" + KEY + "=([^;]*)"));
+        if (m) v = m[1];
+      } catch (e) {}
+    }
+    return v;
+  }
+  function store(value, maxAge) {
+    try {
+      if (value) { window.localStorage.setItem(KEY, value); }
+      else { window.localStorage.removeItem(KEY); }
+    } catch (e) {}
+    try {
+      var secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = KEY + "=" + (value || "") + "; Max-Age=" + (value ? maxAge : 0) +
+                        "; Path=/; SameSite=Lax" + secure;
+    } catch (e) {}
+  }
+  window.addEventListener("message", function (event) {
+    if (!event.data || event.data.type !== "streamlit:render") { return; }
+    var args = event.data.args || {};
+    if (args.nonce && args.nonce !== lastNonce) {
+      lastNonce = args.nonce;
+      if (args.action === "set") { store(args.value, args.max_age || 0); }
+      if (args.action === "clear") { store("", 0); }
+    }
+    var payload = {token: readToken(), nonce: lastNonce || ""};
+    var text = JSON.stringify(payload);
+    if (text !== lastSent) {          // only report a change, so the page does not keep rerunning
+      lastSent = text;
+      send("streamlit:setComponentValue", {value: payload, dataType: "json"});
+    }
+  });
+  send("streamlit:componentReady", {apiVersion: 1});
+  send("streamlit:setFrameHeight", {height: 0});
+</script>
+</body></html>

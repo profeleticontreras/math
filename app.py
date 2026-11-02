@@ -108,7 +108,7 @@ CANNED = {
     }
 }
 
-# ── C-ID MATH 210 Learning Standards Map ─────────────────────────────────────
+# ── MAT 3A Learning Standards Map ─────────────────────────────────────
 # All 24 standards with skills, prerequisites, and 8 field connections each
 STANDARDS_MAP = {
     "S-01": {
@@ -831,7 +831,7 @@ Break solutions into numbered steps.
 After the solution: one sentence of interpretation, one encouragement.
 
 COURSE SCOPE (STRICT):
-This is Calculus 1 (C-ID MATH 210). Every problem you write and every solution you show
+This is Calculus 1 (MAT 3A). Every problem you write and every solution you show
 must stay strictly within Calculus 1 techniques. NEVER use, require, or reference:
 - Integration by parts
 - Trigonometric substitution
@@ -1344,8 +1344,9 @@ def generate_worked_example(standard_code, difficulty="medium", language="en"):
             "Intenta tu problema — tienes las herramientas para esto.")
 
 
-def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_focus=None):
-    """Generate a quiz question aligned to a specific C-ID MATH 210 standard."""
+def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_focus=None,
+                     qtype=None, avoid_questions=None):
+    """Generate a quiz question aligned to a specific MAT 3A standard."""
     if standard_code not in STANDARDS_MAP:
         return {"error": f"Unknown standard: {standard_code}"}
 
@@ -1383,6 +1384,14 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
     boundary = METHOD_BOUNDARIES.get(standard_code, "")
     boundary_line = (f"METHOD BOUNDARY (critical): {boundary}\n" if boundary else "")
 
+    # Question type (skill / conceptual / interpret) and no repeats within the session
+    type_line = (f"QUESTION TYPE: {QTYPE_PROMPTS[qtype]}\n" if qtype in QTYPE_PROMPTS else "")
+    avoid_line = ""
+    if avoid_questions:
+        _prev = "\n".join(f"  - {q[:300]}" for q in avoid_questions[-12:])
+        avoid_line = (f"ALREADY ASKED THIS SESSION (write a clearly different problem: different "
+                      f"function, numbers, and context):\n{_prev}\n")
+
     prompt = (
         f"You are a Calculus 1 tutor for California community college students -- "
         f"many are first-generation students heading into engineering, data science, "
@@ -1391,6 +1400,8 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         f"STANDARD: {standard_code} -- {std['topic']}\n"
         f"SKILLS ASSESSED:\n{skills_list}\n"
         f"{skill_focus_line}"
+        f"{type_line}"
+        f"{avoid_line}"
         f"{boundary_line}"
         f"ALGEBRA PREREQUISITES: {prereqs}\n\n"
         f"AVAILABLE FIELD CONNECTIONS (choose the one that fits most naturally):\n"
@@ -1438,8 +1449,93 @@ def quiz_by_standard(standard_code, difficulty="medium", language="en", skill_fo
         "skills":        std["skills"],
         "algebra_prereqs": std["algebra_prereqs"],
         "difficulty":    difficulty,
-        "language":      language
+        "language":      language,
+        "qtype":         qtype,
+        "skill_focus":   skill_focus
     }
+
+
+# ── Challenge rounds: three mixed questions (skill, conceptual, interpret) ───
+QTYPE_PROMPTS = {
+    "skill": "a skill question. The student carries out the technique for this subskill and "
+             "reaches a clean, exact answer.",
+    "conceptual": "a conceptual question. The student explains or decides why or whether, "
+                  "justifying with a definition or property, with little computation.",
+    "interpret": "an interpretation question. A short real-world context gives a result or "
+                 "expression, and the student explains what it means in context, with units.",
+}
+QTYPE_LABEL = {
+    "skill": {"en": "Skill", "es": "Habilidad"},
+    "conceptual": {"en": "Conceptual", "es": "Conceptual"},
+    "interpret": {"en": "Interpret", "es": "Interpretar"},
+}
+
+
+def plan_challenge_round(standard_lock=None, topic=None, n=3, first_skill=None):
+    """Plan n questions: one of each type, different subskills, subskills not yet used
+    this session when possible."""
+    types = ["skill", "conceptual", "interpret"]
+    random.shuffle(types)
+    if standard_lock and standard_lock in STANDARDS_MAP:
+        codes = [standard_lock] * n
+    else:
+        pool = list(INTENT_TO_STANDARDS.get(topic, [])) if topic else []
+        pool = [c for c in pool if c in STANDARDS_MAP] or list(STANDARDS_MAP.keys())
+        codes = random.sample(pool, n) if len(pool) >= n else [random.choice(pool) for _ in range(n)]
+    used = st.session_state.setdefault("used_subskills", [])
+    plan = []
+    for i in range(n):
+        code = codes[i]
+        skills = list(STANDARDS_MAP[code]["skills"])
+        in_plan = [x["skill"] for x in plan if x["code"] == code]
+        fresh = [k for k in skills if (code, k) not in used and k not in in_plan]
+        if not fresh:
+            fresh = [k for k in skills if k not in in_plan] or skills
+        skill = random.choice(fresh)
+        plan.append({"code": code, "qtype": types[i % 3], "skill": skill})
+    if first_skill:
+        plan[0]["skill"] = first_skill
+    return plan
+
+
+def make_round_question(plan, idx, lang):
+    """Generate question idx of a planned round and remember it so later rounds differ."""
+    step = plan[idx]
+    q = quiz_by_standard(
+        step["code"], pick_difficulty(), lang, skill_focus=step["skill"],
+        qtype=step["qtype"], avoid_questions=st.session_state.get("asked_questions", [])
+    )
+    st.session_state.session_calls += 1
+    if "question" in q:
+        st.session_state.setdefault("asked_questions", []).append(q["question"])
+        st.session_state.setdefault("used_subskills", []).append((step["code"], step["skill"]))
+    return q
+
+
+def round_question_message(q, step, q_num, n, lang):
+    label = QTYPE_LABEL.get(step["qtype"], {}).get(lang, "")
+    return (
+        f"**Question {q_num} of {n} | {step['code']}: {q['topic']} · {label}**\n\n"
+        f"*Prerequisites: {', '.join(q['algebra_prereqs'])}*\n\n" + q["question"]
+    )
+
+
+def begin_challenge_round(lang, standard_lock=None, topic=None, first_skill=None):
+    """Start a new three-question round and post its first question."""
+    st.session_state.num_questions = 3
+    plan = plan_challenge_round(standard_lock, topic, 3, first_skill)
+    q = make_round_question(plan, 0, lang)
+    st.session_state.messages.append({
+        "role": "assistant", "type": "question",
+        "content": round_question_message(q, plan[0], 1, 3, lang)
+    })
+    qs = {"current_question": q, "q_num": 1, "num_questions": 3,
+          "topic": topic, "scores": [], "plan": plan}
+    if standard_lock:
+        qs["standard_lock"] = standard_lock
+    st.session_state.quiz_state = qs
+    st.session_state.round_done = False
+    st.session_state.last_round_ctx = {"standard_lock": standard_lock, "topic": topic}
 
 
 # ── AI: grade with mindset messaging (Sonnet) ─────────────────────────────────
@@ -1943,7 +2039,7 @@ def build_explanation_html(title, std_code, score_label, question,
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; MAT 3A</div>
   </header>
 
   <div>
@@ -1966,7 +2062,7 @@ def build_explanation_html(title, std_code, score_label, question,
 
   <footer>
     Canelita con Profe Contreras
-    &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {std_code or ''}
+    &nbsp;·&nbsp; MAT 3A &nbsp;·&nbsp; {std_code or ''}
     <br>To save as PDF: File &rarr; Print &rarr; Save as PDF &nbsp;|&nbsp;
     On iPhone/iPad: Share &rarr; Print &rarr; pinch to zoom preview
   </footer>
@@ -2227,7 +2323,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; MAT 3A &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="intro">{header_note}</div>
@@ -2236,7 +2332,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
   {question_blocks}
 
   <footer>
-    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210<br>
+    Canelita con Profe Contreras &nbsp;·&nbsp; MAT 3A<br>
     Standards: {', '.join(standards_practiced)}<br>
     To save as PDF: File → Print → Save as PDF &nbsp;|&nbsp;
     iPhone/iPad: Share → Print → pinch to zoom
@@ -2397,7 +2493,7 @@ def build_session_report_html(student_name, messages, session_score,
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">Your math. Your pace. Your place. &nbsp;·&nbsp; MAT 3A &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="stats">
@@ -2431,7 +2527,7 @@ def build_session_report_html(student_name, messages, session_score,
   </div>
 
   <footer>
-    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210<br>
+    Canelita con Profe Contreras &nbsp;·&nbsp; MAT 3A<br>
     <strong>Save as PDF:</strong>
     iPhone/iPad: Share → Print → pinch to zoom &nbsp;|&nbsp;
     Mac/PC: File → Print → Save as PDF
@@ -2443,7 +2539,7 @@ def build_session_report_html(student_name, messages, session_score,
 
 def build_standards_checklist_html(student_name, std_progress, language="en"):
     """
-    Build a printable HTML checklist of all 24 C-ID MATH 210 standards
+    Build a printable HTML checklist of all 24 MAT 3A standards
     with subskills and mastery status for the student.
     """
     week = get_current_week()
@@ -2624,7 +2720,7 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
 <body>
   <header>
     <div class="app-name">Canelita con Profe Contreras</div>
-    <div class="app-sub">C-ID MATH 210 — 25 Standards &nbsp;·&nbsp; {student_name} &nbsp;·&nbsp; {week}</div>
+    <div class="app-sub">MAT 3A — 25 Standards &nbsp;·&nbsp; {student_name} &nbsp;·&nbsp; {week}</div>
   </header>
 
   <div class="summary">
@@ -2642,7 +2738,7 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
   </div>
 
   <footer>
-    Canelita con Profe Contreras &nbsp;·&nbsp; C-ID MATH 210 &nbsp;·&nbsp; {student_name}<br>
+    Canelita con Profe Contreras &nbsp;·&nbsp; MAT 3A &nbsp;·&nbsp; {student_name}<br>
     <strong>{'Save as PDF' if language=='en' else 'Guardar como PDF'}:</strong>
     {'iPhone/iPad: Share → Print → pinch to zoom | Mac/PC: File → Print → Save as PDF'
      if language=='en' else
@@ -2887,7 +2983,7 @@ if st.session_state.screen == "professor":
                 unsafe_allow_html=True)
     st.markdown(
         '<p class="app-sub">Canelita con Profe Contreras &nbsp;·&nbsp; '
-        'C-ID MATH 210 &nbsp;·&nbsp; Student Progress</p>',
+        'MAT 3A &nbsp;·&nbsp; Student Progress</p>',
         unsafe_allow_html=True
     )
 
@@ -3138,26 +3234,26 @@ elif st.session_state.screen == "welcome":
     st.markdown('<div class="cf-grid">'
         + _feat_card("#00796b", _ic_chat, _tl("Chat", "Chat"),
             _tl("Choose “Tutor chat”", "Elige “Chat tutor”"),
-            _tl("Ask any Calculus 1 question in English or Spanish, or send a photo of your handwritten work. "
-                "You get a clear, step-by-step explanation and can ask about any step.",
-                "Pregunta cualquier cosa de Cálculo 1 en inglés o español, o envía una foto de tu trabajo a mano. "
-                "Recibes una explicación clara, paso a paso, y puedes preguntar sobre cualquier paso."))
+            _tl("Type any Calculus 1 question in English or Spanish and get a clear explanation "
+                "with a worked example. Keep asking follow-up questions until it makes sense.",
+                "Escribe cualquier pregunta de Cálculo 1 en inglés o español y recibe una explicación clara "
+                "con un ejemplo resuelto. Sigue preguntando hasta que tenga sentido."))
         + _feat_card("#b45309", _ic_chal, _tl("Challenge mode", "Modo reto"),
             _tl("Choose “Challenge me”", "Elige “Reto”"),
             _tl("Practice questions on all 24 standards, each tied to a real career. "
+                "Type your answer or upload a photo of your handwritten work. "
                 "Every answer gets a score out of 3, a full worked solution, and an algebra check. "
                 "You earn semillas as you go.",
                 "Preguntas de práctica sobre los 24 estándares, cada una conectada con una carrera real. "
+                "Escribe tu respuesta o sube una foto de tu trabajo a mano. "
                 "Cada respuesta recibe una puntuación de 3, la solución completa y un repaso del álgebra. "
                 "Ganas semillas mientras practicas."))
         + _feat_card("#3949ab", _ic_print, _tl("Print a handout", "Imprime una hoja"),
             _tl("Choose “Get a handout”", "Elige “Obtener una hoja”"),
             _tl("Download the handouts Profe Contreras has posted, like a Preparation with worked solutions. "
-                "In a session, any explanation can be saved as a PDF, and you can print your session report "
-                "to bring to office hours.",
+                "In a session, any explanation can be saved as a PDF.",
                 "Descarga las hojas que Profe Contreras ha publicado, como una Preparación con soluciones. "
-                "En una sesión, puedes guardar cualquier explicación como PDF e imprimir tu reporte "
-                "para llevarlo a horas de oficina."))
+                "En una sesión, puedes guardar cualquier explicación como PDF."))
         + '</div>', unsafe_allow_html=True)
 
     # ── Row 1: one highlighted, centered panel -- no sign-in for students ────
@@ -3208,12 +3304,7 @@ elif st.session_state.screen == "welcome":
             if handout_mode:
                 num_q = 0
             elif not tutor_chat_mode:
-                num_q = st.selectbox(
-                    _tl("   How many questions?", "   ¿Cuántas preguntas?"),
-                    [1, 2, 3, 4, 5],
-                    index=2,
-                    key="welcome_numq"
-                )
+                num_q = 3   # Challenge me always gives a round of three mixed questions
             else:
                 num_q = 0
 
@@ -3369,55 +3460,13 @@ elif st.session_state.screen == "welcome":
                         chosen_skill = st.session_state.get("selected_skill")
 
                         if chosen_std and chosen_std in STANDARDS_MAP:
-                            first_q = quiz_by_standard(
-                                chosen_std, pick_difficulty(), lang,
-                                skill_focus=chosen_skill
-                            )
-                            st.session_state.session_calls += 1
-                            nq       = st.session_state.num_questions
-                            std_data = STANDARDS_MAP[chosen_std]
-                            skill_note  = (f"\n*Skill: {chosen_skill}*\n\n"
-                                           if chosen_skill else "\n\n")
-                            prereqs_str = ", ".join(std_data["algebra_prereqs"])
-                            st.session_state.messages.append({
-                                "role": "assistant", "type": "question",
-                                "content": (
-                                    f"**Question 1 of {nq} | "
-                                    f"{chosen_std}: {std_data['topic']}**\n"
-                                    f"*Prerequisites: {prereqs_str}*"
-                                    f"{skill_note}" + first_q["question"]
-                                )
-                            })
-                            st.session_state.quiz_state = {
-                                "current_question": first_q,
-                                "q_num": 1, "num_questions": nq,
-                                "topic": std_data["intent_tag"],
-                                "standard_lock": chosen_std, "scores": []
-                            }
-                            if std_data["intent_tag"] not in st.session_state.session_topics:
-                                st.session_state.session_topics.append(std_data["intent_tag"])
+                            begin_challenge_round(lang, standard_lock=chosen_std,
+                                                  first_skill=chosen_skill)
+                            _tag = STANDARDS_MAP[chosen_std]["intent_tag"]
+                            if _tag not in st.session_state.session_topics:
+                                st.session_state.session_topics.append(_tag)
                         else:
-                            first_code  = random.choice(list(STANDARDS_MAP.keys()))
-                            first_q     = quiz_by_standard(
-                                first_code, pick_difficulty(), lang
-                            )
-                            st.session_state.session_calls += 1
-                            nq = st.session_state.num_questions
-                            prereqs_str = ", ".join(first_q["algebra_prereqs"])
-                            st.session_state.messages.append({
-                                "role": "assistant", "type": "question",
-                                "content": (
-                                    f"**Question 1 of {nq} | "
-                                    f"{first_code}: {first_q['topic']}**\n\n"
-                                    f"*Prerequisites: {prereqs_str}*\n\n"
-                                    + first_q["question"]
-                                )
-                            })
-                            st.session_state.quiz_state = {
-                                "current_question": first_q,
-                                "q_num": 1, "num_questions": nq,
-                                "topic": None, "scores": []
-                            }
+                            begin_challenge_round(lang)
 
                         st.rerun()
 
@@ -3437,10 +3486,10 @@ elif st.session_state.screen == "welcome":
         )
         st.markdown(
             f'<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin:0 0 0.6rem;">'
-            + _tl("Your C-ID MATH 210 checklist: 24 standards that follow our textbook chapter by "
+            + _tl("Your MAT 3A checklist: 24 standards that follow our textbook chapter by "
                   "chapter. Work through them all and you'll be ready for Calculus 2, Differential "
                   "Equations, Physics, and beyond. Pick one, or leave it on Random.",
-                  "Tu lista C-ID MATH 210: 24 estándares que siguen nuestro libro capítulo por "
+                  "Tu lista MAT 3A: 24 estándares que siguen nuestro libro capítulo por "
                   "capítulo. Trabájalos todos y estarás listo para Cálculo 2, Ecuaciones "
                   "Diferenciales, Física y más. Elige uno o déjalo en Aleatorio.")
             + '</p>',
@@ -3773,10 +3822,7 @@ elif st.session_state.screen == "chat":
         st.divider()
         st.caption("Settings")
         # Difficulty is auto-rotated to find the student's starting place -- no manual selector.
-        st.session_state.num_questions = st.select_slider(
-            "Questions per quiz", [1,2,3,4,5],
-            value=st.session_state.num_questions
-        )
+        st.session_state.num_questions = 3
         lang_opts = {"Auto-detect":"auto","English":"en","Español":"es"}
         cur_lbl   = {v:k for k,v in lang_opts.items()}.get(
                         st.session_state.language, "Auto-detect")
@@ -4198,6 +4244,35 @@ elif st.session_state.screen == "chat":
         image_b64       = None
         image_submitted = False
 
+        # After a round: three more (different) questions, or print the session
+        if st.session_state.get("round_done") and st.session_state.quiz_state is None:
+            _l = st.session_state.get("current_lang", "en")
+            _c1, _c2 = st.columns(2)
+            with _c1:
+                if st.button("Give me three more questions" if _l == "en"
+                             else "Dame tres preguntas más",
+                             type="primary", use_container_width=True, key="more_round_btn"):
+                    _ctx = st.session_state.get("last_round_ctx") or {}
+                    begin_challenge_round(_l, standard_lock=_ctx.get("standard_lock"),
+                                          topic=_ctx.get("topic"))
+                    st.rerun()
+            with _c2:
+                st.download_button(
+                    "Print my session" if _l == "en" else "Imprimir mi sesión",
+                    data=build_session_report_html(
+                        student_name        = st.session_state.get("student_id", "Student"),
+                        messages            = st.session_state.messages,
+                        session_score       = st.session_state.session_score,
+                        session_max         = st.session_state.session_max,
+                        elapsed_min         = elapsed_min,
+                        standards_practiced = st.session_state.session_standards,
+                        session_semillas    = st.session_state.get("session_semillas", 0),
+                        language            = _l),
+                    file_name=f"session_report_{get_current_week()}.html",
+                    mime="text/html", key="round_report_download",
+                    use_container_width=True,
+                    help="Open the file in your browser, then Print or Save as PDF")
+
         # Image uploader appears only when a quiz question is waiting
         if st.session_state.quiz_state is not None:
             # Low-pressure option: see a worked example of a similar problem first
@@ -4402,29 +4477,14 @@ elif st.session_state.screen == "chat":
                             )
                         })
                     else:
-                        # Respect standard_lock: if a specific standard was chosen,
-                        # ALL questions in this round use that same standard
-                        locked = qs.get("standard_lock")
-                        if locked and locked in STANDARDS_MAP:
-                            next_code = locked
-                        else:
-                            topic = qs.get("topic")
-                            pool  = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
-                                     if topic else list(STANDARDS_MAP.keys()))
-                            next_code = random.choice(pool)
-                        next_q = quiz_by_standard(
-                            next_code, pick_difficulty(), lang
-                        )
-                        st.session_state.session_calls += 1
+                        _plan = qs.get("plan")
+                        _step = _plan[qs["q_num"] - 1]
+                        next_q = make_round_question(_plan, qs["q_num"] - 1, lang)
                         qs["current_question"] = next_q
                         st.session_state.messages.append({
                             "role": "assistant", "type": "question",
-                            "content": (
-                                f"**Question {qs['q_num']} of {qs['num_questions']}"
-                                f" | {next_code}: {next_q['topic']}**\n\n"
-                                f"*Prerequisites: {', '.join(next_q['algebra_prereqs'])}*\n\n"
-                                + next_q["question"]
-                            )
+                            "content": round_question_message(
+                                next_q, _step, qs["q_num"], qs["num_questions"], lang)
                         })
                 else:
                     total = sum(qs["scores"])
@@ -4433,14 +4493,15 @@ elif st.session_state.screen == "chat":
                     st.session_state.messages.append({
                         "role": "assistant", "type": "chat",
                         "content": (
-                            f"Quiz complete — {total}/{max_s} ({pct}%). "
-                            f"Type 'challenge' for another round or ask me anything."
+                            f"Round complete — {total}/{max_s} ({pct}%). "
+                            f"Choose three more questions or print your session below."
                             if lang == "en" else
-                            f"Quiz terminado — {total}/{max_s} ({pct}%). "
-                            f"Escribe 'reto' para otra ronda."
+                            f"Ronda terminada — {total}/{max_s} ({pct}%). "
+                            f"Elige tres preguntas más o imprime tu sesión abajo."
                         )
                     })
                     st.session_state.quiz_state = None
+                    st.session_state.round_done = True
 
             # ── Chat / command mode ───────────────────────────────────────────
             else:
@@ -4457,28 +4518,7 @@ elif st.session_state.screen == "chat":
                     topic = extract_topic_from_input(user_input)
                     if topic and topic not in st.session_state.session_topics:
                         st.session_state.session_topics.append(topic)
-                    pool       = (INTENT_TO_STANDARDS.get(topic, list(STANDARDS_MAP.keys()))
-                                  if topic else list(STANDARDS_MAP.keys()))
-                    first_code = random.choice(pool)
-                    first_q    = quiz_by_standard(
-                        first_code, pick_difficulty(), lang
-                    )
-                    st.session_state.session_calls += 1
-                    nq = st.session_state.num_questions
-                    st.session_state.messages.append({
-                        "role":"assistant", "type":"question",
-                        "content": (
-                            f"**Question 1 of {nq} | "
-                            f"{first_code}: {first_q['topic']}**\n\n"
-                            f"*Prerequisites: {', '.join(first_q['algebra_prereqs'])}*\n\n"
-                            + first_q["question"]
-                        )
-                    })
-                    st.session_state.quiz_state = {
-                        "current_question": first_q,
-                        "q_num": 1, "num_questions": nq,
-                        "topic": topic, "scores": []
-                    }
+                    begin_challenge_round(lang, topic=topic)
 
                 else:
                     if intent_tag not in ["greeting","goodbye","thanks",

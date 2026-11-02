@@ -3220,26 +3220,56 @@ elif st.session_state.screen == "welcome":
                 f'<p class="cf-body">{body}</p></div>')
     st.markdown(
         '<style>'
-        '.cf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin:0.4rem 0 1.4rem;}'
         '.cf-card{background:rgba(0,121,107,0.06);border:1px solid rgba(0,121,107,0.22);border-top:6px solid;'
-        'border-radius:14px;padding:1rem 1.1rem 0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.08);}'
+        'border-radius:14px;padding:1rem 1.1rem 0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.08);'
+        'transition:transform .12s ease,box-shadow .12s ease;}'
+        '@media (min-width:900px){.cf-card{min-height:19rem;}}'
         '.cf-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.55rem;}'
         '.cf-icon{flex:0 0 46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;}'
         '.cf-title{font-size:1.15rem;font-weight:800;line-height:1.2;color:inherit;}'
-        '.cf-how{font-size:0.78rem;font-weight:700;letter-spacing:0.02em;margin-top:0.1rem;}'
+        '.cf-how{font-size:0.82rem;font-weight:800;letter-spacing:0.02em;margin-top:0.1rem;}'
         '.cf-body{font-size:0.9rem;line-height:1.6;margin:0;color:inherit;}'
+        # the whole card is the click target: an invisible button covers it
+        '.st-key-card_chat,.st-key-card_challenge,.st-key-card_handout{position:relative;}'
+        '.st-key-card_chat [data-testid="stButton"],.st-key-card_challenge [data-testid="stButton"],'
+        '.st-key-card_handout [data-testid="stButton"]{position:absolute;inset:0;z-index:2;margin:0;}'
+        '.st-key-card_chat button,.st-key-card_challenge button,.st-key-card_handout button{'
+        'width:100%;height:100%;opacity:0;cursor:pointer;border-radius:14px;}'
+        '.st-key-card_chat:hover .cf-card,.st-key-card_challenge:hover .cf-card,.st-key-card_handout:hover .cf-card{'
+        'transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.16);}'
+        '.st-key-card_chat:focus-within .cf-card,.st-key-card_challenge:focus-within .cf-card,'
+        '.st-key-card_handout:focus-within .cf-card{outline:3px solid #1a237e;outline-offset:2px;}'
+        '.st-key-handout_panel{border-radius:14px;padding:1.1rem 1.25rem 1.2rem;box-sizing:border-box;'
+        'background:#eef7f5;border:2px solid #00796b;box-shadow:0 4px 12px rgba(0,105,92,0.12);margin:0.4rem 0 1rem;}'
+        '.step-head{font-size:1.15rem;font-weight:800;margin:0 0 0.45rem;color:inherit;}'
         '</style>', unsafe_allow_html=True)
-    st.markdown(f'<p class="section-label">{_tl("What this tutor does","Qué hace este tutor")}</p>',
+    st.markdown(f'<p class="section-label">{_tl("What would you like to do?","¿Qué quieres hacer?")}</p>',
                 unsafe_allow_html=True)
-    st.markdown('<div class="cf-grid">'
-        + _feat_card("#00796b", _ic_chat, _tl("Chat", "Chat"),
-            _tl("Choose “Tutor chat”", "Elige “Chat tutor”"),
+
+    student_id = "Student"
+    is_guest = True
+    lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
+    # Difficulty is chosen automatically -- no student-facing selector.
+    diff_choice = "Random — mix it up"
+    start_clicked = False
+    tutor_chat_mode = False
+    num_q = 0
+
+    _c1, _c2, _c3 = st.columns(3, gap="medium")
+    with _c1, st.container(key="card_chat"):
+        st.markdown(_feat_card("#00796b", _ic_chat, _tl("Chat", "Chat"),
+            _tl("Start a tutor chat", "Empieza un chat con el tutor"),
             _tl("Type any Calculus 1 question in English or Spanish and get a clear explanation "
                 "with a worked example. Keep asking follow-up questions until it makes sense.",
                 "Escribe cualquier pregunta de Cálculo 1 en inglés o español y recibe una explicación clara "
-                "con un ejemplo resuelto. Sigue preguntando hasta que tenga sentido."))
-        + _feat_card("#b45309", _ic_chal, _tl("Challenge mode", "Modo reto"),
-            _tl("Choose “Challenge me”", "Elige “Reto”"),
+                "con un ejemplo resuelto. Sigue preguntando hasta que tenga sentido.")),
+            unsafe_allow_html=True)
+        if st.button(_tl("Chat: start a tutor chat", "Chat: empieza un chat con el tutor"),
+                     key="card_chat_btn", use_container_width=True):
+            start_clicked, tutor_chat_mode, num_q = True, True, 0
+    with _c2, st.container(key="card_challenge"):
+        st.markdown(_feat_card("#b45309", _ic_chal, _tl("Challenge mode", "Modo reto"),
+            _tl("Start a challenge round", "Empieza una ronda de reto"),
             _tl("Practice questions on all 24 standards, each tied to a real career. "
                 "Type your answer or upload a photo of your handwritten work. "
                 "Every answer gets a score out of 3, a full worked solution, and an algebra check. "
@@ -3247,228 +3277,193 @@ elif st.session_state.screen == "welcome":
                 "Preguntas de práctica sobre los 24 estándares, cada una conectada con una carrera real. "
                 "Escribe tu respuesta o sube una foto de tu trabajo a mano. "
                 "Cada respuesta recibe una puntuación de 3, la solución completa y un repaso del álgebra. "
-                "Ganas semillas mientras practicas."))
-        + _feat_card("#3949ab", _ic_print, _tl("Print a handout", "Imprime una hoja"),
-            _tl("Choose “Get a handout”", "Elige “Obtener una hoja”"),
+                "Ganas semillas mientras practicas.")),
+            unsafe_allow_html=True)
+        if st.button(_tl("Challenge mode: start a challenge round", "Modo reto: empieza una ronda de reto"),
+                     key="card_challenge_btn", use_container_width=True):
+            start_clicked, tutor_chat_mode, num_q = True, False, 3   # a round is three mixed questions
+    with _c3, st.container(key="card_handout"):
+        st.markdown(_feat_card("#3949ab", _ic_print, _tl("Print a handout", "Imprime una hoja"),
+            _tl("See posted handouts", "Ver hojas publicadas"),
             _tl("Download the handouts Profe Contreras has posted, like a Preparation with worked solutions. "
                 "In a session, any explanation can be saved as a PDF.",
                 "Descarga las hojas que Profe Contreras ha publicado, como una Preparación con soluciones. "
-                "En una sesión, puedes guardar cualquier explicación como PDF."))
-        + '</div>', unsafe_allow_html=True)
+                "En una sesión, puedes guardar cualquier explicación como PDF.")),
+            unsafe_allow_html=True)
+        if st.button(_tl("Print a handout: see posted handouts", "Imprime una hoja: ver hojas publicadas"),
+                     key="card_handout_btn", use_container_width=True):
+            st.session_state.show_handouts = True
 
-    # ── Row 1: one highlighted, centered panel -- no sign-in for students ────
-    # The student view is open to anyone with the link: no names, nothing saved
-    # after the session (the instructor view still needs a password).
+    # Standard in use + privacy note (the standard is chosen under Learning standards below)
+    _sel = st.session_state.get("selected_standard")
+    _sel_txt = (f"{_sel} · {STANDARDS_MAP[_sel]['topic']}" if _sel in STANDARDS_MAP
+                else _tl("Random — surprise me", "Aleatorio — sorpréndeme"))
     st.markdown(
-        '<style>'
-        '.st-key-start_panel{border-radius:14px;padding:1.1rem 1.25rem 1.2rem;box-sizing:border-box;'
-        'background:#eef7f5;border:2px solid #00796b;box-shadow:0 4px 12px rgba(0,105,92,0.12);}'
-        '.step-head{font-size:1.15rem;font-weight:800;margin:0 0 0.45rem;color:inherit;}'
-        '</style>', unsafe_allow_html=True)
-    student_id = "Student"
-    is_guest = True
-    lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
-    # Difficulty is chosen automatically -- no student-facing selector.
-    diff_choice = "Random — mix it up"
-    _, col_form, _ = st.columns([1, 2.4, 1])
-    with col_form, st.container(key="start_panel"):
-            st.markdown(f'<p class="step-head">{_tl("Choose your practice and start","Elige tu práctica y comienza")}</p>'
-                        f'<p style="font-size:0.84rem;opacity:0.72;margin:-0.2rem 0 0.6rem;">'
-                        + _tl("No sign-in needed. Nothing is saved after you leave, so download your "
-                              "session report if you want to keep your work.",
-                              "No necesitas iniciar sesión. Nada se guarda al salir; descarga tu reporte "
-                              "de sesión si quieres conservar tu trabajo.") + '</p>',
+        f'<p style="font-size:0.88rem;margin:0.2rem 0 0.9rem;">{_tl("Standard", "Estándar")}: '
+        f'<strong style="color:#00796b;">{_sel_txt}</strong> '
+        f'<span style="opacity:0.7;">{_tl("(keep Random, or pick one under Learning standards below). ", "(deja Aleatorio, o elige uno en Estándares de aprendizaje abajo). ")}'
+        f'{_tl("No sign-in needed. Nothing is saved after you leave, so download your session report if you want to keep your work.", "No necesitas iniciar sesión. Nada se guarda al salir; descarga tu reporte de sesión si quieres conservar tu trabajo.")}'
+        f'</span></p>', unsafe_allow_html=True)
+
+    if st.session_state.get("show_handouts"):
+        with st.container(key="handout_panel"):
+            st.markdown(f'<p class="step-head">{_tl("Handouts posted by Profe Contreras","Hojas publicadas por Profe Contreras")}</p>',
                         unsafe_allow_html=True)
-            _sel = st.session_state.get("selected_standard")
-            _sel_txt = (f"{_sel} · {STANDARDS_MAP[_sel]['topic']}" if _sel in STANDARDS_MAP
-                        else _tl("Random — surprise me", "Aleatorio — sorpréndeme"))
-            st.markdown(
-                f'<div style="font-size:0.9rem;margin:0 0 0.45rem;">'
-                f'{_tl("Standard", "Estándar")}: <strong style="color:#00796b;">{_sel_txt}</strong>'
-                f'<br><span style="opacity:0.68;font-size:0.84rem;">'
-                f'{_tl("Keep Random, or pick one under Learning standards below.", "Deja Aleatorio, o elige uno en Estándares de aprendizaje abajo.")}'
-                f'</span></div>',
-                unsafe_allow_html=True
-            )
-            # 3. Session mode — challenge or tutor chat, with question count if challenge
-            session_mode_choice = st.selectbox(
-                _tl("What would you like to do?", "¿Qué quieres hacer?"),
-                [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
-                 _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas"),
-                 _tl("Get a handout — PDF to print", "Obtener una hoja — PDF para imprimir")],
-                key="welcome_mode_choice"
-            )
-            tutor_chat_mode = session_mode_choice.startswith(_tl("Tutor", "Chat"))
-            handout_mode = session_mode_choice.startswith(_tl("Get a handout", "Obtener una hoja"))
+            from handout_page import render_student_handouts
+            render_student_handouts(_tl, st.session_state.get("selected_standard"))
+            if st.button(_tl("Close", "Cerrar"), key="close_handouts_btn"):
+                st.session_state.show_handouts = False
+                st.rerun()
+    if start_clicked:
+        st.session_state.show_handouts = False
 
-            if handout_mode:
-                num_q = 0
-            elif not tutor_chat_mode:
-                num_q = 3   # Challenge me always gives a round of three mixed questions
-            else:
-                num_q = 0
+    # ── Launch a prerequisite tutoring session ────────────────────────
+    if st.session_state.get("prereq_start"):
+        action, pcode = st.session_state.prereq_start
+        st.session_state.prereq_start = None
+        sid = student_id
+        st.session_state.is_guest = True
+        lang = "es" if lang_top == "Español" else "en"
 
-            st.write("")
-            if handout_mode:
-                # Only PDFs the instructor marked "Visible to students" in the archive
-                from handout_page import render_student_handouts
-                render_student_handouts(_tl, st.session_state.get("selected_standard"))
-                start_clicked = False
-            else:
-                start_clicked = st.button(
-                    "Start session / Comenzar",
-                    type="primary",
-                    use_container_width=True,
-                    key="start_btn"
+        # Set up a light session (prereq practice does not count toward standards)
+        st.session_state.student_id    = sid
+        st.session_state.language      = "es" if lang == "es" else "auto"
+        st.session_state.num_questions = 3
+        st.session_state.session_start = time.time()
+        st.session_state.screen        = "chat"
+        st.session_state.current_lang  = lang
+
+        pd = PREREQ_SKILLS.get(pcode, {})
+        intro = (
+            f"Nice — let's sharpen **{pd.get('topic','this skill')}**. "
+            f"This is one of the tools that powers calculus, and getting comfortable "
+            f"with it now pays off everywhere later. Your background knowledge counts here."
+            if lang == "en" else
+            f"Muy bien — afinemos **{pd.get('topic','esta habilidad')}**. "
+            f"Es una de las herramientas que impulsan el cálculo, y dominarla ahora "
+            f"te ayuda en todo lo que sigue. Tu conocimiento previo cuenta aquí."
+        )
+        st.session_state.messages.append({
+            "role": "assistant", "content": intro, "type": "chat"
+        })
+
+        if action == "example":
+            with st.spinner("Preparing a worked example for you..."
+                            if lang == "en" else
+                            "Preparando un ejemplo resuelto para ti..."):
+                ex = generate_prereq_example(pcode, lang)
+            st.session_state.session_calls += 1
+            if not (ex or "").strip():
+                ex = (f"Let's sharpen **{pd.get('topic','this skill')}**. "
+                      f"Ask me for an example or type a problem and I'll walk "
+                      f"through it with you."
+                      if lang == "en" else
+                      f"Afinemos **{pd.get('topic','esta habilidad')}**. "
+                      f"Pídeme un ejemplo o escribe un problema y lo resolvemos juntos.")
+            st.session_state.messages.append({
+                "role": "assistant", "type": "chat",
+                "content": ex, "intent_type": "explanation"
+            })
+        else:  # practice
+            with st.spinner("Preparing a practice problem..."
+                            if lang == "en" else
+                            "Preparando un problema de práctica..."):
+                q = prereq_practice_question(pcode, lang)
+            st.session_state.session_calls += 1
+            st.session_state.messages.append({
+                "role": "assistant", "type": "question",
+                "content": (f"**Foundation practice · {pd.get('topic','')}**\n\n"
+                            + q["question"])
+            })
+            st.session_state.quiz_state = {
+                "current_question": q,
+                "q_num": 1, "num_questions": 3,
+                "topic": None, "scores": [],
+                "is_prereq": True, "prereq_code": pcode,
+            }
+        st.rerun()
+
+    if start_clicked:
+        sid = student_id
+        st.session_state.is_guest = True
+        if True:  # open student view: no name needed
+            all_usage    = st.session_state.get("all_usage", {})
+            current_week = get_current_week()
+            record       = all_usage.get(sid, {})
+            if record.get("week") != current_week:
+                record = {"week": current_week, "minutes_used": 0.0,
+                          "sessions": 0, "api_calls": 0,
+                          "topics_practiced": [], "standards_practiced": []}
+            used      = record.get("minutes_used", 0.0)
+            remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
+
+            if used >= WEEKLY_LIMIT_MINUTES:
+                st.error(
+                    f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
+                    f"weekly limit. Your time resets next week."
                 )
+            else:
+                lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
+                diff_map = {
+                    "Random — mix it up": random.choice(["easy","medium","hard"]),
+                    "Easy": "easy", "Medium": "medium", "Hard": "hard"
+                }
 
-            # ── Launch a prerequisite tutoring session ────────────────────────
-            if st.session_state.get("prereq_start"):
-                action, pcode = st.session_state.prereq_start
-                st.session_state.prereq_start = None
-                sid = student_id
-                st.session_state.is_guest = True
-                lang = "es" if lang_top == "Español" else "en"
-
-                # Set up a light session (prereq practice does not count toward standards)
                 st.session_state.student_id    = sid
-                st.session_state.language      = "es" if lang == "es" else "auto"
-                st.session_state.num_questions = 3
+                st.session_state.language      = lang_map[lang_choice]
+                st.session_state.difficulty    = diff_map[diff_choice]
+                st.session_state.num_questions = num_q
                 st.session_state.session_start = time.time()
                 st.session_state.screen        = "chat"
+                lang = "es" if st.session_state.language == "es" else "en"
                 st.session_state.current_lang  = lang
 
-                pd = PREREQ_SKILLS.get(pcode, {})
-                intro = (
-                    f"Nice — let's sharpen **{pd.get('topic','this skill')}**. "
-                    f"This is one of the tools that powers calculus, and getting comfortable "
-                    f"with it now pays off everywhere later. Your background knowledge counts here."
-                    if lang == "en" else
-                    f"Muy bien — afinemos **{pd.get('topic','esta habilidad')}**. "
-                    f"Es una de las herramientas que impulsan el cálculo, y dominarla ahora "
-                    f"te ayuda en todo lo que sigue. Tu conocimiento previo cuenta aquí."
-                )
+                if tutor_chat_mode:
+                    welcome_msg = (
+                        f"Hi {sid}! Ask me anything about Calculus 1 — "
+                        f"concepts, worked examples, or anything you're curious about. "
+                        f"You have **{format_duration(remaining)}** this week. What's on your mind?"
+                        if lang == "en" else
+                        f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
+                        f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
+                    )
+                else:
+                    _chosen = st.session_state.get("selected_standard")
+                    if _chosen and _chosen in STANDARDS_MAP:
+                        _std_name = f"{STANDARDS_MAP[_chosen]['topic']} ({_chosen})"
+                    else:
+                        _std_name = ("a mix of standards" if lang == "en"
+                                     else "una mezcla de estándares")
+                    welcome_msg = (
+                        f"Let's see what you already know about **{_std_name}**. "
+                        f"There's no wrong answer — just useful information to help us "
+                        f"find the right starting point together.\n\n"
+                        f"You have **{format_duration(remaining)}** of practice time this week. "
+                        f"Type **bye** anytime to see your session report."
+                        if lang == "en" else
+                        f"Veamos qué ya sabes sobre **{_std_name}**. "
+                        f"No hay respuesta equivocada — solo información útil que nos ayuda "
+                        f"a encontrar juntos el punto de partida correcto.\n\n"
+                        f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
+                        f"Escribe **bye** cuando quieras para ver tu reporte."
+                    )
                 st.session_state.messages.append({
-                    "role": "assistant", "content": intro, "type": "chat"
+                    "role": "assistant", "content": welcome_msg, "type": "chat"
                 })
 
-                if action == "example":
-                    with st.spinner("Preparing a worked example for you..."
-                                    if lang == "en" else
-                                    "Preparando un ejemplo resuelto para ti..."):
-                        ex = generate_prereq_example(pcode, lang)
-                    st.session_state.session_calls += 1
-                    if not (ex or "").strip():
-                        ex = (f"Let's sharpen **{pd.get('topic','this skill')}**. "
-                              f"Ask me for an example or type a problem and I'll walk "
-                              f"through it with you."
-                              if lang == "en" else
-                              f"Afinemos **{pd.get('topic','esta habilidad')}**. "
-                              f"Pídeme un ejemplo o escribe un problema y lo resolvemos juntos.")
-                    st.session_state.messages.append({
-                        "role": "assistant", "type": "chat",
-                        "content": ex, "intent_type": "explanation"
-                    })
-                else:  # practice
-                    with st.spinner("Preparing a practice problem..."
-                                    if lang == "en" else
-                                    "Preparando un problema de práctica..."):
-                        q = prereq_practice_question(pcode, lang)
-                    st.session_state.session_calls += 1
-                    st.session_state.messages.append({
-                        "role": "assistant", "type": "question",
-                        "content": (f"**Foundation practice · {pd.get('topic','')}**\n\n"
-                                    + q["question"])
-                    })
-                    st.session_state.quiz_state = {
-                        "current_question": q,
-                        "q_num": 1, "num_questions": 3,
-                        "topic": None, "scores": [],
-                        "is_prereq": True, "prereq_code": pcode,
-                    }
+                chosen_std   = st.session_state.get("selected_standard")
+                chosen_skill = st.session_state.get("selected_skill")
+
+                if chosen_std and chosen_std in STANDARDS_MAP:
+                    begin_challenge_round(lang, standard_lock=chosen_std,
+                                          first_skill=chosen_skill)
+                    _tag = STANDARDS_MAP[chosen_std]["intent_tag"]
+                    if _tag not in st.session_state.session_topics:
+                        st.session_state.session_topics.append(_tag)
+                else:
+                    begin_challenge_round(lang)
+
                 st.rerun()
-
-            if start_clicked:
-                sid = student_id
-                st.session_state.is_guest = True
-                if True:  # open student view: no name needed
-                    all_usage    = st.session_state.get("all_usage", {})
-                    current_week = get_current_week()
-                    record       = all_usage.get(sid, {})
-                    if record.get("week") != current_week:
-                        record = {"week": current_week, "minutes_used": 0.0,
-                                  "sessions": 0, "api_calls": 0,
-                                  "topics_practiced": [], "standards_practiced": []}
-                    used      = record.get("minutes_used", 0.0)
-                    remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
-
-                    if used >= WEEKLY_LIMIT_MINUTES:
-                        st.error(
-                            f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
-                            f"weekly limit. Your time resets next week."
-                        )
-                    else:
-                        lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
-                        diff_map = {
-                            "Random — mix it up": random.choice(["easy","medium","hard"]),
-                            "Easy": "easy", "Medium": "medium", "Hard": "hard"
-                        }
-
-                        st.session_state.student_id    = sid
-                        st.session_state.language      = lang_map[lang_choice]
-                        st.session_state.difficulty    = diff_map[diff_choice]
-                        st.session_state.num_questions = num_q
-                        st.session_state.session_start = time.time()
-                        st.session_state.screen        = "chat"
-                        lang = "es" if st.session_state.language == "es" else "en"
-                        st.session_state.current_lang  = lang
-
-                        if tutor_chat_mode:
-                            welcome_msg = (
-                                f"Hi {sid}! Ask me anything about Calculus 1 — "
-                                f"concepts, worked examples, or anything you're curious about. "
-                                f"You have **{format_duration(remaining)}** this week. What's on your mind?"
-                                if lang == "en" else
-                                f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
-                                f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
-                            )
-                        else:
-                            _chosen = st.session_state.get("selected_standard")
-                            if _chosen and _chosen in STANDARDS_MAP:
-                                _std_name = f"{STANDARDS_MAP[_chosen]['topic']} ({_chosen})"
-                            else:
-                                _std_name = ("a mix of standards" if lang == "en"
-                                             else "una mezcla de estándares")
-                            welcome_msg = (
-                                f"Let's see what you already know about **{_std_name}**. "
-                                f"There's no wrong answer — just useful information to help us "
-                                f"find the right starting point together.\n\n"
-                                f"You have **{format_duration(remaining)}** of practice time this week. "
-                                f"Type **bye** anytime to see your session report."
-                                if lang == "en" else
-                                f"Veamos qué ya sabes sobre **{_std_name}**. "
-                                f"No hay respuesta equivocada — solo información útil que nos ayuda "
-                                f"a encontrar juntos el punto de partida correcto.\n\n"
-                                f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
-                                f"Escribe **bye** cuando quieras para ver tu reporte."
-                            )
-                        st.session_state.messages.append({
-                            "role": "assistant", "content": welcome_msg, "type": "chat"
-                        })
-
-                        chosen_std   = st.session_state.get("selected_standard")
-                        chosen_skill = st.session_state.get("selected_skill")
-
-                        if chosen_std and chosen_std in STANDARDS_MAP:
-                            begin_challenge_round(lang, standard_lock=chosen_std,
-                                                  first_skill=chosen_skill)
-                            _tag = STANDARDS_MAP[chosen_std]["intent_tag"]
-                            if _tag not in st.session_state.session_topics:
-                                st.session_state.session_topics.append(_tag)
-                        else:
-                            begin_challenge_round(lang)
-
-                        st.rerun()
 
 
     # ════════════════════════════════════════════════════════════════════════════════

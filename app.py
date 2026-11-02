@@ -3023,7 +3023,7 @@ if st.session_state.screen == "professor":
                 unsafe_allow_html=True)
     st.markdown(
         '<p class="app-sub">Canelita con Profe Contreras &nbsp;·&nbsp; '
-        'MAT 3A &nbsp;·&nbsp; Student Progress</p>',
+        'MAT 3A</p>',
         unsafe_allow_html=True
     )
 
@@ -3060,86 +3060,6 @@ if st.session_state.screen == "professor":
             st.session_state.screen = "handouts"
             st.rerun()
     st.markdown('<div style="height:0.8rem;"></div>', unsafe_allow_html=True)
-
-    all_usage = st.session_state.get("all_usage", {})
-
-    # Get all student IDs (filter out the metadata keys)
-    student_ids = [k for k in all_usage.keys()
-                   if not k.endswith("_total_semillas")
-                   and not k.endswith("_standards")
-                   and all_usage[k].get("week")]
-
-    if not student_ids:
-        st.info("No student session data yet. Students must log in and complete "
-                "at least one challenge for data to appear here.")
-    else:
-        st.subheader(f"Students this week — {get_current_week()}")
-
-        # Summary table
-        rows = []
-        for sid in sorted(student_ids):
-            rec     = all_usage[sid]
-            std_data = all_usage.get(f"{sid}_standards", {})
-            attempted = len(std_data)
-            mastered  = sum(1 for v in std_data.values() if v.get("best_score",0) == 3)
-            rows.append({
-                "Student":         sid,
-                "Minutes":         round(rec.get("minutes_used", 0)),
-                "Sessions":        rec.get("sessions", 0),
-                "Standards tried": attempted,
-                "Mastered (3/3)":  mastered,
-                "Topics":          ", ".join(rec.get("topics_practiced", [])),
-            })
-
-        import pandas as pd
-        df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True)
-
-        # Per-student drill-down
-        selected_student = st.selectbox(
-            "Drill down — select a student:", student_ids
-        )
-        if selected_student:
-            std_data = all_usage.get(f"{selected_student}_standards", {})
-            if std_data:
-                st.markdown(f"**Standards practiced by {selected_student}:**")
-                std_rows = []
-                for code, v in sorted(std_data.items()):
-                    topic = STANDARDS_MAP.get(code, {}).get("topic", code)
-                    avg   = round(v["total_score"] / v["attempts"], 2) if v["attempts"] else 0
-                    std_rows.append({
-                        "Standard": code,
-                        "Topic":    topic,
-                        "Attempts": v["attempts"],
-                        "Best score (0-3)": v["best_score"],
-                        "Avg score": avg,
-                        "Last practiced": v.get("last_practiced","—"),
-                    })
-                df_std = pd.DataFrame(std_rows)
-                st.dataframe(df_std, use_container_width=True)
-            else:
-                st.info(f"No standard-level data yet for {selected_student}.")
-
-        # Download all data as JSON
-        st.divider()
-        
-        # Glitch reports
-        glitch_log = all_usage.get("__glitch_log__", [])
-        if glitch_log:
-            st.subheader(f"Reported glitches ({len(glitch_log)})")
-            for g in reversed(glitch_log[-20:]):
-                st.markdown(
-                    f"- **{g.get('standard','?')}** by {g.get('student','?')} "
-                    f"(week {g.get('week','?')}): _{g.get('question_preview','')}_"
-                )
-            st.divider()
-
-        st.download_button(
-            label="Download all student data (JSON)",
-            data=json.dumps(all_usage, indent=2, ensure_ascii=False),
-            file_name=f"canelita_student_data_{get_current_week()}.json",
-            mime="application/json"
-        )
 
     if st.button("← Back to tutor", key="prof_back"):
         st.session_state.screen = "welcome"

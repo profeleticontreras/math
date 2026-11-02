@@ -3,3 +3,4 @@ __pycache__/
 .DS_Store
 student_usage.json
 .streamlit/secrets.toml
+handout_archive/

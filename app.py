@@ -2042,8 +2042,9 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
     """
     lang_word  = "Spanish" if language == "es" else "English"
     week       = get_current_week()
-    title_text = (f"Practice Set — {student_name}" if language == "en"
-                  else f"Conjunto de Práctica — {student_name}")
+    _who = "" if student_name in ("Student", "Guest", "") else f" — {student_name}"
+    title_text = (f"Practice Set{_who}" if language == "en"
+                  else f"Conjunto de Práctica{_who}")
 
     # Build questions for each standard practiced
     question_blocks = ""
@@ -2273,8 +2274,9 @@ def build_session_report_html(student_name, messages, session_score,
     week      = get_current_week()
     score_pct = round((session_score / session_max) * 100) if session_max > 0 else 0
     duration  = format_duration(elapsed_min)
-    title_txt = (f"Session Report — {student_name}" if language == "en"
-                 else f"Reporte de Sesión — {student_name}")
+    _who = "" if student_name in ("Student", "Guest", "") else f" — {student_name}"
+    title_txt = (f"Session Report{_who}" if language == "en"
+                 else f"Reporte de Sesión{_who}")
 
     # Build question blocks from grading messages
     question_blocks = ""
@@ -2445,9 +2447,10 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
     with subskills and mastery status for the student.
     """
     week = get_current_week()
-    title_txt = (f"Standards Checklist — {student_name}"
+    _who = "" if student_name in ("Student", "Guest", "") else f" — {student_name}"
+    title_txt = (f"Standards Checklist{_who}"
                  if language == "en" else
-                 f"Lista de Estándares — {student_name}")
+                 f"Lista de Estándares{_who}")
 
     unit_names = {
         1: ("Unit 1 — Limits & Continuity",          "Unidad 1 — Límites y Continuidad"),
@@ -3030,33 +3033,22 @@ elif st.session_state.screen == "welcome":
     )
     _tl = lambda en, es: es if lang_top == "Español" else en
 
-    # ── Logo + title ──────────────────────────────────────────────────────────
-    logo_col, title_col = st.columns([2, 5], gap="small")
-    with logo_col:
-        st.markdown(
-            f'<div style="display:flex;align-items:stretch;">' +
-            f'<img src="{LOGO_SRC}" style="width:100%;max-width:210px;"' +
-            f' alt="Canelita logo"/></div>',
-            unsafe_allow_html=True
-        )
-    with title_col:
-        st.markdown(
-            '<p class="app-title" style="margin-bottom:0.4rem;font-size:1.8rem;">' +
-            'Canelita con Profe Contreras</p>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            '<p style="font-size:1.05rem;font-weight:400;color:inherit;' +
-            'opacity:0.78;margin:0 0 0.15rem 0;">Your Calculus 1 learning partner</p>',
-            unsafe_allow_html=True
-        )
-        # Three-line slogan stacked, same visual height as mug
-        st.markdown(
-            '<div style="font-size:1.0rem;font-weight:500;color:#00796b;' +
-            'line-height:1.85;margin-top:0.15rem;">' +
-            'Your Math.<br>Your Pace.<br>Your Place.</div>',
-            unsafe_allow_html=True
-        )
+    # ── Logo + title: compact one-row header ─────────────────────────────────
+    st.markdown(
+        '<div style="display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap;margin:0.2rem 0 0.3rem;">'
+        f'<img src="{LOGO_SRC}" alt="Canelita logo" style="width:104px;height:auto;flex:0 0 auto;"/>'
+        '<div style="min-width:0;">'
+        '<p class="app-title" style="margin:0 0 0.2rem 0;font-size:1.75rem;line-height:1.15;">'
+        'Canelita con Profe Contreras</p>'
+        '<p style="margin:0 0 0.15rem 0;font-size:1.08rem;font-weight:700;color:#00796b;letter-spacing:0.01em;">'
+        + _tl("Your math. Your pace. Your place.", "Tu matemática. Tu ritmo. Tu lugar.") +
+        '</p>'
+        '<p style="margin:0;font-size:0.92rem;color:inherit;opacity:0.72;">'
+        + _tl("Your Calculus 1 learning partner, in English or Spanish",
+              "Tu compañera de Cálculo 1, en inglés o español") +
+        '</p></div></div>',
+        unsafe_allow_html=True
+    )
 
     st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
 
@@ -3115,88 +3107,324 @@ elif st.session_state.screen == "welcome":
                 unsafe_allow_html=True
             )
 
-    # ── Responsive layout: info left, form right ──────────────────────────────
-    col_info, col_form = st.columns([11, 9], gap="large")
+    # ── Three things the app does: highlighted cards ──────────────────────────
+    _ic_chat = ('<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" '
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5'
+                'a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>')
+    _ic_chal = ('<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" '
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/>'
+                '<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="#fff"/></svg>')
+    _ic_print = ('<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" '
+                 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/>'
+                 '<rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>')
+    def _feat_card(color, icon, title, how, body):
+        return (f'<div class="cf-card" style="border-top-color:{color};">'
+                f'<div class="cf-head"><span class="cf-icon" style="background:{color};">{icon}</span>'
+                f'<div><div class="cf-title">{title}</div><div class="cf-how" style="color:{color};">{how}</div></div></div>'
+                f'<p class="cf-body">{body}</p></div>')
+    st.markdown(
+        '<style>'
+        '.cf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin:0.4rem 0 1.4rem;}'
+        '.cf-card{background:rgba(0,121,107,0.06);border:1px solid rgba(0,121,107,0.22);border-top:6px solid;'
+        'border-radius:14px;padding:1rem 1.1rem 0.9rem;box-shadow:0 4px 12px rgba(0,0,0,0.08);}'
+        '.cf-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.55rem;}'
+        '.cf-icon{flex:0 0 46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;}'
+        '.cf-title{font-size:1.15rem;font-weight:800;line-height:1.2;color:inherit;}'
+        '.cf-how{font-size:0.78rem;font-weight:700;letter-spacing:0.02em;margin-top:0.1rem;}'
+        '.cf-body{font-size:0.9rem;line-height:1.6;margin:0;color:inherit;}'
+        '</style>', unsafe_allow_html=True)
+    st.markdown(f'<p class="section-label">{_tl("What this tutor does","Qué hace este tutor")}</p>',
+                unsafe_allow_html=True)
+    st.markdown('<div class="cf-grid">'
+        + _feat_card("#00796b", _ic_chat, _tl("Chat", "Chat"),
+            _tl("Choose “Tutor chat”", "Elige “Chat tutor”"),
+            _tl("Ask any Calculus 1 question in English or Spanish, or send a photo of your handwritten work. "
+                "You get a clear, step-by-step explanation and can ask about any step.",
+                "Pregunta cualquier cosa de Cálculo 1 en inglés o español, o envía una foto de tu trabajo a mano. "
+                "Recibes una explicación clara, paso a paso, y puedes preguntar sobre cualquier paso."))
+        + _feat_card("#b45309", _ic_chal, _tl("Challenge mode", "Modo reto"),
+            _tl("Choose “Challenge me”", "Elige “Reto”"),
+            _tl("Practice questions on all 24 standards, each tied to a real career. "
+                "Every answer gets a score out of 3, a full worked solution, and an algebra check. "
+                "You earn semillas as you go.",
+                "Preguntas de práctica sobre los 24 estándares, cada una conectada con una carrera real. "
+                "Cada respuesta recibe una puntuación de 3, la solución completa y un repaso del álgebra. "
+                "Ganas semillas mientras practicas."))
+        + _feat_card("#3949ab", _ic_print, _tl("Print a handout", "Imprime una hoja"),
+            _tl("Choose “Get a handout”", "Elige “Obtener una hoja”"),
+            _tl("Download the handouts Profe Contreras has posted, like a Preparation with worked solutions. "
+                "In a session, any explanation can be saved as a PDF, and you can print your session report "
+                "to bring to office hours.",
+                "Descarga las hojas que Profe Contreras ha publicado, como una Preparación con soluciones. "
+                "En una sesión, puedes guardar cualquier explicación como PDF e imprimir tu reporte "
+                "para llevarlo a horas de oficina."))
+        + '</div>', unsafe_allow_html=True)
 
-    # ── LEFT: about panel ─────────────────────────────────────────────────────
-    with col_info:
-        st.markdown(f'<p class="section-label">{_tl("What this tutor does","Qué hace este tutor")}</p>',
-                    unsafe_allow_html=True)
-        st.markdown(f"""
-<div class="feature-block">
-<span class="feature-label">{_tl("Challenge mode.","Modo reto.")}</span>
-{_tl("Original questions aligned to all 24 C-ID MATH 210 standards. Each connects to a real career field — engineering, data science, biology, health, business, or social justice.",
-     "Preguntas originales alineadas a los 24 estándares C-ID MATH 210. Cada una conecta con un campo real: ingeniería, ciencia de datos, biología, salud, negocios o justicia social.")}
-</div>
-<div class="feature-block">
-<span class="feature-label">{_tl("Tutor chat.","Chat con tutor.")}</span>
-{_tl("Ask any Calculus 1 question and get a step-by-step explanation with rendered math, in English or Spanish.",
-     "Pregunta cualquier cosa de Cálculo 1 y obtén una explicación paso a paso con notación matemática renderizada.")}
-</div>
-<div class="feature-block" style="margin-bottom:0.5rem;">
-<span class="feature-label">{_tl("What you can send:","Qué puedes enviar:")}</span>
-<ul style="margin:0.3rem 0 0 1rem;padding:0;font-size:0.85rem;color:inherit;line-height:1.7;">
-  <li>{_tl("A typed answer or question — in English or Spanish","Una respuesta o pregunta escrita — en inglés o español")}</li>
-  <li>{_tl("A photo of your handwritten work","Una foto de tu trabajo escrito a mano")}</li>
-  <li>{_tl("A follow-up question about any step","Una pregunta de seguimiento sobre cualquier paso")}</li>
-</ul>
-</div>
-<div class="feature-block">
-<span class="feature-label">{_tl("Weekly limit.","Límite semanal.")}</span>
-{_tl("Six hours per week keeps this free for every student in the class.",
-     "Seis horas por semana mantiene esto gratuito para cada estudiante.")}
-</div>
-""", unsafe_allow_html=True)
-
-        # Pitch quote
-        st.markdown(f"""
-<div style="margin:0.9rem 0 1rem 0;padding:0.85rem 1rem;
-background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;">
-  <p style="margin:0;font-size:0.92rem;font-style:italic;font-weight:400;
-  color:inherit;line-height:1.65;font-family:Georgia,serif;opacity:0.9;">
-    "{_tl("Getting it wrong is part of getting it right. Every incorrect answer comes with an explanation, a full worked solution, and a check on the algebra underneath — so the next attempt starts from a stronger place.",
-           "Equivocarse es parte del proceso. Cada vez que no la haces, recibes una explicación de dónde te perdiste, la solución completa paso a paso, y un repaso del álgebra que necesitas — para que el siguiente intento salga desde un lugar más sólido.")}"
-  </p>
-</div>
-""", unsafe_allow_html=True)
-
-    # ── RIGHT (desktop) / BOTTOM (mobile): sign-in form ──────────────────────
-    with col_form:
-        st.markdown(
-            f'<p class="section-label">{_tl("Sign in","Iniciar sesión")}</p>',
-            unsafe_allow_html=True
-        )
-
-        # 1. Name / ID, or continue as a guest (nothing kept after the session)
-        name_mode = st.radio(
-            "name mode",
-            [_tl("Use my name or student ID","Usar mi nombre o ID de estudiante"),
-             _tl("Continue as a guest","Continuar como invitado")],
-            horizontal=True, key="name_mode", label_visibility="collapsed"
-        )
-        is_guest = name_mode == _tl("Continue as a guest","Continuar como invitado")
-        if is_guest:
-            student_id = "Guest"
+    # ── Row 1: one highlighted, centered panel -- no sign-in for students ────
+    # The student view is open to anyone with the link: no names, nothing saved
+    # after the session (the instructor view still needs a password).
+    st.markdown(
+        '<style>'
+        '.st-key-start_panel{border-radius:14px;padding:1.1rem 1.25rem 1.2rem;box-sizing:border-box;'
+        'background:#eef7f5;border:2px solid #00796b;box-shadow:0 4px 12px rgba(0,105,92,0.12);}'
+        '.step-head{font-size:1.15rem;font-weight:800;margin:0 0 0.45rem;color:inherit;}'
+        '</style>', unsafe_allow_html=True)
+    student_id = "Student"
+    is_guest = True
+    lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
+    # Difficulty is chosen automatically -- no student-facing selector.
+    diff_choice = "Random — mix it up"
+    _, col_form, _ = st.columns([1, 2.4, 1])
+    with col_form, st.container(key="start_panel"):
+            st.markdown(f'<p class="step-head">{_tl("Choose your practice and start","Elige tu práctica y comienza")}</p>'
+                        f'<p style="font-size:0.84rem;opacity:0.72;margin:-0.2rem 0 0.6rem;">'
+                        + _tl("No sign-in needed. Nothing is saved after you leave, so download your "
+                              "session report if you want to keep your work.",
+                              "No necesitas iniciar sesión. Nada se guarda al salir; descarga tu reporte "
+                              "de sesión si quieres conservar tu trabajo.") + '</p>',
+                        unsafe_allow_html=True)
+            _sel = st.session_state.get("selected_standard")
+            _sel_txt = (f"{_sel} · {STANDARDS_MAP[_sel]['topic']}" if _sel in STANDARDS_MAP
+                        else _tl("Random — surprise me", "Aleatorio — sorpréndeme"))
             st.markdown(
-                '<div style="padding:0.6rem 0.85rem;background:rgba(0,121,107,0.07);'
-                'border-left:3px solid #00796b;border-radius:6px;font-size:0.88rem;line-height:1.55;">'
-                + _tl("You're in as a guest. Your questions, scores, and semillas last only for "
-                      "this session; nothing is saved after you leave. Download your session "
-                      "report before you go to keep your work.",
-                      "Entras como invitado. Tus preguntas, puntuaciones y semillas duran solo "
-                      "esta sesión; nada se guarda al salir. Descarga tu reporte de sesión antes "
-                      "de irte para conservar tu trabajo.")
-                + '</div>', unsafe_allow_html=True)
-        else:
-            student_id = st.text_input(
-                _tl("1. Your name or student ID","1. Tu nombre o ID"),
-                placeholder=_tl("e.g. Maria G. or 12345","p.ej. Maria G. o 12345"),
-                key="welcome_student_id"
+                f'<div style="font-size:0.9rem;margin:0 0 0.45rem;">'
+                f'{_tl("Standard", "Estándar")}: <strong style="color:#00796b;">{_sel_txt}</strong>'
+                f'<br><span style="opacity:0.68;font-size:0.84rem;">'
+                f'{_tl("Keep Random, or pick one under Learning standards below.", "Deja Aleatorio, o elige uno en Estándares de aprendizaje abajo.")}'
+                f'</span></div>',
+                unsafe_allow_html=True
             )
+            # 3. Session mode — challenge or tutor chat, with question count if challenge
+            session_mode_choice = st.selectbox(
+                _tl("What would you like to do?", "¿Qué quieres hacer?"),
+                [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
+                 _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas"),
+                 _tl("Get a handout — PDF to print", "Obtener una hoja — PDF para imprimir")],
+                key="welcome_mode_choice"
+            )
+            tutor_chat_mode = session_mode_choice.startswith(_tl("Tutor", "Chat"))
+            handout_mode = session_mode_choice.startswith(_tl("Get a handout", "Obtener una hoja"))
 
-        # Language comes from top-of-page selector
-        lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
+            if handout_mode:
+                num_q = 0
+            elif not tutor_chat_mode:
+                num_q = st.selectbox(
+                    _tl("   How many questions?", "   ¿Cuántas preguntas?"),
+                    [1, 2, 3, 4, 5],
+                    index=2,
+                    key="welcome_numq"
+                )
+            else:
+                num_q = 0
 
+            st.write("")
+            if handout_mode:
+                # Only PDFs the instructor marked "Visible to students" in the archive
+                from handout_page import render_student_handouts
+                render_student_handouts(_tl, st.session_state.get("selected_standard"))
+                start_clicked = False
+            else:
+                start_clicked = st.button(
+                    "Start session / Comenzar",
+                    type="primary",
+                    use_container_width=True,
+                    key="start_btn"
+                )
+
+            # ── Launch a prerequisite tutoring session ────────────────────────
+            if st.session_state.get("prereq_start"):
+                action, pcode = st.session_state.prereq_start
+                st.session_state.prereq_start = None
+                sid = student_id
+                st.session_state.is_guest = True
+                lang = "es" if lang_top == "Español" else "en"
+
+                # Set up a light session (prereq practice does not count toward standards)
+                st.session_state.student_id    = sid
+                st.session_state.language      = "es" if lang == "es" else "auto"
+                st.session_state.num_questions = 3
+                st.session_state.session_start = time.time()
+                st.session_state.screen        = "chat"
+                st.session_state.current_lang  = lang
+
+                pd = PREREQ_SKILLS.get(pcode, {})
+                intro = (
+                    f"Nice — let's sharpen **{pd.get('topic','this skill')}**. "
+                    f"This is one of the tools that powers calculus, and getting comfortable "
+                    f"with it now pays off everywhere later. Your background knowledge counts here."
+                    if lang == "en" else
+                    f"Muy bien — afinemos **{pd.get('topic','esta habilidad')}**. "
+                    f"Es una de las herramientas que impulsan el cálculo, y dominarla ahora "
+                    f"te ayuda en todo lo que sigue. Tu conocimiento previo cuenta aquí."
+                )
+                st.session_state.messages.append({
+                    "role": "assistant", "content": intro, "type": "chat"
+                })
+
+                if action == "example":
+                    with st.spinner("Preparing a worked example for you..."
+                                    if lang == "en" else
+                                    "Preparando un ejemplo resuelto para ti..."):
+                        ex = generate_prereq_example(pcode, lang)
+                    st.session_state.session_calls += 1
+                    if not (ex or "").strip():
+                        ex = (f"Let's sharpen **{pd.get('topic','this skill')}**. "
+                              f"Ask me for an example or type a problem and I'll walk "
+                              f"through it with you."
+                              if lang == "en" else
+                              f"Afinemos **{pd.get('topic','esta habilidad')}**. "
+                              f"Pídeme un ejemplo o escribe un problema y lo resolvemos juntos.")
+                    st.session_state.messages.append({
+                        "role": "assistant", "type": "chat",
+                        "content": ex, "intent_type": "explanation"
+                    })
+                else:  # practice
+                    with st.spinner("Preparing a practice problem..."
+                                    if lang == "en" else
+                                    "Preparando un problema de práctica..."):
+                        q = prereq_practice_question(pcode, lang)
+                    st.session_state.session_calls += 1
+                    st.session_state.messages.append({
+                        "role": "assistant", "type": "question",
+                        "content": (f"**Foundation practice · {pd.get('topic','')}**\n\n"
+                                    + q["question"])
+                    })
+                    st.session_state.quiz_state = {
+                        "current_question": q,
+                        "q_num": 1, "num_questions": 3,
+                        "topic": None, "scores": [],
+                        "is_prereq": True, "prereq_code": pcode,
+                    }
+                st.rerun()
+
+            if start_clicked:
+                sid = student_id
+                st.session_state.is_guest = True
+                if True:  # open student view: no name needed
+                    all_usage    = st.session_state.get("all_usage", {})
+                    current_week = get_current_week()
+                    record       = all_usage.get(sid, {})
+                    if record.get("week") != current_week:
+                        record = {"week": current_week, "minutes_used": 0.0,
+                                  "sessions": 0, "api_calls": 0,
+                                  "topics_practiced": [], "standards_practiced": []}
+                    used      = record.get("minutes_used", 0.0)
+                    remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
+
+                    if used >= WEEKLY_LIMIT_MINUTES:
+                        st.error(
+                            f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
+                            f"weekly limit. Your time resets next week."
+                        )
+                    else:
+                        lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
+                        diff_map = {
+                            "Random — mix it up": random.choice(["easy","medium","hard"]),
+                            "Easy": "easy", "Medium": "medium", "Hard": "hard"
+                        }
+
+                        st.session_state.student_id    = sid
+                        st.session_state.language      = lang_map[lang_choice]
+                        st.session_state.difficulty    = diff_map[diff_choice]
+                        st.session_state.num_questions = num_q
+                        st.session_state.session_start = time.time()
+                        st.session_state.screen        = "chat"
+                        lang = "es" if st.session_state.language == "es" else "en"
+                        st.session_state.current_lang  = lang
+
+                        if tutor_chat_mode:
+                            welcome_msg = (
+                                f"Hi {sid}! Ask me anything about Calculus 1 — "
+                                f"concepts, worked examples, or anything you're curious about. "
+                                f"You have **{format_duration(remaining)}** this week. What's on your mind?"
+                                if lang == "en" else
+                                f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
+                                f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
+                            )
+                        else:
+                            _chosen = st.session_state.get("selected_standard")
+                            if _chosen and _chosen in STANDARDS_MAP:
+                                _std_name = f"{STANDARDS_MAP[_chosen]['topic']} ({_chosen})"
+                            else:
+                                _std_name = ("a mix of standards" if lang == "en"
+                                             else "una mezcla de estándares")
+                            welcome_msg = (
+                                f"Let's see what you already know about **{_std_name}**. "
+                                f"There's no wrong answer — just useful information to help us "
+                                f"find the right starting point together.\n\n"
+                                f"You have **{format_duration(remaining)}** of practice time this week. "
+                                f"Type **bye** anytime to see your session report."
+                                if lang == "en" else
+                                f"Veamos qué ya sabes sobre **{_std_name}**. "
+                                f"No hay respuesta equivocada — solo información útil que nos ayuda "
+                                f"a encontrar juntos el punto de partida correcto.\n\n"
+                                f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
+                                f"Escribe **bye** cuando quieras para ver tu reporte."
+                            )
+                        st.session_state.messages.append({
+                            "role": "assistant", "content": welcome_msg, "type": "chat"
+                        })
+
+                        chosen_std   = st.session_state.get("selected_standard")
+                        chosen_skill = st.session_state.get("selected_skill")
+
+                        if chosen_std and chosen_std in STANDARDS_MAP:
+                            first_q = quiz_by_standard(
+                                chosen_std, pick_difficulty(), lang,
+                                skill_focus=chosen_skill
+                            )
+                            st.session_state.session_calls += 1
+                            nq       = st.session_state.num_questions
+                            std_data = STANDARDS_MAP[chosen_std]
+                            skill_note  = (f"\n*Skill: {chosen_skill}*\n\n"
+                                           if chosen_skill else "\n\n")
+                            prereqs_str = ", ".join(std_data["algebra_prereqs"])
+                            st.session_state.messages.append({
+                                "role": "assistant", "type": "question",
+                                "content": (
+                                    f"**Question 1 of {nq} | "
+                                    f"{chosen_std}: {std_data['topic']}**\n"
+                                    f"*Prerequisites: {prereqs_str}*"
+                                    f"{skill_note}" + first_q["question"]
+                                )
+                            })
+                            st.session_state.quiz_state = {
+                                "current_question": first_q,
+                                "q_num": 1, "num_questions": nq,
+                                "topic": std_data["intent_tag"],
+                                "standard_lock": chosen_std, "scores": []
+                            }
+                            if std_data["intent_tag"] not in st.session_state.session_topics:
+                                st.session_state.session_topics.append(std_data["intent_tag"])
+                        else:
+                            first_code  = random.choice(list(STANDARDS_MAP.keys()))
+                            first_q     = quiz_by_standard(
+                                first_code, pick_difficulty(), lang
+                            )
+                            st.session_state.session_calls += 1
+                            nq = st.session_state.num_questions
+                            prereqs_str = ", ".join(first_q["algebra_prereqs"])
+                            st.session_state.messages.append({
+                                "role": "assistant", "type": "question",
+                                "content": (
+                                    f"**Question 1 of {nq} | "
+                                    f"{first_code}: {first_q['topic']}**\n\n"
+                                    f"*Prerequisites: {prereqs_str}*\n\n"
+                                    + first_q["question"]
+                                )
+                            })
+                            st.session_state.quiz_state = {
+                                "current_question": first_q,
+                                "q_num": 1, "num_questions": nq,
+                                "topic": None, "scores": []
+                            }
+
+                        st.rerun()
+
+
+    # ════════════════════════════════════════════════════════════════════════════════
+    # SCREEN: CHAT
+    # ════════════════════════════════════════════════════════════════════════════════
     # ── Row 2: learning standards (left) beside prerequisite skills (right) ──
     st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
     col_std, col_pre = st.columns(2, gap="large")
@@ -3204,7 +3432,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         # 2. Learning standards — the clickable checklist (left column)
         st.markdown(
             f'<p style="font-size:1.05rem;font-weight:700;color:inherit;margin:0 0 0.2rem;">'
-            f'{_tl("2. Learning standards", "2. Estándares de aprendizaje")}</p>',
+            f'{_tl("Learning standards", "Estándares de aprendizaje")}</p>',
             unsafe_allow_html=True
         )
         st.markdown(
@@ -3398,233 +3626,19 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     st.session_state.prereq_action_pending = False
                     st.rerun()
 
-    # ── Row 3: what to do, and start ─────────────────────────────────────────
-    st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
-    _, col_go, _ = st.columns([1, 2, 1])
-    with col_go:
-        # 3. Session mode — challenge or tutor chat, with question count if challenge
-        session_mode_choice = st.selectbox(
-            _tl("3. What would you like to do?", "3. ¿Qué quieres hacer?"),
-            [_tl("Challenge me — practice questions", "Reto — preguntas de práctica"),
-             _tl("Tutor chat — I have questions", "Chat tutor — tengo preguntas")],
-            key="welcome_mode_choice"
-        )
-        tutor_chat_mode = session_mode_choice.startswith(_tl("Tutor", "Chat"))
+    # ── Closing note ──────────────────────────────────────────────────────────
+    st.markdown(f"""
+<div style="margin:2.2rem auto 0.6rem;max-width:760px;padding:1.4rem 1.8rem;text-align:center;
+background:rgba(0,121,107,0.07);border-top:4px solid #00796b;border-radius:14px;">
+  <p style="margin:0;font-size:1.08rem;font-style:italic;line-height:1.7;color:inherit;
+  font-family:Georgia,serif;">
+    "{_tl("Getting it wrong is part of learning math. When an answer doesn't work out, you'll see where it went off track, the full worked solution, and a review of the algebra underneath. Then give it another try.",
+           "Equivocarse es parte de aprender matemáticas. Cuando una respuesta no sale, verás dónde se desvió, la solución completa y un repaso del álgebra. Luego inténtalo otra vez.")}"
+  </p>
+  <p style="margin:0.7rem 0 0;font-size:0.95rem;font-weight:700;color:#00796b;">— Profe Contreras</p>
+</div>
+""", unsafe_allow_html=True)
 
-        if not tutor_chat_mode:
-            num_q = st.selectbox(
-                _tl("   How many questions?", "   ¿Cuántas preguntas?"),
-                [1, 2, 3, 4, 5],
-                index=2,
-                key="welcome_numq"
-            )
-        else:
-            num_q = 0
-
-        st.write("")
-        start_clicked = st.button(
-            "Start session / Comenzar",
-            type="primary",
-            use_container_width=True,
-            key="start_btn"
-        )
-
-        # ── Launch a prerequisite tutoring session ────────────────────────
-        if st.session_state.get("prereq_start"):
-            action, pcode = st.session_state.prereq_start
-            st.session_state.prereq_start = None
-            sid = (student_id.strip() if student_id.strip() else "Guest")
-            st.session_state.is_guest = is_guest or sid == "Guest"
-            lang = "es" if lang_top == "Español" else "en"
-
-            # Set up a light session (prereq practice does not count toward standards)
-            st.session_state.student_id    = sid
-            st.session_state.language      = "es" if lang == "es" else "auto"
-            st.session_state.num_questions = 3
-            st.session_state.session_start = time.time()
-            st.session_state.screen        = "chat"
-            st.session_state.current_lang  = lang
-
-            pd = PREREQ_SKILLS.get(pcode, {})
-            intro = (
-                f"Nice — let's sharpen **{pd.get('topic','this skill')}**. "
-                f"This is one of the tools that powers calculus, and getting comfortable "
-                f"with it now pays off everywhere later. Your background knowledge counts here."
-                if lang == "en" else
-                f"Muy bien — afinemos **{pd.get('topic','esta habilidad')}**. "
-                f"Es una de las herramientas que impulsan el cálculo, y dominarla ahora "
-                f"te ayuda en todo lo que sigue. Tu conocimiento previo cuenta aquí."
-            )
-            st.session_state.messages.append({
-                "role": "assistant", "content": intro, "type": "chat"
-            })
-
-            if action == "example":
-                with st.spinner("Preparing a worked example for you..."
-                                if lang == "en" else
-                                "Preparando un ejemplo resuelto para ti..."):
-                    ex = generate_prereq_example(pcode, lang)
-                st.session_state.session_calls += 1
-                if not (ex or "").strip():
-                    ex = (f"Let's sharpen **{pd.get('topic','this skill')}**. "
-                          f"Ask me for an example or type a problem and I'll walk "
-                          f"through it with you."
-                          if lang == "en" else
-                          f"Afinemos **{pd.get('topic','esta habilidad')}**. "
-                          f"Pídeme un ejemplo o escribe un problema y lo resolvemos juntos.")
-                st.session_state.messages.append({
-                    "role": "assistant", "type": "chat",
-                    "content": ex, "intent_type": "explanation"
-                })
-            else:  # practice
-                with st.spinner("Preparing a practice problem..."
-                                if lang == "en" else
-                                "Preparando un problema de práctica..."):
-                    q = prereq_practice_question(pcode, lang)
-                st.session_state.session_calls += 1
-                st.session_state.messages.append({
-                    "role": "assistant", "type": "question",
-                    "content": (f"**Foundation practice · {pd.get('topic','')}**\n\n"
-                                + q["question"])
-                })
-                st.session_state.quiz_state = {
-                    "current_question": q,
-                    "q_num": 1, "num_questions": 3,
-                    "topic": None, "scores": [],
-                    "is_prereq": True, "prereq_code": pcode,
-                }
-            st.rerun()
-
-        if start_clicked:
-            sid = student_id.strip()
-            st.session_state.is_guest = is_guest
-            if not sid:
-                st.warning("Please enter your name or student ID.")
-            else:
-                all_usage    = st.session_state.get("all_usage", {})
-                current_week = get_current_week()
-                record       = all_usage.get(sid, {})
-                if record.get("week") != current_week:
-                    record = {"week": current_week, "minutes_used": 0.0,
-                              "sessions": 0, "api_calls": 0,
-                              "topics_practiced": [], "standards_practiced": []}
-                used      = record.get("minutes_used", 0.0)
-                remaining = max(0.0, WEEKLY_LIMIT_MINUTES - used)
-
-                if used >= WEEKLY_LIMIT_MINUTES:
-                    st.error(
-                        f"Hi {sid} — you have used your full {WEEKLY_LIMIT_HOURS}-hour "
-                        f"weekly limit. Your time resets next week."
-                    )
-                else:
-                    lang_map = {"Auto-detect": "auto", "English": "en", "Español": "es"}
-                    diff_map = {
-                        "Random — mix it up": random.choice(["easy","medium","hard"]),
-                        "Easy": "easy", "Medium": "medium", "Hard": "hard"
-                    }
-
-                    st.session_state.student_id    = sid
-                    st.session_state.language      = lang_map[lang_choice]
-                    st.session_state.difficulty    = diff_map[diff_choice]
-                    st.session_state.num_questions = num_q
-                    st.session_state.session_start = time.time()
-                    st.session_state.screen        = "chat"
-                    lang = "es" if st.session_state.language == "es" else "en"
-                    st.session_state.current_lang  = lang
-
-                    if tutor_chat_mode:
-                        welcome_msg = (
-                            f"Hi {sid}! Ask me anything about Calculus 1 — "
-                            f"concepts, worked examples, or anything you're curious about. "
-                            f"You have **{format_duration(remaining)}** this week. What's on your mind?"
-                            if lang == "en" else
-                            f"Hola {sid}! Pregúntame lo que quieras sobre Cálculo 1. "
-                            f"Tienes **{format_duration(remaining)}** esta semana. ¿Qué quieres explorar?"
-                        )
-                    else:
-                        _chosen = st.session_state.get("selected_standard")
-                        if _chosen and _chosen in STANDARDS_MAP:
-                            _std_name = f"{STANDARDS_MAP[_chosen]['topic']} ({_chosen})"
-                        else:
-                            _std_name = ("a mix of standards" if lang == "en"
-                                         else "una mezcla de estándares")
-                        welcome_msg = (
-                            f"Let's see what you already know about **{_std_name}**. "
-                            f"There's no wrong answer — just useful information to help us "
-                            f"find the right starting point together.\n\n"
-                            f"You have **{format_duration(remaining)}** of practice time this week. "
-                            f"Type **bye** anytime to see your session report."
-                            if lang == "en" else
-                            f"Veamos qué ya sabes sobre **{_std_name}**. "
-                            f"No hay respuesta equivocada — solo información útil que nos ayuda "
-                            f"a encontrar juntos el punto de partida correcto.\n\n"
-                            f"Tienes **{format_duration(remaining)}** de práctica esta semana. "
-                            f"Escribe **bye** cuando quieras para ver tu reporte."
-                        )
-                    st.session_state.messages.append({
-                        "role": "assistant", "content": welcome_msg, "type": "chat"
-                    })
-
-                    chosen_std   = st.session_state.get("selected_standard")
-                    chosen_skill = st.session_state.get("selected_skill")
-
-                    if chosen_std and chosen_std in STANDARDS_MAP:
-                        first_q = quiz_by_standard(
-                            chosen_std, pick_difficulty(), lang,
-                            skill_focus=chosen_skill
-                        )
-                        st.session_state.session_calls += 1
-                        nq       = st.session_state.num_questions
-                        std_data = STANDARDS_MAP[chosen_std]
-                        skill_note  = (f"\n*Skill: {chosen_skill}*\n\n"
-                                       if chosen_skill else "\n\n")
-                        prereqs_str = ", ".join(std_data["algebra_prereqs"])
-                        st.session_state.messages.append({
-                            "role": "assistant", "type": "question",
-                            "content": (
-                                f"**Question 1 of {nq} | "
-                                f"{chosen_std}: {std_data['topic']}**\n"
-                                f"*Prerequisites: {prereqs_str}*"
-                                f"{skill_note}" + first_q["question"]
-                            )
-                        })
-                        st.session_state.quiz_state = {
-                            "current_question": first_q,
-                            "q_num": 1, "num_questions": nq,
-                            "topic": std_data["intent_tag"],
-                            "standard_lock": chosen_std, "scores": []
-                        }
-                        if std_data["intent_tag"] not in st.session_state.session_topics:
-                            st.session_state.session_topics.append(std_data["intent_tag"])
-                    else:
-                        first_code  = random.choice(list(STANDARDS_MAP.keys()))
-                        first_q     = quiz_by_standard(
-                            first_code, pick_difficulty(), lang
-                        )
-                        st.session_state.session_calls += 1
-                        nq = st.session_state.num_questions
-                        prereqs_str = ", ".join(first_q["algebra_prereqs"])
-                        st.session_state.messages.append({
-                            "role": "assistant", "type": "question",
-                            "content": (
-                                f"**Question 1 of {nq} | "
-                                f"{first_code}: {first_q['topic']}**\n\n"
-                                f"*Prerequisites: {prereqs_str}*\n\n"
-                                + first_q["question"]
-                            )
-                        })
-                        st.session_state.quiz_state = {
-                            "current_question": first_q,
-                            "q_num": 1, "num_questions": nq,
-                            "topic": None, "scores": []
-                        }
-
-                    st.rerun()
-
-
-# ════════════════════════════════════════════════════════════════════════════════
-# SCREEN: CHAT
-# ════════════════════════════════════════════════════════════════════════════════
 elif st.session_state.screen == "chat":
 
     elapsed_min  = (time.time() - st.session_state.session_start) / 60 \
@@ -3650,7 +3664,8 @@ elif st.session_state.screen == "chat":
             f'alt="Canelita"/></div>',
             unsafe_allow_html=True
         )
-        st.markdown(f"**{st.session_state.student_id}**")
+        if st.session_state.student_id not in ("Student", "Guest"):
+            st.markdown(f"**{st.session_state.student_id}**")
         st.caption(f"Week {get_current_week()}")
         st.divider()
         st.markdown("**Weekly time**")

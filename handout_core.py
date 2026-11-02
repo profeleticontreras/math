@@ -486,6 +486,8 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
         line = f'{s["id"]}. type: {s["type"].upper()}; subskill {s["subskill_code"]} -- {s["subskill"]}'
         if s.get("context"):
             line += f"; context family: {s['context']}"
+        if s.get("note"):
+            line += f"; the instructor asks for: {s['note']}"
         lines.append(line)
     types_used = sorted({s["type"] for s in slots}, key=QUESTION_TYPES.index)
     avoid_text = (f"\nWrite a different problem from this earlier version (new function, numbers, and "
@@ -776,9 +778,11 @@ def generate_version(client, course, std, catalog, version, counts, lang, report
             "problems": problems, "notes": notes, "review": summary, "timings": timings}
 
 
-def _write_one(client, course, std, catalog, slot, lang, version, avoid, new_function_type=False):
+def _write_one(client, course, std, catalog, slot, lang, version, avoid, new_function_type=False,
+               others=None):
     text, _ = call_claude(client, build_prompt(course, std, catalog, [slot], lang, version, avoid=avoid,
-                                               names=pick_names(), new_function_type=new_function_type),
+                                               names=pick_names(), new_function_type=new_function_type,
+                                               others=others),
                           max_tokens=8000)
     new, _ = parse_problems(text, [slot])
     if not new:
@@ -807,6 +811,105 @@ def duplicate_problem(client, course, std, catalog, problem, lang, version, new_
                    new_function_type=True)
     p["id"] = new_id
     return p
+
+
+def _new_slot(std, qtype, subskill_index=None):
+    i = subskill_index if subskill_index is not None else random.randrange(len(std["subskills"]))
+    slot = {"type": qtype, "subskill_code": f"{std['code']}.{i + 1}", "subskill": std["subskills"][i], "id": 1}
+    if qtype == "interpretation":
+        slot["context"] = random.choice(CONTEXT_FAMILIES)
+    return slot
+
+
+def add_problem(client, course, std, catalog, existing, qtype, lang, version, new_id,
+                subskill_index=None, note=""):
+    """Claude writes one more problem of the chosen type (and subskill, if given), following an
+    optional note from the instructor, unlike the problems already on the handout."""
+    slot = _new_slot(std, qtype, subskill_index)
+    if note.strip():
+        slot["note"] = note.strip()[:500]
+    p = _write_one(client, course, std, catalog, slot, lang, version, None,
+                   others=[_slot(q) for q in existing])
+    p.pop("note", None)
+    p["id"] = new_id
+    p["added"] = "claude"
+    return p
+
+
+def build_own_prompt(course, std, catalog, typed, qtype, lang, version, subskill_index=None):
+    language = ("The handout is in Spanish: keep the instructor's Spanish wording, and write the answer and "
+                "solution in Spanish." if lang == "es" else "Write the answer and solution in English.")
+    sub = (f"It assesses subskill {std['code']}.{subskill_index + 1}." if subskill_index is not None else
+           "Decide which subskill it assesses best and give its number in a <subskill> tag, for example "
+           "<subskill>2</subskill> for " + f"{std['code']}.2.")
+    return f"""An instructor typed their own problem for {HANDOUT_PURPOSE[kind(version)]}
+
+{_std_context(course, std)}
+
+The problem is a {qtype.upper()} problem. {sub}
+
+The instructor typed:
+<typed>
+{typed.strip()}
+</typed>
+
+Your job is to typeset it, not to rewrite it:
+- Keep the instructor's question, numbers, functions, context, and wording. Fix only obvious typos and notation.
+- Put all mathematics in LaTeX (inline $...$; displayed \\[ ... \\] only for a long expression on its own line).
+  Plain-text math such as x^2, sqrt(x), 3/4, f'(x), or e^(2x) becomes $x^2$, $\\sqrt{{x}}$, $\\frac{{3}}{{4}}$, $f'(x)$, $e^{{2x}}$.
+- If it has several tasks (a), (b), ..., put each one in its own <part> without the letter.
+- Write the correct final answer and a complete worked solution. Use the calculator to check every number.
+- If the problem as typed has a mistake or cannot be answered, still typeset it exactly, and explain the issue
+  in one sentence inside <issue>...</issue> after the problem block.
+{language}
+
+Return the block in this exact format, with id="1":
+{BLOCK_FORMAT}
+
+{FORMAT_RULES.replace('<<ACCENTS>>', ' plus Spanish accented letters and inverted punctuation' if lang == 'es' else '')}"""
+
+
+def format_own_problem(client, course, std, catalog, typed, qtype, lang, version, new_id, subskill_index=None):
+    """The instructor's own problem, typeset in LaTeX with an answer and worked solution.
+    The math is checked but never changed: any problem found is reported, not 'fixed'."""
+    if not typed.strip():
+        raise ValueError("Type the problem first.")
+    text, _ = call_claude(client, build_own_prompt(course, std, catalog, typed, qtype, lang, version,
+                                                   subskill_index), max_tokens=8000)
+    if subskill_index is None:
+        m = re.search(r"<subskill>\s*(\d+)\s*</subskill>", text)
+        k = int(m.group(1)) - 1 if m else 0
+        subskill_index = k if 0 <= k < len(std["subskills"]) else 0
+    slot = {"type": qtype, "subskill_code": f"{std['code']}.{subskill_index + 1}",
+            "subskill": std["subskills"][subskill_index], "id": 1}
+    new, _ = parse_problems(text, [slot])
+    if not new:
+        raise RuntimeError("Claude could not format that problem. Try again, or simplify the wording.")
+    p = new[0]
+    issue = re.search(r"<issue>(.*?)</issue>", text, re.S)
+    if issue and issue.group(1).strip():
+        p["warnings"].append("Check this problem: " + issue.group(1).strip()[:400])
+    # independent check of the answer key (reported only; the instructor's wording stays)
+    findings = parse_findings(call_claude(client, build_review_prompt(course, std, catalog, [p]))[0])
+    p["review"] = findings.get(1, [])
+    for f in p["review"]:
+        if f["verdict"] == "confirmed_error":
+            p["warnings"].append("Review note: " + f["text"][:400])
+    if find_pdflatex():
+        p = repair_latex(client, course, std, catalog, [p], lang, version, [])[0]
+    p["id"] = new_id
+    p["added"] = "instructor"
+    return p
+
+
+def insert_position(problems, qtype):
+    """New problems go at the end of their own type group (skill, then conceptual, then interpretation)."""
+    order = QUESTION_TYPES.index(qtype)
+    last = -1
+    for i, q in enumerate(problems):
+        if QUESTION_TYPES.index(q["type"]) <= order:
+            last = i
+    return last + 1
 
 
 def problems_compile(problems, course="calc1", lang="en"):

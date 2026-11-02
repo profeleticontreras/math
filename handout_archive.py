@@ -49,6 +49,23 @@ def std_sort_key(code):
     return int(m.group(1)) if m else 0
 
 
+STUDENT_VERSIONS = ("preparation", "ticket")   # the only handouts that can ever be shown to students
+
+
+def _mark_visible(entries, entry_id, flag):
+    out = []
+    for e in entries:
+        if e["id"] == entry_id:
+            e = dict(e)
+            if flag and e.get("version") in STUDENT_VERSIONS:
+                e["visible"], e["visible_at"] = True, _now().isoformat(timespec="seconds")
+            else:
+                e.pop("visible", None)
+                e.pop("visible_at", None)
+        out.append(e)
+    return out
+
+
 def make_entry(result, course_code):
     """Index entry + archive paths for one generated handout (result from handout_core)."""
     now = _now()
@@ -112,6 +129,10 @@ class LocalArchive:
 
     def read(self, path):
         return (self.root / path).read_bytes()
+
+    def set_visible(self, entry_id, flag):
+        """Show (or hide) one Preparation / Reassessment Ticket PDF to students."""
+        self._write_index(_mark_visible(self.list(), entry_id, flag))
 
     def delete(self, entry):
         for path in entry["files"].values():
@@ -191,6 +212,11 @@ class GitHubArchive:
         if data is None:
             raise FileNotFoundError(path)
         return data
+
+    def set_visible(self, entry_id, flag):
+        """Show (or hide) one Preparation / Reassessment Ticket PDF to students."""
+        self._update_index(lambda es: _mark_visible(es, entry_id, flag),
+                           "Show handout to students" if flag else "Hide handout from students")
 
     def delete(self, entry):
         for path in entry["files"].values():

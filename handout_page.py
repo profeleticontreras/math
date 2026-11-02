@@ -39,10 +39,40 @@ def _preview_md(text):
     return text.replace(r"\%", "%").replace(r"\$", "＄").replace("``", '"').replace("''", '"')
 
 
-TYPE_BADGE = {  # color + icon so the type is obvious without opening
-    "preparation": ("#1565c0", "📘"), "quest1": ("#00695c", "📗"), "quest2": ("#00695c", "📗"),
-    "quest3": ("#00695c", "📗"), "ticket": ("#e65100", "📙"),
-}
+# Archive groups: Preparation and Reassessment Ticket are student handouts and are listed together;
+# each Quest is an instructor handout listed on its own row.
+ARCH_GROUPS = [
+    ("student", ("preparation", "ticket"), "Preparation + Reassessment Ticket"),
+    ("quest1", ("quest1",), "Quest 1"),
+    ("quest2", ("quest2",), "Quest 2"),
+    ("quest3", ("quest3",), "Quest 3"),
+]
+ARCH_CSS = """<style>
+.ar-head{display:flex;align-items:center;gap:0.9rem;margin:0.1rem 0 0.2rem;}
+.ar-std{background:#f1efe9;border:1px solid #dedad0;border-radius:999px;padding:4px 14px;
+  font-weight:700;font-size:1.02rem;color:#333;white-space:nowrap;}
+.ar-title{font-size:1.2rem;font-weight:700;line-height:1.2;}
+.ar-sub{font-size:0.9rem;opacity:0.7;margin-top:0.1rem;}
+.ar-pill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:0.86rem;font-weight:600;
+  margin:0 6px 4px 0;border:1px solid transparent;}
+.ar-lang{background:#fff;border-color:#dcdcdc;color:#333;}
+.ar-type{background:#ebe9e4;color:#333;}
+.ar-stu{background:#e6f6ea;border-color:#b7e1c1;color:#1b5e20;}
+.ar-off{background:#f1f1f1;border-color:#d6d6d6;color:#555;}
+.ar-ins{background:#fff4d6;border-color:#f0d184;color:#8a4b00;}
+.ar-rule{border-top:1px solid rgba(0,0,0,0.10);margin:0.15rem 0 0.35rem;}
+.ar-latest{font-size:0.88rem;opacity:0.72;}
+.ar-set{font-size:0.95rem;padding-left:0.4rem;}
+.ar-set .ar-when{opacity:0.65;}
+</style>"""
+
+
+def _fmt_when(iso):
+    try:
+        d = datetime.datetime.fromisoformat(iso)
+        return f"{d:%b} {d.day}, {d.year}, {d.strftime('%I:%M %p').lstrip('0')}"
+    except (TypeError, ValueError):
+        return str(iso)[:16].replace("T", " ")
 
 
 def _get_archive():
@@ -63,6 +93,7 @@ def _archive_save(e):
     except Exception as exc:  # noqa: BLE001 -- shown, never blocks the handout
         e["archive_error"] = str(exc)
     st.session_state.pop("hg_arch_index", None)
+    _visible_index.clear()
 
 
 def _library():
@@ -272,6 +303,8 @@ def _render_entry(client, e, catalog_for, first):
                    "skill with a different type of function, 🗑 removes one. New problems are reviewed too.")
         for p in r["problems"]:
             head = f"{p.get('num', p['id'])}. [{TYPE_LABEL[p['type']]} · {p['subskill_code']}] {p.get('title') or '(no label)'}"
+            if p.get("added") == "instructor":
+                head += " · your question"
             warn = "  ⚠️" if p.get("warnings") else ("  🛠" if p.get("repaired_from") else "")
             with st.expander(head + warn):
                 st.caption(f"Subskill {p['subskill_code']}: {p['subskill']}"
@@ -326,6 +359,8 @@ def _render_entry(client, e, catalog_for, first):
                         _archive_save(e)
                         st.rerun()
 
+        _render_add_question(client, e, catalog_for)
+
         with st.expander("✏️ Edit the LaTeX and recompile (optional)"):
             tex_name = out["base"] + ".tex"
             edited = st.text_area("LaTeX source", out["files"][tex_name], height=380, key=f"hg_edit_{e['id']}")
@@ -343,15 +378,91 @@ def _render_entry(client, e, catalog_for, first):
                     st.code(err, language="text")
 
 
+def _render_add_question(client, e, catalog_for):
+    """Add one more question to a finished handout: Claude writes it, or the instructor types it."""
+    r = e["result"]
+    std, eid = r["std"], e["id"]
+    done = st.session_state.pop(f"hg_added_{eid}", "")
+    if done:
+        st.success(done)
+    with st.expander("➕ Add a question to this handout"):
+        how = st.radio("How would you like to add it?",
+                       ["Claude writes it", "I'll type my own"], horizontal=True, key=f"hg_add_how_{eid}")
+        c1, c2 = st.columns(2)
+        qtype = c1.selectbox("Question type", hc.QUESTION_TYPES, format_func=lambda t: TYPE_LABEL[t],
+                             key=f"hg_add_type_{eid}")
+        own = how == "I'll type my own"
+        sub_opts = [-1] + list(range(len(std["subskills"])))
+        sub = c2.selectbox("Subskill", sub_opts, key=f"hg_add_sub_{eid}",
+                           format_func=lambda i: ("Let Claude choose the best match" if own else "Any subskill")
+                           if i < 0 else f"{std['code']}.{i + 1}: {std['subskills'][i]}"[:90])
+        if own:
+            text = st.text_area(
+                "Type your question", height=170, key=f"hg_add_text_{eid}",
+                placeholder="Type math the way you'd write it, for example x^2 + y^2 = 25, sqrt(x), "
+                            "(3x+1)/(x-2), f'(x), e^(2x).\nPut each part on its own line: (a) ..., (b) ...")
+            st.caption("Claude typesets your math in LaTeX and writes the answer and worked solution. "
+                       "Your question, numbers, and wording stay the same. If the check finds a problem "
+                       "with it, you'll see a note instead of a silent change.")
+        else:
+            text = st.text_area(
+                "Anything specific? (optional)", height=90, key=f"hg_add_note_{eid}",
+                placeholder="For example: a ladder sliding down a wall; use a trigonometric function; "
+                            "a farmworker's water budget.")
+            st.caption("Claude writes a new problem that's different from the ones already on the "
+                       "handout, checks the math, and makes sure it typesets.")
+        if st.button("Add to handout", type="primary", key=f"hg_add_go_{eid}"):
+            if own and not text.strip():
+                st.warning("Type your question first.")
+                return
+            with st.spinner("Typesetting and checking your question…" if own else
+                            "Writing and checking a new question…"):
+                try:
+                    new_id = max(q["id"] for q in r["problems"]) + 1
+                    args = (client, r["course"], std, catalog_for(r["course"]))
+                    idx = None if sub < 0 else sub
+                    if own:
+                        new = hc.format_own_problem(*args, text, qtype, r["lang"], r["version"], new_id,
+                                                    subskill_index=idx)
+                    else:
+                        new = hc.add_problem(*args, r["problems"], qtype, r["lang"], r["version"], new_id,
+                                             subskill_index=idx, note=text)
+                except Exception as exc:  # noqa: BLE001
+                    st.error(f"Couldn't add the question: {exc}")
+                    return
+            r["problems"].insert(hc.insert_position(r["problems"], qtype), new)
+            e["out"] = hc.build_files(r)
+            _archive_save(e)
+            for k in (f"hg_add_text_{eid}", f"hg_add_note_{eid}"):
+                st.session_state.pop(k, None)
+            n = new.get("num", r["problems"].index(new) + 1)
+            st.session_state[f"hg_added_{eid}"] = (
+                f"Added as problem {n} ({TYPE_LABEL[qtype]}). The PDF and the archive are updated."
+                + (" It has a review note; open it below to check." if new.get("warnings") else ""))
+            st.rerun()
+
+
 def _render_archive(archive):
     if archive.kind == "github":
-        st.caption(f"📚 Every handout is saved permanently in your private GitHub repository "
+        st.caption(f"Every handout is saved permanently in your private GitHub repository "
                    f"**{archive.repo}**, in one folder per learning standard.")
     else:
-        st.info("Handouts are being saved in the app's own folder (handout_archive). On Streamlit Cloud "
-                "that folder is erased whenever the app restarts or updates. To keep them permanently, "
-                "connect a private GitHub repository by adding HANDOUT_ARCHIVE_REPO and "
-                "HANDOUT_ARCHIVE_TOKEN to the app's secrets.")
+        st.warning("**The archive isn't permanent yet.** Handouts are saved inside the app for now, and "
+                   "Streamlit Cloud erases them whenever the app restarts or updates, including handouts "
+                   "you've made visible to students. To keep them, connect a private GitHub repository.")
+        with st.expander("How to connect the private repository"):
+            st.markdown(
+                "1. On github.com, create a **private** repository, for example `canelita-handouts`.\n"
+                "2. Make a fine-grained token: your picture → **Settings** → **Developer settings** → "
+                "**Personal access tokens** → **Fine-grained tokens** → **Generate new token**. Choose "
+                "*Only select repositories* → `canelita-handouts`, and set **Contents** to *Read and write*. "
+                "Copy the token (it starts with `github_pat_`).\n"
+                "3. On share.streamlit.io, open this app's **⋮ → Settings → Secrets**. Keep what's there and "
+                "add these two lines at the bottom, with your own token. The quotation marks are required:")
+            st.code('HANDOUT_ARCHIVE_REPO = "profeleticontreras/canelita-handouts"\n'
+                    'HANDOUT_ARCHIVE_TOKEN = "github_pat_paste_your_token_here"', language="toml")
+            st.caption("Click Save. The app restarts, and this message is replaced by the name of your "
+                       "repository.")
     if "hg_arch_index" not in st.session_state:
         try:
             st.session_state.hg_arch_index = archive.list()
@@ -359,50 +470,107 @@ def _render_archive(archive):
             st.error(f"Couldn't open the archive: {exc}")
             return
     entries = st.session_state.hg_arch_index
+    st.markdown(ARCH_CSS, unsafe_allow_html=True)
+    st.caption("After you've checked a Preparation or Reassessment Ticket, turn on **Visible to students**. "
+               "Students then find its PDF on the home page under *What would you like to do? → "
+               "Get a handout*. Quests are never shown to students.")
+    if st.session_state.get("hg_vis_error"):
+        st.error(st.session_state.pop("hg_vis_error"))
     c1, c2, c3 = st.columns([2, 3, 1])
     courses = sorted({e["course_code"] for e in entries}) or ["MAT 3A"]
     course = c1.radio("Course", courses, horizontal=True, key="hg_arch_course")
-    types = c2.multiselect("Show", ha.VERSION_ORDER, default=ha.VERSION_ORDER, key="hg_arch_types",
-                           format_func=lambda v: f"{TYPE_BADGE[v][1]} {ha.VERSION_LABEL[v]}")
+    show = c2.radio("Show", ["All handouts", "Student handouts", "Instructor handouts (Quests)"],
+                    horizontal=True, key="hg_arch_show")
     if c3.button("↻ Refresh", key="hg_arch_refresh", width="stretch"):
         st.session_state.pop("hg_arch_index", None)
         st.rerun()
-    shown = [e for e in entries if e["course_code"] == course and e["version"] in types]
+    keep = {"All handouts": ha.VERSION_ORDER,
+            "Student handouts": ["preparation", "ticket"],
+            "Instructor handouts (Quests)": ["quest1", "quest2", "quest3"]}[show]
+    shown = [e for e in entries if e["course_code"] == course and e["version"] in keep]
     if not shown:
         st.caption("No archived handouts yet for this selection. Every handout you generate is saved here "
                    "automatically.")
         return
-    st.markdown(
-        " &nbsp; ".join(f'<span style="background:{c};color:#fff;border-radius:6px;padding:2px 9px;'
-                        f'font-size:0.8rem;font-weight:600;">{i} {ha.VERSION_LABEL[v]}</span>'
-                        for v, (c, i) in TYPE_BADGE.items() if v in ("preparation", "quest1", "ticket"))
-        .replace("Quest 1", "Quest 1 · 2 · 3"), unsafe_allow_html=True)
     by_std = {}
     for e in shown:
         by_std.setdefault(e["std_code"], []).append(e)
     for code in sorted(by_std, key=ha.std_sort_key):
-        items = sorted(by_std[code], key=lambda e: (ha.VERSION_ORDER.index(e["version"]), e["created"]),
-                       reverse=False)
-        counts = {}
-        for e in items:
-            counts[e["version"]] = counts.get(e["version"], 0) + 1
-        summary = " · ".join(f"{TYPE_BADGE[v][1]} {ha.VERSION_LABEL[v]} ×{n}"
-                             for v, n in sorted(counts.items(), key=lambda kv: ha.VERSION_ORDER.index(kv[0])))
-        with st.expander(f"**{code} — {items[0]['std_title']}**   ·   {summary}"):
-            for e in sorted(items, key=lambda e: (ha.VERSION_ORDER.index(e["version"]), e["created"])):
-                _render_archive_row(archive, e)
+        _render_archive_standard(archive, code, by_std[code])
 
 
-def _render_archive_row(archive, e):
-    color, icon = TYPE_BADGE[e["version"]]
-    when = e["created"][:16].replace("T", " ")
-    rv = e.get("review", {})
-    flag = f" · ⚠️ {rv['unresolved']} flagged" if rv.get("unresolved") else ""
-    cols = st.columns([5, 1.3, 1.3, 0.8])
-    cols[0].markdown(
-        f'<span style="background:{color};color:#fff;border-radius:6px;padding:3px 10px;font-weight:700;">'
-        f'{icon} {e["version_label"]}</span> &nbsp; {ha.LANG_LABEL.get(e["lang"], e["lang"])} · {when} · '
-        f'{e.get("n_problems", "?")} problems{flag}', unsafe_allow_html=True)
+def _render_archive_standard(archive, code, items):
+    """One card per learning standard, with one row per (language, handout group)."""
+    rows = []
+    for lang in sorted({e["lang"] for e in items}, key=lambda l: (l != "en", l)):
+        for gkey, versions, glabel in ARCH_GROUPS:
+            sets = sorted((e for e in items if e["lang"] == lang and e["version"] in versions),
+                          key=lambda e: e["created"], reverse=True)
+            if sets:
+                rows.append((lang, gkey, glabel, sets))
+    with st.container(border=True, key=f"hg_arch_std_{code}"):
+        n = len(items)
+        st.markdown(
+            f'<div class="ar-head"><span class="ar-std">{code}</span><div>'
+            f'<div class="ar-title">{items[0]["std_title"]}</div>'
+            f'<div class="ar-sub">{n} saved set{"s" if n != 1 else ""} · '
+            f'{len(rows)} handout{"s" if len(rows) != 1 else ""}</div></div></div>',
+            unsafe_allow_html=True)
+        for lang, gkey, glabel, sets in rows:
+            st.markdown('<div class="ar-rule"></div>', unsafe_allow_html=True)
+            student = gkey == "student"
+            n_vis = sum(1 for e in sets if e.get("visible"))
+            if not student:
+                aud = '<span class="ar-pill ar-ins">Instructor only</span>'
+            elif n_vis:
+                aud = (f'<span class="ar-pill ar-stu">Visible to students'
+                       f'{f" ({n_vis})" if len(sets) > 1 else ""}</span>')
+            else:
+                aud = '<span class="ar-pill ar-off">Not visible to students</span>'
+
+            info = (f'<span class="ar-pill ar-lang">{ha.LANG_LABEL.get(lang, lang)}</span>'
+                    f'<span class="ar-pill ar-type">{glabel if len(sets) > 1 else sets[0]["version_label"]}</span>{aud}'
+                    f'<div class="ar-latest">Latest: {_fmt_when(sets[0]["created"])}</div>')
+            if len(sets) == 1:
+                cols = st.columns([3.3, 1.75, 1.45, 1.45, 0.6], vertical_alignment="center")
+                cols[0].markdown(info, unsafe_allow_html=True)
+                _render_set_actions(archive, sets[0], cols[1:])
+            else:
+                st.markdown(info, unsafe_allow_html=True)
+                with st.expander(f"Manage {len(sets)} sets"):
+                    for i, e in enumerate(sets, 1):
+                        cols = st.columns([3.2, 1.75, 1.4, 1.4, 0.6], vertical_alignment="center")
+                        rv = e.get("review", {})
+                        flag = f' · <b style="color:#b45309;">{rv["unresolved"]} flagged</b>' if rv.get("unresolved") else ""
+                        cols[0].markdown(
+                            f'<div class="ar-set">Set {i} · <b>{e["version_label"]}</b> '
+                            f'<span class="ar-when">· {_fmt_when(e["created"])} · '
+                            f'{e.get("n_problems", "?")} problems</span>{flag}</div>',
+                            unsafe_allow_html=True)
+                        _render_set_actions(archive, e, cols[1:])
+
+
+def _toggle_visible(archive, e, key):
+    try:
+        archive.set_visible(e["id"], bool(st.session_state.get(key)))
+    except Exception as exc:  # noqa: BLE001
+        st.session_state.hg_vis_error = f"Couldn't change who can see {e['std_code']} {e['version_label']}: {exc}"
+    st.session_state.pop("hg_arch_index", None)
+    _visible_index.clear()
+
+
+def _render_set_actions(archive, e, cols):
+    """Visible-to-students switch, PDF and LaTeX downloads, and delete, for one saved set."""
+    if e["version"] in ha.STUDENT_VERSIONS:
+        vis = bool(e.get("visible"))
+        key = f"hg_a_vis_{e['id']}_{int(vis)}"
+        cols[0].toggle("Visible to students", value=vis, key=key,
+                       on_change=_toggle_visible, args=(archive, e, key),
+                       help="Turn this on after you've checked the PDF. Students can then download "
+                            "the PDF (never the LaTeX) from the home page. Editing or regenerating "
+                            "a problem hides it again until you turn it back on.")
+    cols = cols[1:]
+    when = _fmt_when(e["created"])
     cache = st.session_state.setdefault("hg_arch_files", {})
     key = e["id"]
     if archive.kind == "local" and key not in cache:
@@ -413,18 +581,19 @@ def _render_archive_row(archive, e):
     if key in cache:
         base = e["files"]["pdf"].rsplit("/", 1)[-1][:-4]
         if cache[key].get("pdf"):
-            cols[1].download_button("⬇️ PDF", cache[key]["pdf"], file_name=f"{e['std_code']} {base}.pdf",
+            cols[0].download_button("Download PDF", cache[key]["pdf"], file_name=f"{e['std_code']} {base}.pdf",
                                     mime="application/pdf", key=f"hg_a_pdf_{key}", width="stretch")
         if cache[key].get("tex"):
-            cols[2].download_button("⬇️ .tex", cache[key]["tex"], file_name=f"{e['std_code']} {base}.tex",
+            cols[1].download_button("Download LaTeX", cache[key]["tex"], file_name=f"{e['std_code']} {base}.tex",
                                     mime="application/x-tex", key=f"hg_a_tex_{key}", width="stretch")
-    elif cols[1].button("📥 Get files", key=f"hg_a_get_{key}", width="stretch"):
+    elif cols[0].button("Get files", key=f"hg_a_get_{key}", width="stretch",
+                        help="Fetch this set's PDF and LaTeX from the archive"):
         try:
             cache[key] = {k: archive.read(e["files"][k]) for k in ("pdf", "tex")}
         except Exception as exc:  # noqa: BLE001
             st.error(f"Couldn't fetch the files: {exc}")
         st.rerun()
-    with cols[3].popover("🗑", help="Delete from the archive"):
+    with cols[2].popover("🗑", help="Delete from the archive"):
         st.markdown(f"Delete **{e['std_code']} {e['version_label']}** ({when}) permanently?")
         if st.button("Delete", type="primary", key=f"hg_a_del_{key}"):
             try:
@@ -433,3 +602,64 @@ def _render_archive_row(archive, e):
                 st.error(f"Couldn't delete: {exc}")
             st.session_state.pop("hg_arch_index", None)
             st.rerun()
+
+
+# ── Student side: download handouts the instructor marked "Visible to students" ──
+@st.cache_data(ttl=300, show_spinner=False)
+def _visible_index():
+    try:
+        entries = ha.get_archive(st.secrets).list()
+    except Exception:  # noqa: BLE001
+        return None
+    return [e for e in entries if e.get("visible") and e.get("version") in ha.STUDENT_VERSIONS]
+
+
+@st.cache_data(ttl=3600, show_spinner=False, max_entries=64)
+def _student_pdf(path, stamp):
+    """PDF bytes for one visible handout (stamp = visible_at, so a re-posted file is re-read)."""
+    return ha.get_archive(st.secrets).read(path)
+
+
+def render_student_handouts(tl, selected_std=None, course="calc1"):
+    """Handout picker + Download PDF button for the student home page."""
+    items = _visible_index()
+    if items is None:
+        st.warning(tl("Handouts can't be loaded right now. Please try again in a few minutes.",
+                      "No se pueden cargar las hojas ahora. Intenta de nuevo en unos minutos."))
+        return
+    items = [e for e in items if e.get("course") == course and e.get("files", {}).get("pdf")]
+    if not items:
+        st.info(tl("No handouts have been posted yet. Check back soon.",
+                   "Todavía no hay hojas publicadas. Vuelve pronto."))
+        return
+    items.sort(key=lambda e: (ha.std_sort_key(e["std_code"]), ha.VERSION_ORDER.index(e["version"]),
+                              e["lang"] != "en", e["created"]))
+    if selected_std:
+        mine = [e for e in items if ha.std_sort_key(e["std_code"]) == ha.std_sort_key(selected_std)]
+        if mine:
+            items = mine
+        else:
+            st.caption(tl(f"No handouts posted for {selected_std} yet. Here is everything available:",
+                          f"Aún no hay hojas para {selected_std}. Esto es lo que hay disponible:"))
+    by_id = {e["id"]: e for e in items}
+    vlabel = {"preparation": tl("Preparation (with worked solutions)", "Preparación (con soluciones)"),
+              "ticket": tl("Reassessment Ticket", "Ticket de reevaluación")}
+
+    def _label(i):
+        e = by_id[i]
+        return (f"{e['std_code']} · {e['std_title']} — {vlabel[e['version']]} "
+                f"({ha.LANG_LABEL.get(e['lang'], e['lang'])})")
+
+    pick = st.selectbox(tl("Choose a handout", "Elige una hoja"), list(by_id), format_func=_label,
+                        key="stu_handout_pick")
+    e = by_id[pick]
+    try:
+        pdf = _student_pdf(e["files"]["pdf"], e.get("visible_at", ""))
+    except Exception:  # noqa: BLE001
+        st.error(tl("That handout couldn't be opened. Please try again later.",
+                    "No se pudo abrir esa hoja. Intenta de nuevo más tarde."))
+        return
+    st.download_button(tl("Download PDF", "Descargar PDF"), pdf,
+                       file_name=f"{e['std_code']} {e['version_label']} ({ha.LANG_LABEL.get(e['lang'], e['lang'])}).pdf",
+                       mime="application/pdf", type="primary", use_container_width=True,
+                       key="stu_handout_dl")

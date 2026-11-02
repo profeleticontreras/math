@@ -2466,7 +2466,7 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
         "S-10":"2.3",           "S-11":"2.5",           "S-12":"2.6",
         "S-13":"2.7",           "S-14":"3.1",           "S-15":"3.2",
         "S-16":"3.3",           "S-17":"3.3, 3.4",      "S-18":"3.5, 3.6",
-        "S-19":"4.1, 4.2, 4.3", "S-20":"4.3",           "S-21":"4.4, 5.1",
+        "S-19":"4.1, 4.2",      "S-20":"4.3",           "S-21":"4.4, 5.1",
         "S-22":"5.2",           "S-23":"5.3",           "S-24":"6.1",
     }
     # Textbook chapter each standard belongs to
@@ -2750,16 +2750,30 @@ st.markdown("""
 with st.sidebar:
     if st.session_state.get("screen") not in ["chat"]:
         with st.expander("Instructor view", expanded=False):
-            prof_id  = st.text_input("Instructor ID", key="prof_id_input",
-                                      placeholder="ProfeLeti")
+            prof_id  = st.text_input("Instructor ID", key="prof_id_input")
             prof_pw  = st.text_input("Password", type="password",
                                       key="prof_pw_input")
             if st.button("Sign in as instructor", key="prof_login"):
-                if prof_id.strip() == "ProfeLeti" and prof_pw.strip() == "Contreras":
+                # The instructor ID and password live in Streamlit secrets
+                # (Settings > Secrets: INSTRUCTOR_ID and INSTRUCTOR_PASSWORD),
+                # never in this file, because the GitHub repo is public.
+                import hmac
+                real_id = str(st.secrets.get("INSTRUCTOR_ID", ""))
+                real_pw = str(st.secrets.get("INSTRUCTOR_PASSWORD", ""))
+                if not real_id or not real_pw:
+                    st.error("Instructor sign-in isn't set up yet. Add INSTRUCTOR_ID and "
+                             "INSTRUCTOR_PASSWORD in the app's Streamlit secrets.")
+                elif (hmac.compare_digest(prof_id.strip(), real_id)
+                        and hmac.compare_digest(prof_pw.strip(), real_pw)):
+                    st.session_state.is_instructor = True
                     st.session_state.screen = "professor"
                     st.rerun()
                 else:
                     st.error("Incorrect ID or password.")
+
+if st.session_state.screen == "professor" and not st.session_state.get("is_instructor"):
+    st.session_state.screen = "welcome"
+    st.rerun()
 
 if st.session_state.screen == "professor":
     st.markdown('<p class="app-title">Instructor Dashboard</p>',
@@ -2769,6 +2783,31 @@ if st.session_state.screen == "professor":
         'C-ID MATH 210 &nbsp;·&nbsp; Student Progress</p>',
         unsafe_allow_html=True
     )
+
+    # ── Handout Generator: big, first thing on the instructor home ─────────
+    st.markdown(
+        '<div style="background:linear-gradient(135deg,#00695c,#00897b);color:#ffffff;'
+        'border-radius:16px;padding:1.4rem 1.6rem;margin:0.2rem 0 0.8rem 0;'
+        'box-shadow:0 4px 14px rgba(0,105,92,0.25);">'
+        '<div style="font-size:1.6rem;font-weight:700;line-height:1.2;">📝 Handout Generator</div>'
+        '<div style="font-size:1.0rem;margin-top:0.45rem;line-height:1.5;">'
+        'Make a <b>Preparation</b>, <b>Quest</b>, or <b>Ticket for Reassessment</b> for any of the '
+        '24 learning standards &mdash; skill, conceptual, and interpretation problems, '
+        'as LaTeX and PDF, with answer keys.</div></div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        '<style>.st-key-open_handout_generator button{background:#00695c;border-color:#00695c;'
+        'color:#ffffff;font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;}'
+        '.st-key-open_handout_generator button:hover{background:#004d40;border-color:#004d40;'
+        'color:#ffffff;}</style>',
+        unsafe_allow_html=True
+    )
+    if st.button("📝  Open the Handout Generator", type="primary",
+                 use_container_width=True, key="open_handout_generator"):
+        st.session_state.screen = "handouts"
+        st.rerun()
+    st.markdown('<div style="height:0.8rem;"></div>', unsafe_allow_html=True)
 
     all_usage = st.session_state.get("all_usage", {})
 
@@ -2855,6 +2894,16 @@ if st.session_state.screen == "professor":
     if st.button("← Back to tutor", key="prof_back"):
         st.session_state.screen = "welcome"
         st.rerun()
+
+elif st.session_state.screen == "handouts":
+    if not st.session_state.get("is_instructor"):
+        st.session_state.screen = "welcome"
+        st.rerun()
+    if st.button("← Back to Instructor Dashboard", key="handouts_back"):
+        st.session_state.screen = "professor"
+        st.rerun()
+    from handout_page import render_handout_generator
+    render_handout_generator(client)
 
 elif st.session_state.screen == "welcome":
 

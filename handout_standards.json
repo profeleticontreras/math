@@ -1,0 +1,290 @@
+[
+ {
+  "code": "S-1",
+  "title": "Measuring Velocity",
+  "sections": "1.1",
+  "description": "Define average velocity from a position function and use it to estimate instantaneous velocity as the limit of average velocities over shrinking time intervals.",
+  "subskills": [
+   "Compute average velocity over an interval [a,b] using AV = (s(b) - s(a))/(b - a), including units",
+   "Interpret average velocity as the slope of a secant line on a position graph",
+   "Estimate instantaneous velocity by computing average velocities over progressively smaller intervals",
+   "Interpret the sign of velocity as direction of motion and relate it to the slope of the tangent line"
+  ]
+ },
+ {
+  "code": "S-2",
+  "title": "Limits -- Understanding & Computation",
+  "sections": "1.2",
+  "description": "Understand limits intuitively from graphs and tables, and evaluate them algebraically using direct substitution, factoring, and rationalizing; connect the limiting process to how average velocity approximates instantaneous velocity.",
+  "subskills": [
+   "Estimate limits from graphs and tables of values",
+   "Evaluate limits by direct substitution",
+   "Resolve indeterminate forms 0/0 by factoring or rationalizing the numerator or denominator",
+   "Connect the limiting process to how average velocity over shrinking time intervals approaches instantaneous velocity (S-1)"
+  ]
+ },
+ {
+  "code": "S-3",
+  "title": "Derivative at a Point & as a Function",
+  "sections": "1.3, 1.4",
+  "description": "Define the derivative -- at a point and as a function -- using the limit of the difference quotient; interpret it as the instantaneous rate of change and slope of the tangent line, and represent it graphically.",
+  "subskills": [
+   "Write and evaluate the limit definition of the derivative at a point and as a function",
+   "Interpret f'(a) as the slope of the tangent line and instantaneous rate of change, and distinguish the value f'(a) from the function f'(x)",
+   "Estimate derivative values from graphs or tables of values",
+   "Sketch the graph of f' from the graph of f and determine where f is differentiable"
+  ]
+ },
+ {
+  "code": "S-4",
+  "title": "Interpreting, Estimating & Using the Derivative",
+  "sections": "1.5",
+  "description": "Interpret the meaning and units of the derivative in applied contexts, and estimate derivative values from tabular or graphical data.",
+  "subskills": [
+   "Interpret the meaning of f'(x) in an applied context (population, depreciation, temperature, etc.)",
+   "Determine the units of f'(x) as (units of f) per (unit of x)",
+   "Estimate f'(x) from tabular data using average rates of change / central differences",
+   "Use f'(x) to predict how f will change for a one-unit change in x"
+  ]
+ },
+ {
+  "code": "S-5",
+  "title": "Higher-Order Derivatives",
+  "sections": "1.6",
+  "description": "Compute second and higher-order derivatives and interpret their physical and geometric meaning.",
+  "subskills": [
+   "Compute f''(x) and f^(3)(x) using repeated differentiation",
+   "Interpret f''(x) as acceleration in motion problems",
+   "Determine concavity from the sign of f''(x)",
+   "Use Leibniz notation for higher-order derivatives: d2y/dx2"
+  ]
+ },
+ {
+  "code": "S-6",
+  "title": "Continuity",
+  "sections": "1.7",
+  "description": "Define continuity at a point and on an interval using one-sided and two-sided limits; classify types of discontinuities and determine where a function is continuous.",
+  "subskills": [
+   "Evaluate one-sided limits and determine whether a two-sided limit exists, including for piecewise functions",
+   "State and apply the three conditions for continuity at a point",
+   "Identify removable, jump, and infinite discontinuities and determine intervals of continuity for composite and piecewise functions",
+   "Apply the Intermediate Value Theorem (IVT)"
+  ]
+ },
+ {
+  "code": "S-7",
+  "title": "Tangent Lines & Linear Approximation",
+  "sections": "1.8",
+  "description": "Write equations of tangent lines to curves at given points and use linearization to approximate function values.",
+  "subskills": [
+   "Find the equation of a tangent line y = f(a) + f'(a)(x - a)",
+   "Use the tangent line as a local linear approximation",
+   "Compute differentials: dy = f'(x)dx",
+   "Estimate function values using linearization"
+  ]
+ },
+ {
+  "code": "S-8",
+  "title": "Differentiation Rules",
+  "sections": "2.1",
+  "description": "Apply standard differentiation rules -- power rule, constant rule, sum/difference rule, constant multiple rule -- to differentiate polynomial and rational functions.",
+  "subskills": [
+   "Apply the power rule for integer and rational exponents",
+   "Differentiate sums, differences, and constant multiples",
+   "Differentiate polynomial functions efficiently",
+   "Differentiate rational functions using algebra + power rule"
+  ]
+ },
+ {
+  "code": "S-9",
+  "title": "Derivatives of Transcendental Functions",
+  "sections": "2.2, 2.4",
+  "description": "Differentiate trigonometric and exponential functions.",
+  "subskills": [
+   "Differentiate sin x and cos x",
+   "Differentiate tan x and the reciprocal trigonometric functions",
+   "Differentiate the natural exponential function e^x",
+   "Differentiate exponential functions a^x and use the required factor ln(a)"
+  ]
+ },
+ {
+  "code": "S-10",
+  "title": "Product & Quotient Rules",
+  "sections": "2.3",
+  "description": "Differentiate products and quotients of functions using the product rule and quotient rule.",
+  "subskills": [
+   "State and apply the product rule: (fg)' = f'g + fg'",
+   "State and apply the quotient rule: (f/g)' = (f'g - fg')/g^2",
+   "Differentiate products and quotients involving polynomial and rational functions",
+   "Differentiate and simplify products and quotients involving trigonometric and exponential functions"
+  ]
+ },
+ {
+  "code": "S-11",
+  "title": "Chain Rule",
+  "sections": "2.5",
+  "description": "Differentiate composite functions using the chain rule, including nested compositions.",
+  "subskills": [
+   "Identify inner and outer functions in a composition",
+   "Apply the chain rule: d/dx[f(g(x))] = f'(g(x)) * g'(x)",
+   "Differentiate functions like sin(x^2), e^(3x), (x^2+1)^5",
+   "Apply chain rule repeatedly for nested compositions"
+  ]
+ },
+ {
+  "code": "S-12",
+  "title": "Derivatives of Inverse Functions",
+  "sections": "2.6",
+  "description": "Differentiate inverse functions -- including logarithms and inverse trigonometric functions -- using the inverse function derivative rule.",
+  "subskills": [
+   "Apply the inverse function derivative rule: if g is the inverse of f, then g'(x) = 1/f'(g(x))",
+   "Derive and use derivatives of ln x and log_a x from inverse and change-of-base relationships",
+   "Differentiate the inverse trigonometric functions arcsin x, arccos x, and arctan x",
+   "Differentiate compositions involving inverse functions using the chain rule (e.g., arctan(3x), ln(x^2+1))"
+  ]
+ },
+ {
+  "code": "S-13",
+  "title": "Implicit Differentiation",
+  "sections": "2.7",
+  "description": "Use implicit differentiation to find dy/dx when y is defined implicitly by an equation in x and y.",
+  "subskills": [
+   "Differentiate both sides of an implicit equation with respect to x",
+   "Solve for dy/dx after differentiating",
+   "Find the slope of a tangent line to an implicit curve at a point",
+   "Apply implicit differentiation to relations like x^2 + y^2 = r^2"
+  ]
+ },
+ {
+  "code": "S-14",
+  "title": "Related Rates",
+  "sections": "3.1",
+  "description": "Solve related rates problems by differentiating equations relating multiple quantities with respect to time.",
+  "subskills": [
+   "Identify all quantities that change with time",
+   "Write an equation relating the quantities",
+   "Differentiate implicitly with respect to t",
+   "Substitute known values to find the unknown rate"
+  ]
+ },
+ {
+  "code": "S-15",
+  "title": "L'Hopital's Rule",
+  "sections": "3.2",
+  "description": "Apply L'Hopital's Rule to evaluate limits of indeterminate forms such as 0/0 and infinity/infinity.",
+  "subskills": [
+   "Identify indeterminate forms: 0/0, inf/inf, 0*inf, inf-inf, 1^inf, 0^0",
+   "Apply L'Hopital's Rule correctly (differentiate numerator and denominator separately)",
+   "Apply the rule repeatedly when needed",
+   "Rewrite indeterminate products and differences before applying the rule"
+  ]
+ },
+ {
+  "code": "S-16",
+  "title": "Mean Value Theorem",
+  "sections": "3.3",
+  "description": "State and apply Rolle's Theorem and the Mean Value Theorem (MVT) to analyze function behavior.",
+  "subskills": [
+   "State the hypotheses and conclusion of the MVT",
+   "Find values of c satisfying the MVT on a given interval",
+   "Apply Rolle's Theorem as a special case of MVT",
+   "Use MVT to argue about function behavior (e.g., uniqueness of zeros)"
+  ]
+ },
+ {
+  "code": "S-17",
+  "title": "Monotonicity, Critical Points & Concavity",
+  "sections": "3.3, 3.4",
+  "description": "Use the first and second derivatives to determine where a function is increasing, decreasing, or concave, to classify critical points and extrema, and to sketch curves.",
+  "subskills": [
+   "Find critical numbers and determine intervals where a function is increasing or decreasing",
+   "Apply the First and Second Derivative Tests to identify and classify local extrema",
+   "Determine concavity and find inflection points where f'' changes sign",
+   "Sketch curves using information from f, f', and f''"
+  ]
+ },
+ {
+  "code": "S-18",
+  "title": "Optimization",
+  "sections": "3.5, 3.6",
+  "description": "Model and solve optimization problems by identifying objective functions and constraints, then applying calculus to find absolute extrema.",
+  "subskills": [
+   "Set up an objective function from a word problem",
+   "Use constraint equations to reduce to one variable",
+   "Find critical points on a closed interval using the Closed Interval Method",
+   "Verify that the critical point is a maximum or minimum"
+  ]
+ },
+ {
+  "code": "S-19",
+  "title": "Riemann Sums & Definite Integrals",
+  "sections": "4.1, 4.2",
+  "description": "Define the definite integral as a limit of Riemann sums and interpret it geometrically as signed area under a curve.",
+  "subskills": [
+   "Write left, right, and midpoint Riemann sum approximations",
+   "Express the definite integral as the limit as n -> infinity of the sum of f(xi*) * delta-x",
+   "Interpret the definite integral as net area under a curve",
+   "Use basic properties of definite integrals (linearity, interval splitting)"
+  ]
+ },
+ {
+  "code": "S-20",
+  "title": "Average Value of a Function",
+  "sections": "4.3",
+  "description": "Compute the average value of a function on an interval using the Mean Value Theorem for Integrals.",
+  "subskills": [
+   "Apply the average value formula: f_avg = (1/(b-a)) times the integral from a to b of f(x) dx",
+   "State and apply the Mean Value Theorem for Integrals",
+   "Interpret average value in applied contexts (e.g., average temperature, velocity)",
+   "Find the value(s) of c where f(c) equals the average value"
+  ]
+ },
+ {
+  "code": "S-21",
+  "title": "Antiderivatives & the Fundamental Theorem of Calculus",
+  "sections": "4.4, 5.1",
+  "description": "Find antiderivatives using basic integration rules, and apply the Fundamental Theorem of Calculus to evaluate definite integrals using antiderivatives.",
+  "subskills": [
+   "Reverse the power rule and integrate basic trig, exponential, and 1/x functions to find antiderivatives",
+   "Write the general antiderivative F(x) + C, and find a particular antiderivative using an initial condition",
+   "State the Fundamental Theorem of Calculus: the integral from a to b of f(x) dx = F(b) - F(a), where F is any antiderivative of f",
+   "Evaluate definite integrals using antiderivatives"
+  ]
+ },
+ {
+  "code": "S-22",
+  "title": "The Second Fundamental Theorem of Calculus",
+  "sections": "5.2",
+  "description": "Construct accumulation functions A(x) = the integral from a to x of f(t) dt and apply the Second Fundamental Theorem of Calculus to differentiate them, connecting properties of f to properties of A.",
+  "subskills": [
+   "Construct an accumulation function A(x) = the integral from a to x of f(t) dt from a given function f",
+   "Apply the Second FTC to differentiate accumulation functions: A'(x) = f(x)",
+   "Relate properties of f -- sign, increasing/decreasing, concavity -- to corresponding properties of A",
+   "Explain how the Second FTC and evaluation via antiderivatives (S-21) both express the inverse relationship between differentiation and integration"
+  ]
+ },
+ {
+  "code": "S-23",
+  "title": "u-Substitution",
+  "sections": "5.3",
+  "description": "Evaluate integrals using the substitution rule (u-substitution) as the integration analog of the chain rule.",
+  "subskills": [
+   "Choose an appropriate substitution u = g(x)",
+   "Rewrite the integral entirely in terms of u",
+   "Apply substitution to both indefinite and definite integrals",
+   "Handle limits of integration correctly when substituting in definite integrals"
+  ]
+ },
+ {
+  "code": "S-24",
+  "title": "Area Between Curves",
+  "sections": "6.1",
+  "description": "Use definite integrals to compute the area of regions bounded by two or more curves.",
+  "subskills": [
+   "Find intersection points of two curves",
+   "Set up the integral of [f(x) - g(x)] dx for area between curves",
+   "Handle cases where curves switch which is on top",
+   "Compute area using vertical or horizontal slicing as appropriate"
+  ]
+ }
+]

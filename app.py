@@ -2327,7 +2327,6 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
   </header>
 
   <div class="intro">{header_note}</div>
-  <div class="semilla-note">🌱 You earned Semillas de Vuelo for taking your learning home.</div>
 
   {question_blocks}
 
@@ -2510,10 +2509,6 @@ def build_session_report_html(student_name, messages, session_score,
       <div class="stat-lbl">Duration</div>
     </div>
     <div class="stat">
-      <div class="stat-val">{session_semillas} 🌱</div>
-      <div class="stat-lbl">Semillas</div>
-    </div>
-    <div class="stat">
       <div class="stat-val">{', '.join(standards_practiced) or '—'}</div>
       <div class="stat-lbl">Standards</div>
     </div>
@@ -2522,8 +2517,7 @@ def build_session_report_html(student_name, messages, session_score,
   {question_blocks if question_blocks else '<p style="color:#6b7280;font-style:italic;">No challenge questions were answered this session.</p>'}
 
   <div class="semilla-card">
-    <div class="semilla-count">🌱 {session_semillas} semillas planted this session</div>
-    <div class="semilla-poem">{poem}</div>
+    <div class="semilla-poem">🌱 {poem}</div>
   </div>
 
   <footer>
@@ -3039,7 +3033,6 @@ if st.session_state.screen == "professor":
         rows = []
         for sid in sorted(student_ids):
             rec     = all_usage[sid]
-            semillas = get_total_semillas(sid, all_usage)
             std_data = all_usage.get(f"{sid}_standards", {})
             attempted = len(std_data)
             mastered  = sum(1 for v in std_data.values() if v.get("best_score",0) == 3)
@@ -3049,7 +3042,6 @@ if st.session_state.screen == "professor":
                 "Sessions":        rec.get("sessions", 0),
                 "Standards tried": attempted,
                 "Mastered (3/3)":  mastered,
-                "Semillas":        semillas,
                 "Topics":          ", ".join(rec.get("topics_practiced", [])),
             })
 
@@ -3148,60 +3140,30 @@ elif st.session_state.screen == "welcome":
 
     st.markdown('<div style="height:0.5rem;"></div>', unsafe_allow_html=True)
 
-    # ── Semillitas — permanent visible block below header ─────────────────────
+    # ── My Why — one box: what semillas are + a reflection prompt ────────────
     semilla_poem_text = SEMILLA_POEM.get("es" if lang_top == "Español" else "en",
                                           SEMILLA_POEM["en"])
+    _mywhy_prompt = _tl(
+        "Semillas are not points, and nothing in this app keeps count. They are your own reasons "
+        "for learning this math and the effort you put in because of them. "
+        "Before you begin, take a deep breath and believe in yourself. "
+        "What brought you here today? Who or what are you planting these semillas for?",
+        "Las semillas no son puntos, y nada en esta aplicación las cuenta. Son tus propias razones "
+        "para aprender estas matemáticas y el esfuerzo que pones por ellas. "
+        "Antes de comenzar, respira hondo y cree en ti. "
+        "¿Qué te trajo aquí hoy? ¿Para quién o para qué estás plantando estas semillas?")
     st.markdown(
-        f'<div style="margin:0.4rem 0 0.9rem;padding:0.9rem 1.1rem;' +
-        f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));' +
-        f'border-radius:10px;border-left:4px solid #00796b;">' +
-        f'<div style="font-size:0.95rem;font-weight:600;color:#00796b;margin-bottom:0.4rem;">' +
-        f'🌱 {_tl("What are semillas?", "¿Qué son las semillas?")}</div>' +
-        f'<p style="font-size:0.88rem;font-style:italic;color:inherit;' +
-        f'line-height:1.7;margin:0;">{semilla_poem_text}</p>' +
+        f'<div style="margin:0.4rem 0 0.9rem;padding:0.9rem 1.1rem;'
+        f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));'
+        f'border-radius:10px;border-left:4px solid #00796b;">'
+        f'<div style="font-size:1rem;font-weight:700;color:#00796b;margin-bottom:0.4rem;">'
+        f'🌱 {_tl("My Why", "Mi Por Qué")}</div>'
+        f'<p style="font-size:0.88rem;font-style:italic;color:inherit;line-height:1.7;margin:0 0 0.6rem;">'
+        f'{semilla_poem_text}</p>'
+        f'<p style="font-size:0.9rem;color:inherit;line-height:1.6;margin:0;">{_mywhy_prompt}</p>'
         f'</div>',
         unsafe_allow_html=True
     )
-
-    # My Why — reflection prompt
-    _mywhy_en = "Take a moment before you begin. What brought you here today? Who or what are you planting these semillas for?"
-    _mywhy_es = "Toma un momento antes de comenzar. ¿Qué te trajo aquí hoy? ¿Para quién o para qué estás plantando estas semillas?"
-    _mywhy_title = "✨ My Why" if lang_top == "English" else "✨ Mi Por Qué"
-    _mywhy_body  = _mywhy_en if lang_top == "English" else _mywhy_es
-    st.markdown(
-        f'<div style="margin:0 0 0.9rem;padding:0.75rem 1rem;' +
-        f'background:rgba(245,158,11,0.08);border-left:4px solid #F59E0B;' +
-        f'border-radius:8px;">' +
-        f'<p style="font-size:0.92rem;font-weight:600;color:#92400e;margin:0 0 0.3rem;">' +
-        f'{_mywhy_title}</p>' +
-        f'<p style="font-size:0.85rem;color:inherit;opacity:0.8;line-height:1.6;margin:0;">' +
-        f'{_mywhy_body}</p>' +
-        f'</div>',
-        unsafe_allow_html=True
-    )
-
-    # Semillas earning rubric — collapsible
-    with st.expander(
-        _tl("🌱 How do I earn semillas?", "🌱 ¿Cómo gano semillas?"),
-        expanded=False
-    ):
-        rubric_rows = [
-            (_tl("Show up (start a session)", "Presentarte (iniciar sesión"),              "+1"),
-            (_tl("Attempt each question",       "Intentar cada pregunta"),                  "+1"),
-            (_tl("Mastery — score 3/3",          "Maestría — puntuación 3/3"),               "+3"),
-            (_tl("Progress — score 2/3",         "Progreso — puntuación 2/3"),               "+2"),
-            (_tl("Courage — score 0–1/3",        "Valentía — puntuación 0–1/3"),             "+1"),
-            (_tl("Resilience — retry after wrong","Resiliencia — reintentar tras error"),     "+2"),
-            (_tl("Semillas de Vuelo — take work home","Semillas de Vuelo — llevar trabajo a casa"),"+5"),
-        ]
-        for label, pts in rubric_rows:
-            st.markdown(
-                f'<div style="display:flex;justify-content:space-between;' +
-                f'padding:0.22rem 0;font-size:0.83rem;border-bottom:1px solid rgba(128,128,128,0.12);">' +
-                f'<span>{label}</span>' +
-                f'<span style="font-weight:600;color:#00796b;">{pts}</span></div>',
-                unsafe_allow_html=True
-            )
 
     # ── Three things the app does: highlighted cards ──────────────────────────
     _ic_chat = ('<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" '
@@ -3231,9 +3193,11 @@ elif st.session_state.screen == "welcome":
         '.cf-body{font-size:0.9rem;line-height:1.6;margin:0;color:inherit;}'
         # the whole card is the click target: an invisible button covers it
         '.st-key-card_chat,.st-key-card_challenge,.st-key-card_handout{position:relative;}'
-        '.st-key-card_chat [data-testid="stButton"],.st-key-card_challenge [data-testid="stButton"],'
-        '.st-key-card_handout [data-testid="stButton"]{position:absolute;inset:0;z-index:2;margin:0;}'
-        '.st-key-card_chat button,.st-key-card_challenge button,.st-key-card_handout button{'
+        '.st-key-card_chat_btn,.st-key-card_challenge_btn,.st-key-card_handout_btn{'
+        'position:absolute !important;inset:0;width:100% !important;height:100% !important;z-index:2;margin:0;}'
+        '.st-key-card_chat_btn [data-testid="stButton"],.st-key-card_challenge_btn [data-testid="stButton"],'
+        '.st-key-card_handout_btn [data-testid="stButton"]{height:100%;}'
+        '.st-key-card_chat_btn button,.st-key-card_challenge_btn button,.st-key-card_handout_btn button{'
         'width:100%;height:100%;opacity:0;cursor:pointer;border-radius:14px;}'
         '.st-key-card_chat:hover .cf-card,.st-key-card_challenge:hover .cf-card,.st-key-card_handout:hover .cf-card{'
         'transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.16);}'
@@ -3255,6 +3219,63 @@ elif st.session_state.screen == "welcome":
     tutor_chat_mode = False
     num_q = 0
 
+    # Clear instruction: two ways in, then a pop-up asks for the other choice
+    st.markdown(
+        '<div style="margin:0 0 0.8rem;padding:0.7rem 1rem;border-radius:10px;'
+        'background:rgba(0,121,107,0.08);border-left:5px solid #00796b;font-size:0.92rem;line-height:1.55;">'
+        + _tl("<strong>Two ways to start.</strong> Click an activity below, or pick a learning standard "
+              "first (Learning standards, further down). Either way, a pop-up will ask for the other choice. "
+              "If you don't pick a learning standard, you get 3 questions generated from random learning standards.",
+              "<strong>Dos maneras de empezar.</strong> Haz clic en una actividad de abajo, o elige primero un "
+              "estándar de aprendizaje (Estándares de aprendizaje, más abajo). De cualquier forma, una ventana "
+              "te pedirá la otra opción. Si no eliges un estándar, recibes 3 preguntas generadas de estándares al azar.")
+        + '</div>', unsafe_allow_html=True)
+
+    _act_names = {"chat": _tl("Chat", "Chat"),
+                  "challenge": _tl("Challenge mode", "Modo reto"),
+                  "handout": _tl("Print a handout", "Imprime una hoja")}
+    _rand_note = _tl("If you don't pick a learning standard, Challenge mode gives 3 questions generated from random learning standards.",
+                     "Si no eliges un estándar, el modo reto te da 3 preguntas generadas de estándares al azar.")
+
+    @st.dialog(_tl("Choose a learning standard", "Elige un estándar de aprendizaje"))
+    def _pick_standard_dialog(activity):
+        st.write(_tl(f"You chose **{_act_names[activity]}**. Which learning standard would you like?",
+                     f"Elegiste **{_act_names[activity]}**. ¿Qué estándar de aprendizaje quieres?"))
+        _none_lbl = (_tl("All standards", "Todos los estándares") if activity == "handout"
+                     else _tl("Random — 3 questions from random standards",
+                              "Aleatorio — 3 preguntas de estándares al azar"))
+        _choice = st.selectbox(
+            _tl("Learning standard", "Estándar de aprendizaje"),
+            [None] + list(STANDARDS_MAP.keys()),
+            format_func=lambda c: _none_lbl if c is None else f"{c} · {STANDARDS_MAP[c]['topic']}",
+            key="dlg_std_choice")
+        st.caption(_rand_note)
+        if st.button(_tl("Continue", "Continuar"), type="primary", use_container_width=True, key="dlg_std_go"):
+            st.session_state.selected_standard = _choice
+            st.session_state.selected_skill = None
+            st.session_state.run_activity = activity
+            st.rerun()
+
+    @st.dialog(_tl("What would you like to do?", "¿Qué quieres hacer?"))
+    def _pick_activity_dialog():
+        _cur = st.session_state.get("selected_standard")
+        _cur_txt = (f"{_cur} · {STANDARDS_MAP[_cur]['topic']}" if _cur in STANDARDS_MAP
+                    else _tl("Random — 3 questions from random standards", "Aleatorio — 3 preguntas de estándares al azar"))
+        st.write(f"{_tl('Learning standard', 'Estándar de aprendizaje')}: **{_cur_txt}**")
+        if _cur not in STANDARDS_MAP:
+            st.caption(_rand_note)
+        for _k in ("chat", "challenge", "handout"):
+            if st.button(_act_names[_k], key=f"dlg_act_{_k}", use_container_width=True,
+                         type="primary" if _k == "challenge" else "secondary"):
+                st.session_state.run_activity = _k
+                st.rerun()
+
+    # An activity chosen in a pop-up arrives here on the next run
+    _from_dialog = st.session_state.pop("run_activity", None)
+    _act = _from_dialog
+    if st.session_state.pop("open_activity_dialog", False):
+        _pick_activity_dialog()
+
     _c1, _c2, _c3 = st.columns(3, gap="medium")
     with _c1, st.container(key="card_chat"):
         st.markdown(_feat_card("#00796b", _ic_chat, _tl("Chat", "Chat"),
@@ -3266,22 +3287,20 @@ elif st.session_state.screen == "welcome":
             unsafe_allow_html=True)
         if st.button(_tl("Chat: start a tutor chat", "Chat: empieza un chat con el tutor"),
                      key="card_chat_btn", use_container_width=True):
-            start_clicked, tutor_chat_mode, num_q = True, True, 0
+            _act = "chat"
     with _c2, st.container(key="card_challenge"):
         st.markdown(_feat_card("#b45309", _ic_chal, _tl("Challenge mode", "Modo reto"),
             _tl("Start a challenge round", "Empieza una ronda de reto"),
             _tl("Practice questions on all 24 standards, each tied to a real career. "
                 "Type your answer or upload a photo of your handwritten work. "
-                "Every answer gets a score out of 3, a full worked solution, and an algebra check. "
-                "You earn semillas as you go.",
+                "Every answer gets a score out of 3, a full worked solution, and an algebra check.",
                 "Preguntas de práctica sobre los 24 estándares, cada una conectada con una carrera real. "
                 "Escribe tu respuesta o sube una foto de tu trabajo a mano. "
-                "Cada respuesta recibe una puntuación de 3, la solución completa y un repaso del álgebra. "
-                "Ganas semillas mientras practicas.")),
+                "Cada respuesta recibe una puntuación de 3, la solución completa y un repaso del álgebra.")),
             unsafe_allow_html=True)
         if st.button(_tl("Challenge mode: start a challenge round", "Modo reto: empieza una ronda de reto"),
                      key="card_challenge_btn", use_container_width=True):
-            start_clicked, tutor_chat_mode, num_q = True, False, 3   # a round is three mixed questions
+            _act = "challenge"
     with _c3, st.container(key="card_handout"):
         st.markdown(_feat_card("#3949ab", _ic_print, _tl("Print a handout", "Imprime una hoja"),
             _tl("See posted handouts", "Ver hojas publicadas"),
@@ -3292,7 +3311,18 @@ elif st.session_state.screen == "welcome":
             unsafe_allow_html=True)
         if st.button(_tl("Print a handout: see posted handouts", "Imprime una hoja: ver hojas publicadas"),
                      key="card_handout_btn", use_container_width=True):
-            st.session_state.show_handouts = True
+            _act = "handout"
+
+    # Card clicked with no standard picked: a pop-up asks for one
+    if _act and not _from_dialog and st.session_state.get("selected_standard") is None:
+        _pick_standard_dialog(_act)
+        _act = None
+    if _act == "chat":
+        start_clicked, tutor_chat_mode, num_q = True, True, 0
+    elif _act == "challenge":
+        start_clicked, tutor_chat_mode, num_q = True, False, 3   # a round is three mixed questions
+    elif _act == "handout":
+        st.session_state.show_handouts = True
 
     # Standard in use + privacy note (the standard is chosen under Learning standards below)
     _sel = st.session_state.get("selected_standard")
@@ -3301,7 +3331,7 @@ elif st.session_state.screen == "welcome":
     st.markdown(
         f'<p style="font-size:0.88rem;margin:0.2rem 0 0.9rem;">{_tl("Standard", "Estándar")}: '
         f'<strong style="color:#00796b;">{_sel_txt}</strong> '
-        f'<span style="opacity:0.7;">{_tl("(keep Random, or pick one under Learning standards below). ", "(deja Aleatorio, o elige uno en Estándares de aprendizaje abajo). ")}'
+        f'<span style="opacity:0.7;">&nbsp;·&nbsp; '
         f'{_tl("No sign-in needed. Nothing is saved after you leave, so download your session report if you want to keep your work.", "No necesitas iniciar sesión. Nada se guarda al salir; descarga tu reporte de sesión si quieres conservar tu trabajo.")}'
         f'</span></p>', unsafe_allow_html=True)
 
@@ -3527,6 +3557,7 @@ elif st.session_state.screen == "welcome":
                      type="primary" if random_selected else "secondary"):
             st.session_state.selected_standard = None
             st.session_state.selected_skill = None
+            st.session_state.open_activity_dialog = True
             st.rerun()
 
         # One expander per chapter, buttons inside
@@ -3546,6 +3577,7 @@ elif st.session_state.screen == "welcome":
                                  type="primary" if is_sel else "secondary"):
                         st.session_state.selected_standard = code
                         st.session_state.selected_skill = None  # always practice all skills
+                        st.session_state.open_activity_dialog = True
                         st.rerun()
 
         # Show which standard is active (or Random) as a confirmation line
@@ -3721,26 +3753,8 @@ elif st.session_state.screen == "chat":
         )
         st.divider()
 
-        # ── Semillas — permanent seed counter ─────────────────────────────
-        all_usage_now = st.session_state.get("all_usage", {})
-        sid_now       = st.session_state.get("student_id", "")
-        total_sem     = get_total_semillas(sid_now, all_usage_now)
-        sess_sem      = st.session_state.get("session_semillas", 0)
         lang_now      = st.session_state.get("current_lang", "en")
 
-        st.markdown(
-            f'<div style="text-align:center;padding:0.7rem 0.5rem 0.5rem;'
-            f'background:rgba(0,121,107,0.07);border-radius:8px;margin-bottom:0.4rem;">'
-            f'<div style="font-size:1.6rem;margin-bottom:0.2rem;">🌱</div>'
-            f'<div style="font-size:1.1rem;font-weight:600;color:#00796b;margin-bottom:0.15rem;">'
-            f'{total_sem} semillas</div>'
-            f'<div style="font-size:0.7rem;color:inherit;opacity:0.65;line-height:1.4;">'
-            + (f'+{sess_sem} planted this session' if sess_sem else
-               ('plant your first — start a challenge' if lang_now == 'en'
-                else 'planta tu primera — comienza un reto'))
-            + f'</div></div>',
-            unsafe_allow_html=True
-        )
         # Poem always visible — not collapsed
         poem = SEMILLA_POEM.get(lang_now, SEMILLA_POEM["en"])
         st.markdown(
@@ -3759,7 +3773,7 @@ elif st.session_state.screen == "chat":
             pct_s = round(
                 (st.session_state.session_score / st.session_state.session_max) * 100
             )
-            st.metric("Points",
+            st.metric("Score",
                       f"{st.session_state.session_score}/{st.session_state.session_max}",
                       f"{pct_s}%")
         else:
@@ -3915,11 +3929,11 @@ elif st.session_state.screen == "chat":
     std_label = (f" · **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
                  if std_now and std_now in STANDARDS_MAP else "")
     semilla_open = (
-        f"🌱 Every question you attempt — right or wrong — plants a seed."
-        f"{std_label} That already counts."
+        f"🌱 Every question you attempt, right or wrong, helps you learn."
+        f"{std_label}"
         if lang_now == "en" else
-        f"🌱 Cada pregunta que intentas — correcta o no — planta una semilla."
-        f"{std_label} Eso ya cuenta."
+        f"🌱 Cada pregunta que intentas, correcta o no, te ayuda a aprender."
+        f"{std_label}"
     )
     st.markdown(
         f'<div style="margin:0 0 0.75rem;padding:0.55rem 0.9rem;'
@@ -3960,7 +3974,6 @@ elif st.session_state.screen == "chat":
                 std_code = msg.get("standard_code", "")
                 question = msg.get("question_text", "")
                 is_img   = msg.get("from_image", False)
-                semilla_note  = msg.get("semilla_note", "")
                 wisdom_quote  = msg.get("wisdom_quote", "")
                 offer_retry   = msg.get("offer_retry", False)
                 retry_std     = msg.get("retry_standard", "")
@@ -4012,18 +4025,6 @@ elif st.session_state.screen == "chat":
                         unsafe_allow_html=True
                     )
 
-                # Semilla award
-                if semilla_note:
-                    st.markdown(
-                        f'<div style="margin:0.5rem 0;padding:0.5rem 0.9rem;'
-                        f'background:rgba(0,121,107,0.06);border-radius:6px;'
-                        f'display:inline-block;">'
-                        f'<span style="font-size:0.95rem;font-weight:600;'
-                        f'color:#00796b;">{semilla_note}</span>'
-                        f'</div>',
-                        unsafe_allow_html=True
-                    )
-
                 # Wisdom quote
                 if wisdom_quote:
                     st.markdown(
@@ -4045,29 +4046,16 @@ elif st.session_state.screen == "chat":
                         f"Intenta otra pregunta sobre {retry_std}"
                     )
                     if st.button(retry_label, key=f"retry_{id(msg)}", type="secondary"):
-                        # Generate same standard, award resilience semillas
+                        # Generate another question on the same standard
                         retry_q = quiz_by_standard(
                             retry_std, pick_difficulty(), lang_now
                         )
                         st.session_state.session_calls += 1
-                        all_usage = st.session_state.get("all_usage", {})
-                        sid       = st.session_state.get("student_id", "guest")
-                        all_usage, rtotal = award_semillas(
-                            sid, "resilience", SEMILLA_VALUES["resilience"], all_usage
-                        )
-                        st.session_state.all_usage     = all_usage
-                        st.session_state.session_semillas += SEMILLA_VALUES["resilience"]
-                        r_icon = "🌱🌱"
-                        r_note = (
-                            f"{r_icon} +{SEMILLA_VALUES['resilience']} semillas de "
-                            f"Resiliencia · Total: {rtotal}"
-                        )
                         # Show as a new single-question mini-challenge
                         st.session_state.messages.append({
                             "role": "assistant", "type": "question",
                             "content": (
                                 f"**Retry — {retry_std}: {retry_q['topic']}**\n\n"
-                                f"*{r_note}*\n\n"
                                 + retry_q["question"]
                             )
                         })
@@ -4200,30 +4188,14 @@ elif st.session_state.screen == "chat":
         st.success(random.choice(id_msgs))
 
         # ── Semillitas story — prominent at end of session ────────────────
-        total_sem_report = get_total_semillas(
-            st.session_state.get("student_id",""), 
-            st.session_state.get("all_usage",{})
-        )
-        sess_sem_report = st.session_state.get("session_semillas", 0)
         poem_report = SEMILLA_POEM.get(lang, SEMILLA_POEM["en"])
 
         st.markdown(
             f'<div style="margin:1rem 0;padding:1.1rem 1.3rem;'
             f'background:linear-gradient(135deg,rgba(0,121,107,0.10),rgba(0,121,107,0.04));'
             f'border-radius:10px;border:1px solid rgba(0,121,107,0.2);">'
-            f'<div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;">'
-            f'<span style="font-size:1.8rem;">🌱</span>'
-            f'<div>'
-            f'<div style="font-size:1.05rem;font-weight:600;color:#00796b;">'
-            f'{"You planted" if lang == "en" else "Plantaste"} '
-            f'{sess_sem_report} semilla{"s" if sess_sem_report != 1 else ""} '
-            f'{"today" if lang == "en" else "hoy"} · '
-            f'{"Total:" if lang == "en" else "Total:"} {total_sem_report}</div>'
-            f'<div style="font-size:0.75rem;color:inherit;opacity:0.6;">'
-            f'{"Every session, every attempt, every mistake — each one is a seed." if lang == "en" else "Cada sesión, cada intento, cada error — cada uno es una semilla."}'
-            f'</div></div></div>'
             f'<p style="font-size:0.88rem;line-height:1.7;font-style:italic;'
-            f'color:inherit;opacity:0.85;margin:0;">{poem_report}</p>'
+            f'color:inherit;opacity:0.85;margin:0;">🌱 {poem_report}</p>'
             f'</div>',
             unsafe_allow_html=True
         )
@@ -4379,37 +4351,9 @@ elif st.session_state.screen == "chat":
                         std_code not in st.session_state.session_standards:
                     st.session_state.session_standards.append(std_code)
 
-                # ── Award semillas based on score ─────────────────────────
                 all_usage = st.session_state.get("all_usage", {})
                 sid       = st.session_state.get("student_id", "guest")
                 score     = grading["score"]
-
-                # Award showed-up semilla on first question of session
-                if not st.session_state.get("awarded_showed_up"):
-                    all_usage, _ = award_semillas(sid, "showed_up",
-                                                   SEMILLA_VALUES["showed_up"], all_usage)
-                    st.session_state.awarded_showed_up = True
-
-                # Award per-attempt semilla
-                all_usage, _ = award_semillas(sid, "attempted",
-                                               SEMILLA_VALUES["attempted"], all_usage)
-
-                # Award score-based semillas
-                if score == 3:
-                    semilla_reason = "mastery"
-                    semilla_count  = SEMILLA_VALUES["mastery"]
-                elif score == 2:
-                    semilla_reason = "progress"
-                    semilla_count  = SEMILLA_VALUES["progress"]
-                else:
-                    semilla_reason = "courage"
-                    semilla_count  = SEMILLA_VALUES["courage"]
-
-                all_usage, new_total = award_semillas(
-                    sid, semilla_reason, semilla_count, all_usage
-                )
-                st.session_state.session_semillas += semilla_count + SEMILLA_VALUES["attempted"]
-                st.session_state.all_usage = all_usage
 
                 # Track per-standard progress (foundation-skill practice is not a standard)
                 if not _is_prereq_q:
@@ -4422,21 +4366,6 @@ elif st.session_state.screen == "chat":
                                FOUR_AGREEMENTS_WISDOM.get(lang, FOUR_AGREEMENTS_WISDOM["en"]))
                 wisdom_quote = random.choice(wisdom_pool)
 
-                # Build semilla award note
-                semilla_icons = {
-                    "mastery":    ("🌱🌱🌱", "Maestría", "Mastery"),
-                    "progress":   ("🌱🌱",    "Progreso", "Progress"),
-                    "courage":    ("🌱",      "Valentía", "Courage"),
-                }
-                icon, label_es, label_en = semilla_icons.get(
-                    semilla_reason, ("🌱", "Semilla", "Seed")
-                )
-                semilla_label = label_es if lang == "es" else label_en
-                semilla_note  = (
-                    f"{icon} +{semilla_count} semilla{'s' if semilla_count > 1 else ''} "
-                    f"de {semilla_label} · Total: {new_total}"
-                )
-
                 st.session_state.messages.append({
                     "role": "assistant", "content": grading["feedback"],
                     "type": "grading", "score": grading["score"],
@@ -4447,7 +4376,6 @@ elif st.session_state.screen == "chat":
                     "prereq_suggestion": grading.get("prereq_suggestion"),
                     "standard_code": std_code, "from_image": from_image,
                     "question_text": qs["current_question"].get("question",""),
-                    "semilla_note": semilla_note,
                     "wisdom_quote": wisdom_quote,
                     "offer_retry": score <= 1,
                     "retry_standard": std_code,

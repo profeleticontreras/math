@@ -1,0 +1,342 @@
+[
+ {
+  "code": "S-1",
+  "title": "Introduction to DE",
+  "sections": "1.1",
+  "description": "Solve first-order differential equations using analytical techniques and verify solutions against given initial conditions. Examine and interpret the role of differential equations in real-world scenarios, identifying the assumptions and implications of mathematical models.",
+  "subskills": [
+   "Solve first-order differential equations using analytical techniques and verify solutions against given initial conditions.",
+   "Examine and interpret the role of differential equations in real-world scenarios, identifying the assumptions and implications of mathematical models."
+  ]
+ },
+ {
+  "code": "S-2",
+  "title": "Classification of Differential Equations",
+  "sections": "1.2",
+  "description": "Differentiate between types of differential equations. Analyze and categorize properties of differential equations.",
+  "subskills": [
+   "Differentiate between types of differential equations.",
+   "Analyze and categorize properties of differential equations."
+  ]
+ },
+ {
+  "code": "S-3",
+  "title": "Integrals as Solutions",
+  "sections": "1.3",
+  "description": "Identify when integration can be used to solve a first order differential equation. Integrate to solve a first order differential equation. Integrate to solve a first order initial value problem. Use integration to solve an application problem that involves a first order differential equation.",
+  "subskills": [
+   "Identify when integration can be used to solve a first order differential equation.",
+   "Integrate to solve a first order differential equation.",
+   "Integrate to solve a first order initial value problem.",
+   "Use integration to solve an application problem that involves a first order differential equation."
+  ]
+ },
+ {
+  "code": "S-4",
+  "title": "Slope Fields",
+  "sections": "1.4",
+  "description": "Sketch a slope field given a differential equation. Determine whether there exists a unique solution to a differential equation using Picard's Theorem.",
+  "subskills": [
+   "Sketch a slope field given a differential equation.",
+   "Determine whether there exists a unique solution to a differential equation using Picard's Theorem."
+  ]
+ },
+ {
+  "code": "S-5",
+  "title": "Separable Equations",
+  "sections": "1.5",
+  "description": "Recognize and solve separable differential equations by correctly separating variables. Apply separable differential equations to practical problems, such as exponential growth/decay, Newton's Law of Cooling, and motion, and interpret the physical meaning of the solutions.",
+  "subskills": [
+   "Recognize and solve separable differential equations by correctly separating variables.",
+   "Apply separable differential equations to practical problems, such as exponential growth/decay, Newton's Law of Cooling, and motion, and interpret the physical meaning of the solutions."
+  ]
+ },
+ {
+  "code": "S-6",
+  "title": "Linear Equations and the Integrating Factor",
+  "sections": "1.6",
+  "description": "Recognize and solve linear differential equations. Apply linear equations to figure out the concentration of chemicals in bodies of water.",
+  "subskills": [
+   "Recognize and solve linear differential equations.",
+   "Apply linear equations to figure out the concentration of chemicals in bodies of water."
+  ]
+ },
+ {
+  "code": "S-7",
+  "title": "Existence and Uniqueness of Solutions of Nonlinear Equations",
+  "sections": "1.7",
+  "description": "Understand and apply the existence and uniqueness theorems for nonlinear differential equations. Analyze scenarios where existence or uniqueness may fail.",
+  "subskills": [
+   "Understand and apply the existence and uniqueness theorems for nonlinear differential equations.",
+   "Analyze scenarios where existence or uniqueness may fail."
+  ]
+ },
+ {
+  "code": "S-8",
+  "title": "Substitution",
+  "sections": "1.8",
+  "description": "Apply substitution to simplify and solve non-separable differential equations. Solve Bernoulli equations using the substitution.",
+  "subskills": [
+   "Apply substitution to simplify and solve non-separable differential equations.",
+   "Solve Bernoulli equations using the substitution."
+  ]
+ },
+ {
+  "code": "S-9",
+  "title": "Autonomous Equations",
+  "sections": "1.9",
+  "description": "Understand and analyze the qualitative behavior of autonomous equations. Solve and sketch phase diagram of autonomous equations and their applications.",
+  "subskills": [
+   "Understand and analyze the qualitative behavior of autonomous equations.",
+   "Solve and sketch phase diagram of autonomous equations and their applications."
+  ]
+ },
+ {
+  "code": "S-10",
+  "title": "Numerical Methods - Euler's Method",
+  "sections": "1.10",
+  "description": "Understand and implement Euler's method for numerical approximation. Analyze the accuracy and limitations of Euler's method.",
+  "subskills": [
+   "Understand and implement Euler's method for numerical approximation.",
+   "Analyze the accuracy and limitations of Euler's method."
+  ]
+ },
+ {
+  "code": "S-11",
+  "title": "Exact Equations",
+  "sections": "1.11",
+  "description": "Identify and solve exact differential equations. Utilize integrating factors to solve non-exact equations.",
+  "subskills": [
+   "Identify and solve exact differential equations.",
+   "Utilize integrating factors to solve non-exact equations."
+  ]
+ },
+ {
+  "code": "S-12",
+  "title": "Transformation of Non-Linear Equations into Separable",
+  "sections": "1.12",
+  "description": "Understand the method of solving Bernoulli equations by transforming them into separable equations through substitution. Apply substitution techniques to solve homogeneous nonlinear differential equations by reducing them to separable equations. Identify and solve specific forms of nonlinear differential equations that can be transformed using known solutions or variable substitutions.",
+  "subskills": [
+   "Understand the method of solving Bernoulli equations by transforming them into separable equations through substitution.",
+   "Apply substitution techniques to solve homogeneous nonlinear differential equations by reducing them to separable equations.",
+   "Identify and solve specific forms of nonlinear differential equations that can be transformed using known solutions or variable substitutions."
+  ]
+ },
+ {
+  "code": "S-13",
+  "title": "Growth and Decay",
+  "sections": "2.1",
+  "description": "Model and solve problems involving exponential growth and decay. Apply differential equations to mixed growth and decay scenarios.",
+  "subskills": [
+   "Model and solve problems involving exponential growth and decay.",
+   "Apply differential equations to mixed growth and decay scenarios."
+  ]
+ },
+ {
+  "code": "S-14",
+  "title": "Cooling Problems",
+  "sections": "2.2",
+  "description": "Apply Newton's Law of Cooling to model temperature changes in various contexts. Solve differential equations to find temperature as a function of time and predict key values, such as time or temperature at specific points.",
+  "subskills": [
+   "Apply Newton's Law of Cooling to model temperature changes in various contexts.",
+   "Solve differential equations to find temperature as a function of time and predict key values, such as time or temperature at specific points."
+  ]
+ },
+ {
+  "code": "S-15",
+  "title": "Elementary Mechanics",
+  "sections": "2.3",
+  "description": "Understand Newton's Second Law of Motion and its application to modeling forces and motion. Analyze motion through a resisting medium, including terminal velocity and escape velocity scenarios.",
+  "subskills": [
+   "Understand Newton's Second Law of Motion and its application to modeling forces and motion.",
+   "Analyze motion through a resisting medium, including terminal velocity and escape velocity scenarios."
+  ]
+ },
+ {
+  "code": "S-16",
+  "title": "Mixing Problems",
+  "sections": "2.4",
+  "description": "Model and solve first-order differential equations in real-world applications involving mixture. Analyze and solve mixture problems to determine the concentration and quantity of substances over time.",
+  "subskills": [
+   "Model and solve first-order differential equations in real-world applications involving mixture.",
+   "Analyze and solve mixture problems to determine the concentration and quantity of substances over time."
+  ]
+ },
+ {
+  "code": "S-17",
+  "title": "Orthogonal Trajectories of Curves and Pursuit Curves",
+  "sections": "2.5",
+  "description": "Understand and solve differential equations to find orthogonal trajectories of a given family of curves. Understand and derive the pursuit curve equations for a moving body following a target, and determine conditions for interception.",
+  "subskills": [
+   "Understand and solve differential equations to find orthogonal trajectories of a given family of curves.",
+   "Understand and derive the pursuit curve equations for a moving body following a target, and determine conditions for interception."
+  ]
+ },
+ {
+  "code": "S-18",
+  "title": "Second Order Linear ODEs",
+  "sections": "3.1",
+  "description": "Understand and solve second-order linear differential equations, both homogeneous and nonhomogeneous. Learn techniques such as superposition and reduction of order to construct general solutions.",
+  "subskills": [
+   "Understand and solve second-order linear differential equations, both homogeneous and nonhomogeneous.",
+   "Learn techniques such as superposition and reduction of order to construct general solutions."
+  ]
+ },
+ {
+  "code": "S-19",
+  "title": "The Method of Undetermined Coefficients I",
+  "sections": "3.2",
+  "description": "Understand the method of undetermined coefficients to find particular solutions of nonhomogeneous second-order linear differential equations with constant coefficients. Apply the principle of superposition to combine particular solutions for equations with multiple nonhomogeneous terms.",
+  "subskills": [
+   "Understand the method of undetermined coefficients to find particular solutions of nonhomogeneous second-order linear differential equations with constant coefficients.",
+   "Apply the principle of superposition to combine particular solutions for equations with multiple nonhomogeneous terms."
+  ]
+ },
+ {
+  "code": "S-20",
+  "title": "The Method of Undetermined Coefficients II",
+  "sections": "3.3",
+  "description": "Understand how to use the method of undetermined coefficients to find particular solutions for differential equations with sinusoidal forcing functions. Apply strategies to identify the correct form of a particular solution based on the complementary equation and the degree of polynomials in the forcing function.",
+  "subskills": [
+   "Understand how to use the method of undetermined coefficients to find particular solutions for differential equations with sinusoidal forcing functions.",
+   "Apply strategies to identify the correct form of a particular solution based on the complementary equation and the degree of polynomials in the forcing function."
+  ]
+ },
+ {
+  "code": "S-21",
+  "title": "Constant Coefficient Second-Order Linear ODEs",
+  "sections": "3.4",
+  "description": "Understand and apply the method of solving second-order linear homogeneous differential equations with constant coefficients using the characteristic equation. Analyze and solve differential equations with distinct, repeated, or complex roots, and interpret the resulting solutions in terms of exponential and trigonometric functions.",
+  "subskills": [
+   "Understand and apply the method of solving second-order linear homogeneous differential equations with constant coefficients using the characteristic equation.",
+   "Analyze and solve differential equations with distinct, repeated, or complex roots, and interpret the resulting solutions in terms of exponential and trigonometric functions."
+  ]
+ },
+ {
+  "code": "S-22",
+  "title": "Homogeneous Equations - Higher Order Linear ODEs",
+  "sections": "3.5",
+  "description": "Solve higher-order linear differential equations, including those with constant coefficients, using characteristic equations to find general and particular solutions. Understand and apply the concepts of linear independence and superposition to construct solutions for systems of differential equations.",
+  "subskills": [
+   "Solve higher-order linear differential equations, including those with constant coefficients, using characteristic equations to find general and particular solutions.",
+   "Understand and apply the concepts of linear independence and superposition to construct solutions for systems of differential equations."
+  ]
+ },
+ {
+  "code": "S-23",
+  "title": "Reduction of Order",
+  "sections": "3.6",
+  "description": "Understand and apply the reduction of order method to solve second-order linear differential equations when one solution is already known. Derive and solve the resulting first-order equation to find the general solution of the given differential equation.",
+  "subskills": [
+   "Understand and apply the reduction of order method to solve second-order linear differential equations when one solution is already known.",
+   "Derive and solve the resulting first-order equation to find the general solution of the given differential equation."
+  ]
+ },
+ {
+  "code": "S-24",
+  "title": "Variation of Parameters",
+  "sections": "3.7",
+  "description": "Understand the method of variation of parameters to find a particular solution of second-order linear nonhomogeneous differential equations. Apply variation of parameters to equations with known solutions of the complementary equation to derive the general solution.",
+  "subskills": [
+   "Understand the method of variation of parameters to find a particular solution of second-order linear nonhomogeneous differential equations.",
+   "Apply variation of parameters to equations with known solutions of the complementary equation to derive the general solution."
+  ]
+ },
+ {
+  "code": "S-25",
+  "title": "Mechanical Vibrations",
+  "sections": "3.8",
+  "description": "Understand the mathematical modeling of physical systems such as mass-spring systems, RLC circuits, and pendulums using linear second-order differential equations. Analyze the behavior of solutions for damped and undamped systems, including the concepts of natural frequency, amplitude, and different damping scenarios.",
+  "subskills": [
+   "Understand the mathematical modeling of physical systems such as mass-spring systems, RLC circuits, and pendulums using linear second-order differential equations.",
+   "Analyze the behavior of solutions for damped and undamped systems, including the concepts of natural frequency, amplitude, and different damping scenarios."
+  ]
+ },
+ {
+  "code": "S-26",
+  "title": "Nonhomogeneous Equations",
+  "sections": "3.9",
+  "description": "Learn to solve nonhomogeneous second-order linear differential equations using methods such as undetermined coefficients and variation of parameters. Understand the decomposition of the general solution into complementary and particular solutions and apply initial conditions to determine specific solutions.",
+  "subskills": [
+   "Learn to solve nonhomogeneous second-order linear differential equations using methods such as undetermined coefficients and variation of parameters.",
+   "Understand the decomposition of the general solution into complementary and particular solutions and apply initial conditions to determine specific solutions."
+  ]
+ },
+ {
+  "code": "S-27",
+  "title": "Forced Oscillations and Resonance",
+  "sections": "3.10",
+  "description": "Analyze and solve forced oscillation problems using second-order differential equations, with a focus on undamped, damped, and resonance scenarios. Explore the concepts of pure and practical resonance and their implications in real-world systems, including the effects of damping on oscillatory behavior.",
+  "subskills": [
+   "Analyze and solve forced oscillation problems using second-order differential equations, with a focus on undamped, damped, and resonance scenarios.",
+   "Explore the concepts of pure and practical resonance and their implications in real-world systems, including the effects of damping on oscillatory behavior."
+  ]
+ },
+ {
+  "code": "S-28",
+  "title": "The Laplace Transform",
+  "sections": "5.1",
+  "description": "Understand the basics of Laplace transforms and their existence and uniqueness. Identify common functions and their Laplace transforms. Understand properties and theorems of Laplace transform. Find inverse Laplace transform.",
+  "subskills": [
+   "Understand the basics of Laplace transforms and their existence and uniqueness.",
+   "Identify common functions and their Laplace transforms.",
+   "Understand properties and theorems of Laplace transform.",
+   "Find inverse Laplace transform."
+  ]
+ },
+ {
+  "code": "S-29",
+  "title": "Transforms of Derivatives and ODEs",
+  "sections": "5.2",
+  "description": "Derive and understand the standard formulas for transforms of first, second, and higher-order derivatives. Understand how linearity properties of transforms simplify the handling of derivatives and complex differential equations.",
+  "subskills": [
+   "Derive and understand the standard formulas for transforms of first, second, and higher-order derivatives.",
+   "Understand how linearity properties of transforms simplify the handling of derivatives and complex differential equations."
+  ]
+ },
+ {
+  "code": "S-30",
+  "title": "Convolution",
+  "sections": "5.3",
+  "description": "Understand the key idea of convolution as a process of combining two functions to produce a third function. Learn and verify key properties of convolution. Use the Convolution Theorem to find the Laplace Transform of the integral. Use the inverse form of the Convolution Theorem to find the inverse Laplace Transform.",
+  "subskills": [
+   "Understand the key idea of convolution as a process of combining two functions to produce a third function.",
+   "Learn and verify key properties of convolution.",
+   "Use the Convolution Theorem to find the Laplace Transform of the integral.",
+   "Use the inverse form of the Convolution Theorem to find the inverse Laplace Transform."
+  ]
+ },
+ {
+  "code": "S-31",
+  "title": "Introduction to Systems of ODEs",
+  "sections": "6.1",
+  "description": "Solving the first-order system of differential equations for two variables. Changing the higher-order ordinary differential equations and system of ordinary differential equations to first-order systems. Solve the equilibrium solutions of Autonomous differential equations and check the stability of the equilibrium solutions.",
+  "subskills": [
+   "Solving the first-order system of differential equations for two variables.",
+   "Changing the higher-order ordinary differential equations and system of ordinary differential equations to first-order systems.",
+   "Solve the equilibrium solutions of Autonomous differential equations and check the stability of the equilibrium solutions."
+  ]
+ },
+ {
+  "code": "S-32",
+  "title": "Linear systems of ODEs",
+  "sections": "6.2",
+  "description": "Understand the fundamental operations of matrix arithmetic, including addition, multiplication, and the computation of transposes and inverses. Understand the differentiation rules for matrix and vector-valued functions, and apply them to linear systems of ordinary differential equations (ODEs). Solve first-order linear systems of ODEs using the fundamental matrix and the principle of superposition.",
+  "subskills": [
+   "Understand the fundamental operations of matrix arithmetic, including addition, multiplication, and the computation of transposes and inverses.",
+   "Understand the differentiation rules for matrix and vector-valued functions, and apply them to linear systems of ordinary differential equations (ODEs).",
+   "Solve first-order linear systems of ODEs using the fundamental matrix and the principle of superposition."
+  ]
+ },
+ {
+  "code": "S-33",
+  "title": "Eigenvalue Method",
+  "sections": "6.3",
+  "description": "Writing system of linear differential equations in the matrix form. Solve for eigenvalues and eigenvectors of a given matrix. Apply eigenvalue method to solve system of Linear Differential Equations to find general solutions.",
+  "subskills": [
+   "Writing system of linear differential equations in the matrix form.",
+   "Solve for eigenvalues and eigenvectors of a given matrix.",
+   "Apply eigenvalue method to solve system of Linear Differential Equations to find general solutions."
+  ]
+ }
+]

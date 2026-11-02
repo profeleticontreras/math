@@ -4,3 +4,4 @@ texlive-latex-extra
 texlive-pictures
 texlive-fonts-recommended
 lmodern
+poppler-utils

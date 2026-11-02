@@ -2773,30 +2773,107 @@ st.markdown("""
 # SCREEN: WELCOME
 # ════════════════════════════════════════════════════════════════════════════════
 
-# ── Professor login check (sidebar) ─────────────────────────────────────────
+# ── Instructor sign-in (sidebar), with "Keep me signed in" ─────────────────
+# The instructor ID and password live in Streamlit secrets (INSTRUCTOR_ID,
+# INSTRUCTOR_PASSWORD), never in this file, because the GitHub repo is public.
+# "Keep me signed in" stores a signed, expiring pass in that browser's cookie --
+# never the password. Changing INSTRUCTOR_PASSWORD cancels every saved pass.
+import hmac as _hmac
+import hashlib as _hashlib
+
+_REMEMBER_COOKIE = "canelita_instructor"
+_REMEMBER_DAYS = 30
+
+
+def _remember_key():
+    return "|".join(str(st.secrets.get(k, "")) for k in
+                    ("INSTRUCTOR_ID", "INSTRUCTOR_PASSWORD", "REMEMBER_SECRET")).encode()
+
+
+def _make_remember_token():
+    exp = int(time.time()) + _REMEMBER_DAYS * 86400
+    sig = _hmac.new(_remember_key(), f"instructor|{exp}".encode(), _hashlib.sha256).hexdigest()
+    return f"{exp}.{sig}"
+
+
+def _remember_token_ok(token):
+    try:
+        exp_text, sig = str(token).split(".", 1)
+        exp = int(exp_text)
+    except (ValueError, AttributeError):
+        return False
+    if exp < time.time() or not st.secrets.get("INSTRUCTOR_PASSWORD"):
+        return False
+    good = _hmac.new(_remember_key(), f"instructor|{exp}".encode(), _hashlib.sha256).hexdigest()
+    return _hmac.compare_digest(sig, good)
+
+
+def _write_remember_cookie(value, max_age):
+    import streamlit.components.v1 as _components
+    _components.html(
+        "<script>"
+        "const w = window.parent; const secure = w.location.protocol === 'https:' ? '; Secure' : '';"
+        f"w.document.cookie = '{_REMEMBER_COOKIE}={value}; Max-Age={int(max_age)}; Path=/; SameSite=Lax' + secure;"
+        "</script>",
+        height=0,
+    )
+
+
+# A browser this instructor chose to keep signed in goes straight to the dashboard.
+if not st.session_state.get("is_instructor") and not st.session_state.get("remember_checked"):
+    st.session_state.remember_checked = True
+    try:
+        _saved_pass = st.context.cookies.get(_REMEMBER_COOKIE)
+    except Exception:  # noqa: BLE001 -- older Streamlit or no cookies
+        _saved_pass = None
+    if _saved_pass and _remember_token_ok(_saved_pass):
+        st.session_state.is_instructor = True
+        if st.session_state.get("screen") == "welcome":
+            st.session_state.screen = "professor"
+
 with st.sidebar:
     if st.session_state.get("screen") not in ["chat"]:
-        with st.expander("Instructor view", expanded=False):
-            prof_id  = st.text_input("Instructor ID", key="prof_id_input")
-            prof_pw  = st.text_input("Password", type="password",
-                                      key="prof_pw_input")
-            if st.button("Sign in as instructor", key="prof_login"):
-                # The instructor ID and password live in Streamlit secrets
-                # (Settings > Secrets: INSTRUCTOR_ID and INSTRUCTOR_PASSWORD),
-                # never in this file, because the GitHub repo is public.
-                import hmac
-                real_id = str(st.secrets.get("INSTRUCTOR_ID", ""))
-                real_pw = str(st.secrets.get("INSTRUCTOR_PASSWORD", ""))
-                if not real_id or not real_pw:
-                    st.error("Instructor sign-in isn't set up yet. Add INSTRUCTOR_ID and "
-                             "INSTRUCTOR_PASSWORD in the app's Streamlit secrets.")
-                elif (hmac.compare_digest(prof_id.strip(), real_id)
-                        and hmac.compare_digest(prof_pw.strip(), real_pw)):
-                    st.session_state.is_instructor = True
+        if st.session_state.get("is_instructor"):
+            st.markdown("**Signed in as instructor**")
+            if st.session_state.get("screen") != "professor":
+                if st.button("Instructor Dashboard", key="prof_dash_side", width="stretch"):
                     st.session_state.screen = "professor"
                     st.rerun()
-                else:
-                    st.error("Incorrect ID or password.")
+            if st.button("Sign out", key="prof_signout", width="stretch",
+                         help="Signs out and forgets this computer."):
+                st.session_state.is_instructor = False
+                st.session_state.screen = "welcome"
+                st.session_state.pending_cookie = ("", 0)  # remove the saved pass
+                st.rerun()
+        else:
+            with st.expander("Instructor view", expanded=False):
+                prof_id  = st.text_input("Instructor ID", key="prof_id_input")
+                prof_pw  = st.text_input("Password", type="password",
+                                          key="prof_pw_input")
+                keep_in  = st.checkbox("Keep me signed in on this computer (30 days)",
+                                       key="prof_keep",
+                                       help="Only use this on your own computer.")
+                if st.button("Sign in as instructor", key="prof_login"):
+                    real_id = str(st.secrets.get("INSTRUCTOR_ID", ""))
+                    real_pw = str(st.secrets.get("INSTRUCTOR_PASSWORD", ""))
+                    if not real_id or not real_pw:
+                        st.error("Instructor sign-in isn't set up yet. Add INSTRUCTOR_ID and "
+                                 "INSTRUCTOR_PASSWORD in the app's Streamlit secrets.")
+                    elif (_hmac.compare_digest(prof_id.strip(), real_id)
+                            and _hmac.compare_digest(prof_pw.strip(), real_pw)):
+                        st.session_state.is_instructor = True
+                        st.session_state.screen = "professor"
+                        if keep_in:
+                            st.session_state.pending_cookie = (_make_remember_token(),
+                                                               _REMEMBER_DAYS * 86400)
+                        st.rerun()
+                    else:
+                        st.error("Incorrect ID or password.")
+
+# Save or remove the "keep me signed in" pass (runs once, after the rerun above).
+if st.session_state.get("pending_cookie") is not None:
+    _value, _age = st.session_state.pop("pending_cookie")
+    _write_remember_cookie(_value, _age)
 
 if st.session_state.screen == "professor" and not st.session_state.get("is_instructor"):
     st.session_state.screen = "welcome"
@@ -3083,40 +3160,6 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 </div>
 """, unsafe_allow_html=True)
 
-        # Standards checklist
-        st.markdown(f'<p class="section-label" style="margin-top:0.2rem;">' +
-                    f'{_tl("Your C-ID MATH 210 Checklist — 24 Standards","Tu lista C-ID MATH 210 — 24 estándares")}</p>',
-                    unsafe_allow_html=True)
-        st.markdown(
-            f'<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin-bottom:0.75rem;">' +
-            _tl("These 24 standards are California's official Calculus 1 framework, "
-                "sequenced to follow our textbook chapter by chapter. "
-                "They are your checklist — work through them all and you'll know you're ready "
-                "for Calculus 2, Differential Equations, Physics, and beyond.",
-                "Estos 24 estándares son el marco oficial de Cálculo 1 de California, "
-                "ordenados para seguir nuestro libro capítulo por capítulo. "
-                "Son tu lista de verificación — trabájalos todos y sabrás que estás listo "
-                "para Cálculo 2, Ecuaciones Diferenciales, Física y más.") + '</p>',
-            unsafe_allow_html=True
-        )
-        for ch, name_en, name_es, codes in [
-            ("Ch. 1", "Understanding the Derivative", "Entendiendo la Derivada",       "S-01 – S-07"),
-            ("Ch. 2", "Computing Derivatives",        "Calculando Derivadas",          "S-08 – S-13"),
-            ("Ch. 3", "Using Derivatives",            "Usando Derivadas",              "S-14 – S-18"),
-            ("Ch. 4", "The Definite Integral",        "La Integral Definida",          "S-19 – S-21"),
-            ("Ch. 5", "Evaluating Integrals",         "Evaluando Integrales",          "S-22 – S-23"),
-            ("Ch. 6", "Using Definite Integrals",     "Usando Integrales Definidas",   "S-24"),
-        ]:
-            name = name_es if lang_top == "Español" else name_en
-            st.markdown(
-                f'<div class="unit-row">' +
-                f'<span class="unit-num">{ch}</span>' +
-                f'<span class="unit-name" style="font-size:0.9rem;">{name}</span>' +
-                f'<span class="unit-codes">{codes}</span>' +
-                f'</div>',
-                unsafe_allow_html=True
-            )
-
     # ── RIGHT (desktop) / BOTTOM (mobile): sign-in form ──────────────────────
     with col_form:
         st.markdown(
@@ -3124,43 +3167,26 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             unsafe_allow_html=True
         )
 
-        # 1. Name / ID with optional geeky username
+        # 1. Name / ID, or continue as a guest (nothing kept after the session)
         name_mode = st.radio(
             "name mode",
             [_tl("Use my name or student ID","Usar mi nombre o ID de estudiante"),
-             _tl("Generate a fun username","Generar un nombre divertido")],
+             _tl("Continue as a guest","Continuar como invitado")],
             horizontal=True, key="name_mode", label_visibility="collapsed"
         )
-
-        if name_mode == _tl("Generate a fun username","Generar un nombre divertido"):
-            import random as _rnd
-            _adj = ["Rogue","Sneaky","Turbo","Spicy","Cosmic","Rebel","Savage",
-                    "Sleepy","Wobbly","Mysterious","Epic","Tiny","Grumpy",
-                    "Chaotic","Radical"]
-            _nou = ["Integral","Cactus","Sandwich","Theorem","Banana",
-                    "Llama","Penguin","Noodle","Waffle","Burrito",
-                    "Derivative","Taco","Pickle","Pi","Avocado"]
-            if "generated_username" not in st.session_state:
-                import random as _r2
-                st.session_state.generated_username = (
-                    f"{_r2.choice(_adj)}{_r2.choice(_nou)}{_r2.randint(10,99)}"
-                )
-            col_un, col_re = st.columns([3,1])
-            with col_un:
-                st.markdown(
-                    f'<div style="padding:0.55rem 0.8rem;background:rgba(0,121,107,0.07);' +
-                    f'border-radius:6px;font-size:0.95rem;font-weight:600;color:#00796b;">' +
-                    f'🤓 {st.session_state.generated_username}</div>',
-                    unsafe_allow_html=True
-                )
-            with col_re:
-                if st.button(_tl("New","Otro"), key="regen_username"):
-                    import random as _r3
-                    st.session_state.generated_username = (
-                        f"{_r3.choice(_adj)}{_r3.choice(_nou)}{_r3.randint(10,99)}"
-                    )
-                    st.rerun()
-            student_id = st.session_state.generated_username
+        is_guest = name_mode == _tl("Continue as a guest","Continuar como invitado")
+        if is_guest:
+            student_id = "Guest"
+            st.markdown(
+                '<div style="padding:0.6rem 0.85rem;background:rgba(0,121,107,0.07);'
+                'border-left:3px solid #00796b;border-radius:6px;font-size:0.88rem;line-height:1.55;">'
+                + _tl("You're in as a guest. Your questions, scores, and semillas last only for "
+                      "this session; nothing is saved after you leave. Download your session "
+                      "report before you go to keep your work.",
+                      "Entras como invitado. Tus preguntas, puntuaciones y semillas duran solo "
+                      "esta sesión; nada se guarda al salir. Descarga tu reporte de sesión antes "
+                      "de irte para conservar tu trabajo.")
+                + '</div>', unsafe_allow_html=True)
         else:
             student_id = st.text_input(
                 _tl("1. Your name or student ID","1. Tu nombre o ID"),
@@ -3171,18 +3197,25 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         # Language comes from top-of-page selector
         lang_choice = "Español" if lang_top == "Español" else "Auto-detect"
 
-        # 2. Learning standard — chapter-grouped buttons (no dropdown)
+    # ── Row 2: learning standards (left) beside prerequisite skills (right) ──
+    st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
+    col_std, col_pre = st.columns(2, gap="large")
+    with col_std:
+        # 2. Learning standards — the clickable checklist (left column)
         st.markdown(
-            f'<p style="font-size:0.95rem;font-weight:600;color:inherit;'
-            f'margin:0.6rem 0 0.2rem;">'
-            f'{_tl("2. Pick a standard to practice", "2. Elige un estándar para practicar")}'
-            f'</p>',
+            f'<p style="font-size:1.05rem;font-weight:700;color:inherit;margin:0 0 0.2rem;">'
+            f'{_tl("2. Learning standards", "2. Estándares de aprendizaje")}</p>',
             unsafe_allow_html=True
         )
         st.markdown(
-            f'<p style="font-size:0.8rem;color:inherit;opacity:0.6;margin:0 0 0.5rem;">'
-            f'{_tl("Or leave it on Random to be surprised.", "O déjalo en Aleatorio para sorprenderte.")}'
-            f'</p>',
+            f'<p style="font-size:0.84rem;color:inherit;opacity:0.8;line-height:1.6;margin:0 0 0.6rem;">'
+            + _tl("Your C-ID MATH 210 checklist: 24 standards that follow our textbook chapter by "
+                  "chapter. Work through them all and you'll be ready for Calculus 2, Differential "
+                  "Equations, Physics, and beyond. Pick one, or leave it on Random.",
+                  "Tu lista C-ID MATH 210: 24 estándares que siguen nuestro libro capítulo por "
+                  "capítulo. Trabájalos todos y estarás listo para Cálculo 2, Ecuaciones "
+                  "Diferenciales, Física y más. Elige uno o déjalo en Aleatorio.")
+            + '</p>',
             unsafe_allow_html=True
         )
 
@@ -3203,6 +3236,13 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             5: _tl("Chapter 5 · Evaluating Integrals",         "Capítulo 5 · Evaluando Integrales"),
             6: _tl("Chapter 6 · Using Definite Integrals",     "Capítulo 6 · Usando Integrales Definidas"),
         }
+
+        # Show each chapter's standard range in its title (S-01 – S-07, ...)
+        for _chn in list(_ch_titles):
+            _cc = sorted((c for c, n in _tb_chapter.items() if n == _chn),
+                         key=lambda c: int(c.split("-")[1]))
+            _rng = _cc[0] if len(_cc) == 1 else f"{_cc[0]} – {_cc[-1]}"
+            _ch_titles[_chn] = f"{_ch_titles[_chn]}  ·  {_rng}"
 
         # Currently selected standard (from a prior button click this session)
         selected_code = st.session_state.get("selected_standard")
@@ -3294,11 +3334,12 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
         # We rotate difficulty so the session finds the student's starting place.
         diff_choice = "Random — mix it up"
 
+    with col_pre:
         # ── Sharpen your tools — prerequisite skills ──────────────────────
         st.markdown(
-            f'<p style="font-size:0.95rem;font-weight:600;color:inherit;'
-            f'margin:0.8rem 0 0.2rem;">'
-            f'{_tl("🔧 Sharpen your tools (optional)", "🔧 Afina tus herramientas (opcional)")}'
+            f'<p style="font-size:1.05rem;font-weight:700;color:inherit;'
+            f'margin:0 0 0.2rem;">'
+            f'{_tl("Prerequisite skills (optional)", "Habilidades previas (opcional)")}'
             f'</p>',
             unsafe_allow_html=True
         )
@@ -3357,6 +3398,10 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
                     st.session_state.prereq_action_pending = False
                     st.rerun()
 
+    # ── Row 3: what to do, and start ─────────────────────────────────────────
+    st.markdown('<div style="height:0.6rem;"></div>', unsafe_allow_html=True)
+    _, col_go, _ = st.columns([1, 2, 1])
+    with col_go:
         # 3. Session mode — challenge or tutor chat, with question count if challenge
         session_mode_choice = st.selectbox(
             _tl("3. What would you like to do?", "3. ¿Qué quieres hacer?"),
@@ -3389,6 +3434,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
             action, pcode = st.session_state.prereq_start
             st.session_state.prereq_start = None
             sid = (student_id.strip() if student_id.strip() else "Guest")
+            st.session_state.is_guest = is_guest or sid == "Guest"
             lang = "es" if lang_top == "Español" else "en"
 
             # Set up a light session (prereq practice does not count toward standards)
@@ -3451,6 +3497,7 @@ background:rgba(0,121,107,0.08);border-left:3px solid #00796b;border-radius:6px;
 
         if start_clicked:
             sid = student_id.strip()
+            st.session_state.is_guest = is_guest
             if not sid:
                 st.warning("Please enter your name or student ID.")
             else:
@@ -3741,7 +3788,7 @@ elif st.session_state.screen == "chat":
                 # Clear chat state but keep identity/settings
                 keep = {k: st.session_state[k] for k in
                         ["student_id","language","difficulty","num_questions",
-                         "all_usage","selected_standard","selected_skill"]
+                         "all_usage","selected_standard","selected_skill","is_guest"]
                         if k in st.session_state}
                 for key in list(st.session_state.keys()):
                     del st.session_state[key]
@@ -4055,7 +4102,8 @@ elif st.session_state.screen == "chat":
                     record.setdefault("standards_practiced", []).append(s)
             if "all_usage" not in st.session_state:
                 st.session_state.all_usage = {}
-            st.session_state.all_usage[st.session_state.student_id] = record
+            if not st.session_state.get("is_guest"):  # guests: nothing kept past the session
+                st.session_state.all_usage[st.session_state.student_id] = record
             st.session_state.usage_saved = True
         else:
             # Already saved — reconstruct record for display

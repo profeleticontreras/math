@@ -17,6 +17,38 @@ import time
 # Import datetime for ISO week calculation
 from datetime import datetime
 
+# ── Dollar amounts vs. math ──────────────────────────────────────────────────
+# Streamlit (and MathJax in printouts) treat every pair of $ signs as math, so
+# "$12,000 to spend ... at $3 each" turns the words between the two amounts into
+# an italic equation. fix_dollars() escapes a $ only when it clearly starts a
+# money amount: $ + number, followed by a space and a word, punctuation, or the
+# end of the text. Math such as $5x+80$, $3 + 4$ or $2\\cdot 3$ is left alone.
+import re as _re_dollars
+_MONEY_RE = _re_dollars.compile(r'(?<![\\$])\$(\d[\d,]*(?:\.\d+)?)')
+_MONEY_AFTER_RE = _re_dollars.compile(r"(?:[.,;:!?)\]'\"’”]|[kKmMbB]\b|\s*$|\s+[A-Za-z]{2,}|\s+\()")
+
+def fix_dollars(text):
+    """Escape currency dollar signs ($12,000 -> \\$12,000) so they are not read as math."""
+    if not isinstance(text, str) or "$" not in text:
+        return text
+    def _sub(m):
+        rest = text[m.end():]
+        return "\\$" + m.group(1) if _MONEY_AFTER_RE.match(rest) else m.group(0)
+    return _MONEY_RE.sub(_sub, text)
+
+_st_markdown_original = st.markdown
+def _st_markdown_fixed(body, *args, **kwargs):
+    return _st_markdown_original(fix_dollars(body), *args, **kwargs)
+st.markdown = _st_markdown_fixed
+try:
+    from streamlit.delta_generator import DeltaGenerator as _DG
+    _dg_markdown_original = _DG.markdown
+    def _dg_markdown_fixed(self, body, *args, **kwargs):
+        return _dg_markdown_original(self, fix_dollars(body), *args, **kwargs)
+    _DG.markdown = _dg_markdown_fixed
+except Exception:
+    pass
+
 # ── Page configuration ────────────────────────────────────────────────────────
 # Configure the browser tab title, icon, and layout
 st.set_page_config(
@@ -1843,6 +1875,7 @@ def build_explanation_html(title, std_code, score_label, question,
             return ""
         # Escape HTML special chars except $ (needed for MathJax)
         text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        text = fix_dollars(text)
         # Bold
         text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
         # Italic (not inside math)
@@ -2157,6 +2190,7 @@ def generate_practice_set_html(standards_practiced, difficulty, language, studen
             if not text:
                 return ""
             text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+            text = fix_dollars(text)
             text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
             text = re.sub(r'\*([^*\n]+?)\*', r'<em>\1</em>', text)
             lines = text.split('\n')
@@ -2354,6 +2388,7 @@ def build_session_report_html(student_name, messages, session_score,
         if not text:
             return ""
         text = text.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+        text = fix_dollars(text)
         text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
         text = re.sub(r'\*([^*\n]+?)\*', r'<em>\1</em>', text)
         lines = text.split('\n')
@@ -3223,24 +3258,24 @@ elif st.session_state.screen == "welcome":
     st.markdown(
         '<div style="margin:0 0 0.8rem;padding:0.7rem 1rem;border-radius:10px;'
         'background:rgba(0,121,107,0.08);border-left:5px solid #00796b;font-size:0.92rem;line-height:1.55;">'
-        + _tl("<strong>Two ways to start.</strong> Click an activity below, or pick a learning standard "
-              "first (Learning standards, further down). Either way, a pop-up will ask for the other choice. "
-              "If you don't pick a learning standard, you get 3 questions generated from random learning standards.",
-              "<strong>Dos maneras de empezar.</strong> Haz clic en una actividad de abajo, o elige primero un "
-              "estándar de aprendizaje (Estándares de aprendizaje, más abajo). De cualquier forma, una ventana "
-              "te pedirá la otra opción. Si no eliges un estándar, recibes 3 preguntas generadas de estándares al azar.")
+        + _tl("<strong>You can start two ways.</strong> Choose Chat, Challenge mode, or Print a handout below, "
+              "or choose a learning standard first. After your first choice, a small window asks for the other one. "
+              "If you skip the standard, you get 3 questions from randomly chosen standards.",
+              "<strong>Puedes empezar de dos maneras.</strong> Elige Chat, Modo reto o Imprime una hoja aquí abajo, "
+              "o elige primero un estándar de aprendizaje. Después de tu primera elección, una ventana pequeña te pide la otra. "
+              "Si no eliges un estándar, recibes 3 preguntas de estándares elegidos al azar.")
         + '</div>', unsafe_allow_html=True)
 
     _act_names = {"chat": _tl("Chat", "Chat"),
                   "challenge": _tl("Challenge mode", "Modo reto"),
                   "handout": _tl("Print a handout", "Imprime una hoja")}
-    _rand_note = _tl("If you don't pick a learning standard, Challenge mode gives 3 questions generated from random learning standards.",
-                     "Si no eliges un estándar, el modo reto te da 3 preguntas generadas de estándares al azar.")
+    _rand_note = _tl("If you skip the standard, Challenge mode gives you 3 questions from randomly chosen standards.",
+                     "Si no eliges un estándar, el modo reto te da 3 preguntas de estándares elegidos al azar.")
 
     @st.dialog(_tl("Choose a learning standard", "Elige un estándar de aprendizaje"))
     def _pick_standard_dialog(activity):
-        st.write(_tl(f"You chose **{_act_names[activity]}**. Which learning standard would you like?",
-                     f"Elegiste **{_act_names[activity]}**. ¿Qué estándar de aprendizaje quieres?"))
+        st.write(_tl(f"You chose **{_act_names[activity]}**. Which learning standard do you want to work on?",
+                     f"Elegiste **{_act_names[activity]}**. ¿En qué estándar de aprendizaje quieres trabajar?"))
         _none_lbl = (_tl("All standards", "Todos los estándares") if activity == "handout"
                      else _tl("Random — 3 questions from random standards",
                               "Aleatorio — 3 preguntas de estándares al azar"))
@@ -3580,50 +3615,29 @@ elif st.session_state.screen == "welcome":
                         st.session_state.open_activity_dialog = True
                         st.rerun()
 
-        # Show which standard is active (or Random) as a confirmation line
+        # One box: the standard in use + the foundation skills that support it
         if selected_code and selected_code in STANDARDS_MAP:
-            st.markdown(
-                f'<div style="margin:0.4rem 0;padding:0.5rem 0.8rem;'
-                f'background:rgba(0,121,107,0.08);border-radius:6px;'
-                f'font-size:0.85rem;">'
-                f'{_tl("Practicing", "Practicando")}: '
-                f'<strong style="color:#00796b;">{selected_code} · '
-                f'{STANDARDS_MAP[selected_code]["topic"]}</strong><br>'
-                f'<span style="font-size:0.76rem;opacity:0.7;">'
-                f'{_tl("Skills that power this topic", "Habilidades que impulsan este tema")}: '
-                f'{", ".join(STANDARDS_MAP[selected_code]["algebra_prereqs"])}</span>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            # Surface the supporting foundation skills as an available resource --
-            # framed as a good find and an opportunity, never as a gap to fix.
-            _linked_prereqs = STANDARD_TO_PREREQS.get(selected_code, [])
-            if _linked_prereqs:
-                with st.expander(
-                    _tl("✨ Available resources for prerequisite skills",
-                        "✨ Recursos disponibles para habilidades previas"),
-                    expanded=False
-                ):
+            _linked_prereqs = [c for c in STANDARD_TO_PREREQS.get(selected_code, []) if c in PREREQ_SKILLS]
+            with st.container(border=True):
+                st.markdown(
+                    f'<div style="font-size:0.9rem;">{_tl("Practicing", "Practicando")}: '
+                    f'<strong style="color:#00796b;">{selected_code} · '
+                    f'{STANDARDS_MAP[selected_code]["topic"]}</strong></div>',
+                    unsafe_allow_html=True
+                )
+                if _linked_prereqs:
                     st.markdown(
-                        f'<p style="font-size:0.8rem;color:inherit;opacity:0.75;'
-                        f'margin:0 0 0.5rem;line-height:1.5;">'
-                        f'{_tl("Nice find — these foundation skills (algebra, trig, "
-                               "functions, and more) connect directly to this topic. "
-                               "Explore any of them whenever you like:",
-                               "Buen hallazgo — estas habilidades base (álgebra, trigonometría, "
-                               "funciones y más) se conectan directamente con este tema. "
-                               "Explóralas cuando quieras:")}'
-                        f'</p>',
-                        unsafe_allow_html=True
-                    )
+                        f'<p style="font-size:0.82rem;opacity:0.75;margin:0.3rem 0 0.5rem;line-height:1.5;">'
+                        f'{_tl("These skills support this standard. If you'd like a refresher, choose one to see a worked example or try a problem.", "Estas habilidades apoyan este estándar. Si quieres repasar, elige una para ver un ejemplo resuelto o intentar un problema.")}'
+                        f'</p>', unsafe_allow_html=True)
                     for _pc in _linked_prereqs:
                         _pt = PREREQ_SKILLS[_pc]["topic"]
                         _grp = PREREQ_SKILLS[_pc]["group"]
                         _c1, _c2 = st.columns([3, 2])
                         with _c1:
                             st.markdown(
-                                f'<span style="font-size:0.82rem;">{_pt}</span>'
-                                f'<br><span style="font-size:0.68rem;opacity:0.55;">{_grp}</span>',
+                                f'<span style="font-size:0.85rem;">{_pt}</span>'
+                                f'<br><span style="font-size:0.7rem;opacity:0.55;">{_grp}</span>',
                                 unsafe_allow_html=True
                             )
                         with _c2:
@@ -3632,7 +3646,32 @@ elif st.session_state.screen == "welcome":
                                          use_container_width=True):
                                 st.session_state.prereq_focus = _pc
                                 st.session_state.prereq_action_pending = True
+                                st.session_state.prereq_src = "box"
                                 st.rerun()
+                        # The choice appears right under the skill that was clicked
+                        if (st.session_state.get("prereq_action_pending")
+                                and st.session_state.get("prereq_src") == "box"
+                                and st.session_state.get("prereq_focus") == _pc):
+                            st.caption(PREREQ_SKILLS[_pc].get("desc", ""))
+                            _e1, _e2 = st.columns(2)
+                            with _e1:
+                                if st.button(_tl("💡 See a worked example", "💡 Ver un ejemplo resuelto"),
+                                             key=f"lp_ex_{selected_code}_{_pc}", use_container_width=True):
+                                    st.session_state.prereq_start = ("example", _pc)
+                                    st.session_state.prereq_action_pending = False
+                                    st.rerun()
+                            with _e2:
+                                if st.button(_tl("✏️ Try a problem", "✏️ Intentar un problema"),
+                                             key=f"lp_pr_{selected_code}_{_pc}", use_container_width=True):
+                                    st.session_state.prereq_start = ("practice", _pc)
+                                    st.session_state.prereq_action_pending = False
+                                    st.rerun()
+                else:
+                    st.markdown(
+                        f'<span style="font-size:0.78rem;opacity:0.7;">'
+                        f'{_tl("Skills that help with this standard", "Habilidades que ayudan con este estándar")}: '
+                        f'{", ".join(STANDARDS_MAP[selected_code]["algebra_prereqs"])}</span>',
+                        unsafe_allow_html=True)
 
         # Difficulty is chosen automatically — no student-facing selector.
         # We rotate difficulty so the session finds the student's starting place.
@@ -3674,33 +3713,26 @@ elif st.session_state.screen == "welcome":
                                  use_container_width=True):
                         st.session_state.prereq_focus = _pc
                         st.session_state.prereq_action_pending = True
+                        st.session_state.prereq_src = "list"
                         st.rerun()
-
-        # If a prereq was picked, offer example-or-practice choice
-        if st.session_state.get("prereq_action_pending"):
-            _pc = st.session_state.get("prereq_focus")
-            _pd = PREREQ_SKILLS.get(_pc, {})
-            st.markdown(
-                f'<div style="margin:0.4rem 0;padding:0.6rem 0.9rem;'
-                f'background:rgba(0,121,107,0.08);border-radius:8px;">'
-                f'<strong style="color:#00796b;">{_pd.get("topic","")}</strong><br>'
-                f'<span style="font-size:0.8rem;opacity:0.75;">{_pd.get("desc","")}</span>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            _pcol1, _pcol2 = st.columns(2)
-            with _pcol1:
-                if st.button(_tl("💡 See a worked example", "💡 Ver un ejemplo resuelto"),
-                             key="prereq_example_btn", use_container_width=True):
-                    st.session_state.prereq_start = ("example", _pc)
-                    st.session_state.prereq_action_pending = False
-                    st.rerun()
-            with _pcol2:
-                if st.button(_tl("✏️ Try a problem", "✏️ Intentar un problema"),
-                             key="prereq_practice_btn", use_container_width=True):
-                    st.session_state.prereq_start = ("practice", _pc)
-                    st.session_state.prereq_action_pending = False
-                    st.rerun()
+                    # The choice opens right under the skill that was clicked
+                    if (st.session_state.get("prereq_action_pending")
+                            and st.session_state.get("prereq_src") == "list"
+                            and st.session_state.get("prereq_focus") == _pc):
+                        st.caption(PREREQ_SKILLS.get(_pc, {}).get("desc", ""))
+                        _e1, _e2 = st.columns(2)
+                        with _e1:
+                            if st.button(_tl("💡 See a worked example", "💡 Ver un ejemplo resuelto"),
+                                         key=f"pl_ex_{_pc}", use_container_width=True):
+                                st.session_state.prereq_start = ("example", _pc)
+                                st.session_state.prereq_action_pending = False
+                                st.rerun()
+                        with _e2:
+                            if st.button(_tl("✏️ Try a problem", "✏️ Intentar un problema"),
+                                         key=f"pl_pr_{_pc}", use_container_width=True):
+                                st.session_state.prereq_start = ("practice", _pc)
+                                st.session_state.prereq_action_pending = False
+                                st.rerun()
 
     # ── Closing note ──────────────────────────────────────────────────────────
     st.markdown(f"""
@@ -3929,10 +3961,10 @@ elif st.session_state.screen == "chat":
     std_label = (f" · **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
                  if std_now and std_now in STANDARDS_MAP else "")
     semilla_open = (
-        f"🌱 Every question you attempt, right or wrong, helps you learn."
+        f"🌱 Try each question, right or wrong. Your answer shows us where to start."
         f"{std_label}"
         if lang_now == "en" else
-        f"🌱 Cada pregunta que intentas, correcta o no, te ayuda a aprender."
+        f"🌱 Intenta cada pregunta, correcta o no. Tu respuesta nos muestra por dónde empezar."
         f"{std_label}"
     )
     st.markdown(
@@ -3987,7 +4019,7 @@ elif st.session_state.screen == "chat":
                     unsafe_allow_html=True
                 )
                 if feedback:   st.markdown(feedback)
-                if scaffold:   st.info(scaffold)
+                if scaffold:   st.info(fix_dollars(scaffold))
                 if solution:
                     with st.expander("Full solution"):
                         st.markdown(solution)

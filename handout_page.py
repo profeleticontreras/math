@@ -265,6 +265,35 @@ def _render_make(client):
         _render_entry(client, e, catalog_for=_catalog, first=(idx == 0))
 
 
+def _selection_bar(e, r):
+    """Select several problems with the checkboxes and delete them together without opening them."""
+    eid = e["id"]
+    keys = {p["id"]: f"hg_sel_{eid}_{p['id']}" for p in r["problems"]}
+    chosen = [p for p in r["problems"] if st.session_state.get(keys[p["id"]])]
+
+    def set_all(flag):
+        for k in keys.values():
+            st.session_state[k] = flag
+
+    c1, c2, c3, _ = st.columns([1, 1, 1.6, 2.4])
+    c1.button("Select all", key=f"hg_selall_{eid}", on_click=set_all, args=(True,), width="stretch")
+    c2.button("Clear", key=f"hg_selnone_{eid}", on_click=set_all, args=(False,), width="stretch")
+    with c3.popover(f"🗑 Delete selected ({len(chosen)})", width="stretch", disabled=not chosen):
+        if len(chosen) >= len(r["problems"]):
+            st.warning("A handout needs at least one problem. Leave one unchecked.")
+        else:
+            nums = ", ".join(str(p.get("num", p["id"])) for p in chosen)
+            st.markdown(f"Remove problem(s) {nums} from this handout? The remaining problems are renumbered.")
+            if st.button("Delete selected problems", type="primary", key=f"hg_delsel_{eid}"):
+                with st.spinner("Rebuilding the handout…"):
+                    for p in chosen:
+                        r["problems"].remove(p)
+                        st.session_state.pop(keys[p["id"]], None)
+                    e["out"] = hc.build_files(r)
+                    _archive_save(e)
+                st.rerun()
+
+
 def _render_entry(client, e, catalog_for, first):
     r, out = e["result"], e["out"]
     rv = r.get("review", {})
@@ -313,6 +342,7 @@ def _render_entry(client, e, catalog_for, first):
         st.markdown("**Review the problems**")
         st.caption("Tables and graphs show only in the PDF. 🔄 replaces a problem, ➕ adds another on the same "
                    "skill with a different type of function, 🗑 removes one. New problems are reviewed too.")
+        _selection_bar(e, r)
         for p in r["problems"]:
             head = f"{p.get('num', p['id'])}. [{TYPE_LABEL[p['type']]} · {p['subskill_code']}] {p.get('title') or '(no label)'}"
             if p.get("quick"):
@@ -320,61 +350,66 @@ def _render_entry(client, e, catalog_for, first):
             if p.get("added") == "instructor":
                 head += " · your question"
             warn = "  ⚠️" if p.get("warnings") else ("  🛠" if p.get("repaired_from") else "")
-            with st.expander(head + warn):
-                st.caption(f"Subskill {p['subskill_code']}: {p['subskill']}"
-                           + (f" · context: {p['context']}" if p.get("context") else ""))
-                st.markdown(_preview_md(p["statement"].replace("[[blank]]", "\\_\\_\\_\\_\\_\\_")))
-                if p.get("quick"):
-                    st.markdown(_quick_md(p))
-                for letter, part in zip("abcd", p.get("parts", [])):
-                    st.markdown(f"**({letter})** " + _preview_md(part))
-                if st.toggle("Show answer and solution", key=f"hg_sol_{e['id']}_{p['id']}"):
-                    st.markdown("**Answer:** " + _preview_md(p.get("answer", "")))
-                    st.markdown(_preview_md(p.get("solution", "")))
-                if p.get("repaired_from"):
-                    st.caption("🛠 Fixed after review: " + "; ".join(p["repaired_from"])[:400])
-                for w in p.get("warnings", []):
-                    st.caption(f"⚠️ {w}")
-                b1, b2, b3 = st.columns(3)
-                regen = b1.button("🔄 Regenerate", key=f"hg_regen_{e['id']}_{p['id']}", width="stretch",
-                                  help="Replace this problem with a new one on the same skill "
-                                       "(new function, numbers, and context).")
-                dup = b2.button("➕ Duplicate", key=f"hg_dup_{e['id']}_{p['id']}", width="stretch",
-                                help="Add one more problem on the same skill, using a different type "
-                                     "of function. It goes right after this one.")
-                with b3.popover("🗑 Delete", width="stretch", help="Remove this problem from the handout."):
-                    st.markdown(f"Remove problem {p.get('num', p['id'])} from this handout? "
-                                "The remaining problems are renumbered.")
-                    delete = st.button("Delete problem", type="primary", key=f"hg_del_{e['id']}_{p['id']}")
-                if regen or dup:
-                    with st.spinner("Writing and reviewing a new problem…"):
-                        try:
-                            args = (client, r["course"], r["std"], catalog_for(r["course"]), p, r["lang"],
-                                    r["version"])
-                            if regen:
-                                new = hc.regenerate_problem(*args, existing=r["problems"])
+            sel_col, body_col = st.columns([0.06, 0.94], vertical_alignment="top")
+            sel_col.checkbox("Select", key=f"hg_sel_{e['id']}_{p['id']}", label_visibility="collapsed",
+                             help="Select this problem to delete it with the others, without opening it.")
+            with body_col:
+                with st.expander(head + warn):
+                    st.caption(f"Subskill {p['subskill_code']}: {p['subskill']}"
+                               + (f" · context: {p['context']}" if p.get("context") else ""))
+                    st.markdown(_preview_md(p["statement"].replace("[[blank]]", "\\_\\_\\_\\_\\_\\_")))
+                    if p.get("quick"):
+                        st.markdown(_quick_md(p))
+                    for letter, part in zip("abcd", p.get("parts", [])):
+                        st.markdown(f"**({letter})** " + _preview_md(part))
+                    if st.toggle("Show answer and solution", key=f"hg_sol_{e['id']}_{p['id']}"):
+                        st.markdown("**Answer:** " + _preview_md(p.get("answer", "")))
+                        st.markdown(_preview_md(p.get("solution", "")))
+                    if p.get("repaired_from"):
+                        st.caption("🛠 Fixed after review: " + "; ".join(p["repaired_from"])[:400])
+                    for w in p.get("warnings", []):
+                        st.caption(f"⚠️ {w}")
+                    b1, b2, b3 = st.columns(3)
+                    regen = b1.button("🔄 Regenerate", key=f"hg_regen_{e['id']}_{p['id']}", width="stretch",
+                                      help="Replace this problem with a new one on the same skill "
+                                           "(new function, numbers, and context).")
+                    dup = b2.button("➕ Duplicate", key=f"hg_dup_{e['id']}_{p['id']}", width="stretch",
+                                    help="Add one more problem on the same skill, using a different type "
+                                         "of function. It goes right after this one.")
+                    with b3.popover("🗑 Delete", width="stretch", help="Remove this problem from the handout."):
+                        st.markdown(f"Remove problem {p.get('num', p['id'])} from this handout? "
+                                    "The remaining problems are renumbered.")
+                        delete = st.button("Delete problem", type="primary", key=f"hg_del_{e['id']}_{p['id']}")
+                    if regen or dup:
+                        with st.spinner("Writing and reviewing a new problem…"):
+                            try:
+                                args = (client, r["course"], r["std"], catalog_for(r["course"]), p, r["lang"],
+                                        r["version"])
+                                if regen:
+                                    new = hc.regenerate_problem(*args, existing=r["problems"])
+                                else:
+                                    new = hc.duplicate_problem(*args, new_id=max(q["id"] for q in r["problems"]) + 1,
+                                                       existing=r["problems"])
+                            except Exception as exc:  # noqa: BLE001
+                                st.error(str(exc))
                             else:
-                                new = hc.duplicate_problem(*args, new_id=max(q["id"] for q in r["problems"]) + 1,
-                                                   existing=r["problems"])
-                        except Exception as exc:  # noqa: BLE001
-                            st.error(str(exc))
+                                i = r["problems"].index(p)
+                                if regen:
+                                    r["problems"][i] = new
+                                else:
+                                    r["problems"].insert(i + 1, new)
+                                e["out"] = hc.build_files(r)
+                                _archive_save(e)
+                                st.rerun()
+                    if delete:
+                        if len(r["problems"]) <= 1:
+                            st.warning("A handout needs at least one problem.")
                         else:
-                            i = r["problems"].index(p)
-                            if regen:
-                                r["problems"][i] = new
-                            else:
-                                r["problems"].insert(i + 1, new)
+                            r["problems"].remove(p)
+                            st.session_state.pop(f"hg_sel_{e['id']}_{p['id']}", None)
                             e["out"] = hc.build_files(r)
                             _archive_save(e)
                             st.rerun()
-                if delete:
-                    if len(r["problems"]) <= 1:
-                        st.warning("A handout needs at least one problem.")
-                    else:
-                        r["problems"].remove(p)
-                        e["out"] = hc.build_files(r)
-                        _archive_save(e)
-                        st.rerun()
 
         _render_add_question(client, e, catalog_for)
 

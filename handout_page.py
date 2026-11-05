@@ -6,6 +6,7 @@ Generation, review, LaTeX, and PDF logic live in handout_core.py.
 Session keys start with "hg_" so they never collide with the tutor's state.
 """
 import datetime
+import hashlib
 import io
 import re
 import zipfile
@@ -134,10 +135,6 @@ def _entry_title(e):
 
 def render_handout_generator(client):
     st.markdown('<p class="app-title">Handout Generator</p>', unsafe_allow_html=True)
-    st.markdown('<p class="app-sub">Preparation &nbsp;·&nbsp; Quest 1, 2, 3 &nbsp;·&nbsp; Reassessment Ticket'
-                ' &nbsp;·&nbsp; Claude writes the problems, checks every number with a calculator, and a '
-                'second independent review checks the math, scope, and realism. Skim before printing.</p>',
-                unsafe_allow_html=True)
     if not hc.find_pdflatex():
         st.warning("LaTeX isn't installed where the app is running, so you'll get .tex files only "
                    "(open them in TeXstudio to make the PDF).")
@@ -383,7 +380,13 @@ def _render_entry(client, e, catalog_for, first):
 
         with st.expander("✏️ Edit the LaTeX and recompile (optional)"):
             tex_name = out["base"] + ".tex"
-            edited = st.text_area("LaTeX source", out["files"][tex_name], height=380, key=f"hg_edit_{e['id']}")
+            # The widget key includes a fingerprint of the current source, so the box always shows the
+            # handout as it is now (after deleting, adding, or regenerating problems), never a stale copy.
+            fp = hashlib.md5(out["files"][tex_name].encode("utf-8")).hexdigest()[:10]
+            st.caption("This is the current handout, including any problems you removed or added. "
+                       "Deleting, adding, or regenerating a problem afterward rebuilds the handout "
+                       "from the problems, so finish those changes first and edit the LaTeX last.")
+            edited = st.text_area("LaTeX source", out["files"][tex_name], height=380, key=f"hg_edit_{e['id']}_{fp}")
             if st.button("Compile my edits", key=f"hg_cmp_{e['id']}"):
                 pdf, err = hc.compile_pdf(edited)
                 if pdf:

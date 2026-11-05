@@ -94,6 +94,7 @@ LABELS = {
         "pass": "Pass", "retake": "Retake", "attempt": "Attempt",
         "ticket_done": "Ticket Reassessment Completed",
         "key": "Answer Key", "problem": "Problem", "answer": "Answer", "sec": "Sec.",
+        "bank": "Word bank",
     },
     "es": {
         "preparation": "Preparación", "quest1": "Quest 1", "quest2": "Quest 2",
@@ -108,42 +109,22 @@ LABELS = {
         "pass": "Aprobado", "retake": "Repetir", "attempt": "Intento",
         "ticket_done": "Ticket de reevaluación completado",
         "key": "Clave de respuestas", "problem": "Problema", "answer": "Respuesta", "sec": "Secc.",
+        "bank": "Banco de palabras",
     },
 }
 
 INSTRUCTIONS = {
-    ("en", "quest"): (
-        "To give you credit, I need to see how you think through each problem; that lets me "
-        "assess your understanding fairly and give you useful feedback. Show all of your work "
-        "and box your final answers. Give exact values unless a problem asks you to round. "
-        "Answer application questions in complete sentences with appropriate units. Write your "
-        "name, the assessment title, and the corresponding question numbers on any separate "
-        "pages you submit."),
-    ("en", "preparation"): (
-        "This Preparation is a readiness check. Work each problem on your own first, then "
-        "compare your work with the answer key at the end. Use what you find to decide what to "
-        "study, so you can make the most of your assessment days. Show all of your work and box "
-        "your final answers."),
-    ("en", "ticket"): (
-        "Complete this Reassessment Ticket and bring it with you on the day you plan to "
-        "reassess. Show all of your work, box your final answers, and give exact values unless "
-        "a problem asks you to round."),
-    ("es", "quest"): (
-        "Para darte crédito, necesito ver cómo razonas en cada problema; así puedo evaluar tu "
-        "comprensión de manera justa y darte comentarios útiles. Muestra todo tu trabajo y "
-        "encierra tus respuestas finales en un recuadro. Da valores exactos a menos que el "
-        "problema pida redondear. Responde las preguntas de aplicación con oraciones completas "
-        "y unidades apropiadas. Escribe tu nombre, el título de la evaluación y los números de "
-        "las preguntas en cualquier hoja adicional que entregues."),
-    ("es", "preparation"): (
-        "Esta Preparación es una revisión de tu preparación. Primero resuelve cada problema por "
-        "tu cuenta y después compara tu trabajo con la clave de respuestas al final. Usa lo que "
-        "descubras para decidir qué estudiar y aprovechar al máximo tus días de evaluación. "
-        "Muestra todo tu trabajo y encierra tus respuestas finales en un recuadro."),
-    ("es", "ticket"): (
-        "Completa este Ticket de reevaluación y tráelo el día en que planeas reevaluarte. "
-        "Muestra todo tu trabajo, encierra tus respuestas finales en un recuadro y da valores "
-        "exactos a menos que el problema pida redondear."),
+    (lang, k): text
+    for k in ("quest", "preparation", "ticket")
+    for lang, text in (
+        ("en", "Show all your work and steps, and box your final answers. Show your work on the "
+               "quick-answer questions (multiple choice, word bank, matching) too, wherever it applies, "
+               "then circle your choice or write your answer."),
+        ("es", "Muestra todo tu trabajo y tus pasos, y encierra tus respuestas finales en un recuadro. "
+               "Muestra también tu trabajo en las preguntas de respuesta rápida (opción múltiple, banco "
+               "de palabras, relacionar) cuando corresponda, y luego encierra en un círculo tu opción o "
+               "escribe tu respuesta."),
+    )
 }
 
 
@@ -174,11 +155,30 @@ NAME_POOL = [
     "Layla", "Omar", "Yasmin", "Karim", "Leilani", "Kai", "Malia", "Tavita",
     "Andrea", "Jomar", "Rizalyn", "Emma", "Owen", "Hannah", "Liam", "Nadia", "Sofía", "Elijah",
     "Alex", "Jordan", "Sam", "River", "Taylor",
+    "Renata", "Esteban", "Paloma", "Rafael", "Daniela", "Emiliano", "Citlali", "Gael",
+    "Aaliyah", "Terrence", "Nia", "Jamal", "Folasade", "Chidi", "Amina", "Samir",
+    "Hana", "Takeshi", "Soo-ah", "Jin", "Thuy", "Bao", "Meera", "Vikram", "Deepa", "Kiran",
+    "Farah", "Yusuf", "Soraya", "Hamid", "Noelani", "Keanu", "Sina", "Lani",
+    "Marisa", "Paolo", "Carmela", "Noah", "Ingrid", "Mateusz", "Clara", "Theo", "Maya", "Quinn",
+    "Avery", "Morgan", "Rowan", "Sage", "Eden", "Ana", "Bruno", "Elena", "Tomás", "Violeta",
 ]
 
 
-def pick_names(rng=random, k=4):
-    return rng.sample(NAME_POOL, k)
+def pick_names(rng=random, k=4, exclude=()):
+    """k distinct names, none in `exclude`."""
+    taken = {x.lower() for x in exclude}
+    pool = [n for n in NAME_POOL if n.lower() not in taken] or NAME_POOL[:]
+    return rng.sample(pool, min(k, len(pool)))
+
+
+def names_in_use(problems):
+    """Pool names that already appear in the given problems' text."""
+    text = " ".join(" ".join([p.get("statement", ""), p.get("answer", ""), p.get("solution", "")]
+                             + list(p.get("parts", []))) for p in problems)
+    return [n for n in NAME_POOL if re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", text)]
+
+
+FUNCTION_FAMILIES = ["polynomial", "exponential", "trigonometric", "logarithmic"]
 
 
 def plan_problems(std, counts, rng=random):
@@ -205,6 +205,47 @@ def plan_problems(std, counts, rng=random):
             slots.append(slot)
     for k, s in enumerate(slots, 1):
         s["id"] = k
+    fams = []
+    while len(fams) < len(slots):  # every family used before any repeats
+        batch = FUNCTION_FAMILIES[:]
+        rng.shuffle(batch)
+        fams += batch
+    for s, f in zip(slots, fams):
+        s["function"] = f
+    assign_quick(slots, rng)
+    return slots
+
+
+QUICK_FORMATS = ["mc", "blank", "match"]
+QUICK_NAMES = {"mc": "multiple choice", "blank": "fill in the blank with a word bank", "match": "matching"}
+QUICK_SHARE = 1 / 3          # about a third of the problems are quick-answer
+
+
+def assign_quick(slots, rng=random, share=QUICK_SHARE):
+    """Mark about `share` of the slots as quick-answer (multiple choice, fill in the blank with a
+    word bank, or matching), spread across the question types and mixing the three formats."""
+    k = int(len(slots) * share + 0.5)
+    if k <= 0:
+        return slots
+    by_type = {}
+    for sl in slots:
+        by_type.setdefault(sl["type"], []).append(sl)
+    for lst in by_type.values():
+        rng.shuffle(lst)
+    order = list(by_type)
+    rng.shuffle(order)
+    chosen = []
+    while len(chosen) < k:
+        for t in order:
+            if by_type[t] and len(chosen) < k:
+                chosen.append(by_type[t].pop())
+    fmts = []
+    while len(fmts) < len(chosen):
+        batch = QUICK_FORMATS[:]
+        rng.shuffle(batch)
+        fmts += batch
+    for sl, f in zip(chosen, fmts):
+        sl["quick"] = f
     return slots
 
 
@@ -389,12 +430,14 @@ QUALITY_RULES = r"""QUESTION CONSTRUCTION
 - Do not repeat rules, formulas, definitions, or interpretation requests across parts.
 - If students must state a rule or formula, do not give it away in the question.
 - Do not supply unnecessary precomputed values when a function is given; ask students to evaluate and interpret instead.
+- Be concise. Word problems state only what is needed to solve them: one or two short sentences of context, then the givens. No backstory, filler, or repeated information.
+- Function mix: unless the subskill or standard requires a particular kind of function, use the assigned function family (polynomial, exponential, trigonometric, or logarithmic) for the slot. If the family does not fit the subskill, use the nearest family the standard and earlier standards allow. Use these families in both pure-math problems and applications. Keep applications realistic for the family chosen.
 - Keep complete equations together. Display long equations instead of splitting an equality or fraction across text lines.
 
 CULTURALLY RELEVANT AND AFFIRMING (very important; follows Hartnell College's Equity-Minded Rubric)
 - Connect each application to the lived experiences, jobs, families, communities, and career goals of California community college students, many of them Latine, first-generation, multilingual, working, commuting, and caring for family. Show these realities with respect and agency, never as hardships to pity.
 - Asset-based framing: show people using their strengths (bilingual skills, family knowledge, community networks, work experience, persistence) and making decisions. No deficit narratives: never make poverty, debt trouble, immigration or citizenship status, crime, disability, mental health, body size, or housing insecurity the "story" of a problem.
-- Representation: when a problem needs a person, use one of the names provided for this handout (at most once each; many problems need no named person). Across the handout, show women, men, and nonbinary people (they/them is fine) of many backgrounds as engineers, scientists, nurses, farmers, business owners, data analysts, and students. Show varied families and multilingual people naturally, without making identity the topic.
+- Representation: when a problem needs a person, use only names from the list provided for this problem, and use each name once. A name must never appear in more than one problem on the handout; many problems need no named person. Across the handout, show women, men, and nonbinary people (they/them is fine) of many backgrounds as engineers, scientists, nurses, farmers, business owners, data analysts, and students. Show varied families and multilingual people naturally, without making identity the topic.
 - Never tie a name or culture to a stereotyped job, food, accent, income level, or behavior. Avoid language that triggers stereotype threat, such as suggesting a group is "bad at math."
 - Mistakes are part of learning: when a problem shows a classmate's work with an error, frame it respectfully ("Jordan's first attempt...") and ask students to help improve it; never mock or shame the person.
 - Use communal, inclusive language where natural (we, our community). Contexts may highlight how math helps communities make fair, informed decisions; keep the focus on agency and solutions.
@@ -414,6 +457,8 @@ APPLICATIONS AND REALISM (realism is part of correctness)
 - Check magnitudes, signs, rates, endpoints, and interior extrema. Revenue, counts, concentrations, and other nonnegative levels must stay nonnegative on the working domain. Negative rates can be valid; distinguish levels from rates, and revenue from profit or loss.
 - Explain any jump with a credible mechanism (a fee policy, a discrete transfer, a sensor recalibration). Never invent unexplained physical jumps.
 - Do not move numerical constants into an unrelated context or unit system.
+- Interpretation results must be believable so students can trust their own work. After computing, check the value, sign, and units against everyday experience; if a correct computation gives a surprising value, change the givens until the result is realistic. Make every answer choice, word-bank word, and matching option realistic in the context too.
+- When an interpretation problem asks for the units or the meaning of a derivative or other rate, write one sentence that names the input and output quantities with their units (for example, "Let $t$ be the time in hours and $B(t)$ the charge in percent.") and put that whole sentence in \textbf{...}. Bold only that sentence. Do the same in quick-answer interpretation items about a rate.
 
 ROUNDING AND UNITS
 - Keep full precision during calculations. Round only final requested approximations, to three decimal places unless the problem says otherwise; money to the nearest cent.
@@ -443,6 +488,56 @@ FORMAT_RULES = r"""LATEX FORMAT (inside the tags)
   Use mark=o for an open point. Right after every graph add one sentence that begins "Graph description:" and describes it in words for students who cannot see it.
 - In <answer>, give only the final results, labeled (a), (b), ... when there are parts. Do not use \boxed.
 - In <solution>, show every step with short explanations between steps."""
+
+QUICK_GUIDE = {
+    "mc": ("MULTIPLE CHOICE: one stem and exactly 4 <choice> tags. Exactly one choice is correct; the "
+           "other three are plausible and each reflects a specific common error or misconception. "
+           "Put numerical choices in increasing order. Never use \"all of the above\" or \"none of the above\", "
+           "and do not make the correct choice the longest. In <answer> give the letter and the choice, for example C. "
+           "Explain in <solution> why each wrong choice is wrong."),
+    "blank": ("FILL IN THE BLANK WITH A WORD BANK: a short statement with 2 to 4 blanks written exactly as "
+              "[[blank]] (never underscores). Give the word bank as <word> tags, one per blank plus 1 or 2 "
+              "extra words, in an order that does not follow the blanks. Each word can be used once, and the "
+              "words may be short phrases or inline math. In <answer> list the words in blank order."),
+    "match": ("MATCHING: 3 to 5 <left> items and one more <right> option than there are left items, in "
+              "shuffled order (the options are lettered A, B, C... and the items numbered automatically). "
+              "Keep every item short, with inline math only. Say what is being matched in the statement. "
+              "In <answer> write the key as 1-C, 2-A, and so on."),
+}
+
+QUICK_BLOCKS = {
+    "mc": """<problem id="N">
+<title>short label (2 to 6 words)</title>
+<statement>question stem</statement>
+<choice>first choice</choice>
+<choice>second choice</choice>
+<choice>third choice</choice>
+<choice>fourth choice</choice>
+<answer>C: the correct choice</answer>
+<solution>worked solution that reaches the answer and says why each other choice is wrong</solution>
+</problem>""",
+    "blank": """<problem id="N">
+<title>short label (2 to 6 words)</title>
+<statement>sentence(s) with [[blank]] markers</statement>
+<word>word or phrase</word>
+<word>word or phrase</word>
+<answer>words in blank order</answer>
+<solution>explanation</solution>
+</problem>""",
+    "match": """<problem id="N">
+<title>short label (2 to 6 words)</title>
+<statement>what to match with what</statement>
+<left>item</left>
+<left>item</left>
+<left>item</left>
+<right>option</right>
+<right>option</right>
+<right>option</right>
+<right>option</right>
+<answer>1-C, 2-A, 3-D</answer>
+<solution>why each pair matches</solution>
+</problem>""",
+}
 
 BLOCK_FORMAT = """<problem id="1">
 <title>short italic label naming the subskill (2 to 6 words, no math); leave it empty when the statement is already self-explanatory</title>
@@ -486,10 +581,24 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
         line = f'{s["id"]}. type: {s["type"].upper()}; subskill {s["subskill_code"]} -- {s["subskill"]}'
         if s.get("context"):
             line += f"; context family: {s['context']}"
+        if s.get("function"):
+            line += f"; function family: {s['function']}"
+        if s.get("quick"):
+            line += f"; format: QUICK-ANSWER {QUICK_NAMES[s['quick']]}"
         if s.get("note"):
             line += f"; the instructor asks for: {s['note']}"
         lines.append(line)
     types_used = sorted({s["type"] for s in slots}, key=QUESTION_TYPES.index)
+    quick_used = [f for f in QUICK_FORMATS if any(s.get("quick") == f for s in slots)]
+    quick_text = ""
+    if quick_used:
+        quick_text = ("\nQuick-answer formats (for the slots marked QUICK-ANSWER). These are short, gradable items "
+                      "that still test the slot's type and subskill, and students work them out and show their "
+                      "work, so they must not be answerable by guessing or by recall alone. Use no <part> tags "
+                      "in them; use these blocks instead of the standard block.\n"
+                      + "\n".join("- " + QUICK_GUIDE[f] for f in quick_used)
+                      + "\n\nBlock formats for quick-answer problems:\n"
+                      + "\n\n".join(QUICK_BLOCKS[f] for f in quick_used) + "\n")
     avoid_text = (f"\nWrite a different problem from this earlier version (new function, numbers, and "
                   f"context):\n{avoid}\n" if avoid else "")
     if new_function_type and avoid:
@@ -510,7 +619,7 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
 
 Question types:
 {chr(10).join('- ' + TYPE_GUIDE[t] for t in types_used)}
-
+{quick_text}
 Write exactly {len(slots)} problem(s), one per slot, in this order. Each problem must assess its assigned subskill and be of its assigned type. Vary functions, numbers, and contexts so no two problems feel alike.
 {chr(10).join(lines)}
 {avoid_text}
@@ -571,6 +680,28 @@ def clean_latex(text):
     return text, warnings
 
 
+def quick_issues(p):
+    """Structural problems in a quick-answer problem (these show as warnings)."""
+    q, out = p.get("quick"), []
+    if q == "mc":
+        if len(p.get("choices", [])) < 3:
+            out.append("multiple choice needs at least 3 choices")
+        if not re.match(r"\s*\(?[A-Ha-h]\b", p.get("answer", "")):
+            out.append("multiple-choice answer should start with the letter of the correct choice")
+    elif q == "blank":
+        nb = p["statement"].count("[[blank]]")
+        if nb < 1:
+            out.append("fill-in-the-blank needs [[blank]] markers in the statement")
+        if len(p.get("bank", [])) < nb + 1:
+            out.append("word bank needs at least one more word than there are blanks")
+    elif q == "match":
+        if len(p.get("left", [])) < 2:
+            out.append("matching needs at least 2 items")
+        if len(p.get("right", [])) < len(p.get("left", [])):
+            out.append("matching needs at least as many options as items")
+    return out
+
+
 def parse_problems(text, slots):
     found = {int(i): body for i, body in BLOCK_RE.findall(text)}
     problems, missing = [], []
@@ -594,6 +725,16 @@ def parse_problems(text, slots):
             cleaned, w = clean_latex(part)
             p["parts"].append(cleaned)
             p["warnings"] += w
+        if p.get("quick"):
+            p["parts"] = []
+            for field, tag in (("choices", "choice"), ("bank", "word"), ("left", "left"), ("right", "right")):
+                items = []
+                for raw in re.findall(rf"<{tag}>(.*?)</{tag}>", body, re.S):
+                    cleaned, w = clean_latex(raw.strip())
+                    items.append(cleaned)
+                    p["warnings"] += w
+                p[field] = items
+            p["warnings"] += quick_issues(p)
         if not p["statement"]:
             p["warnings"].append("empty statement")
         problems.append(p)
@@ -602,6 +743,8 @@ def parse_problems(text, slots):
 
 def block_text(p, pid=None):
     parts = "".join(f"<part>{x}</part>\n" for x in p.get("parts", []))
+    for field, tag in (("choices", "choice"), ("bank", "word"), ("left", "left"), ("right", "right")):
+        parts += "".join(f"<{tag}>{x}</{tag}>\n" for x in p.get(field, []))
     return (f'<problem id="{pid or p["id"]}">\n<title>{p.get("title", "")}</title>\n'
             f'<statement>{p["statement"]}</statement>\n{parts}<answer>{p.get("answer", "")}</answer>\n'
             f'<solution>{p.get("solution", "")}</solution>\n</problem>')
@@ -611,6 +754,8 @@ def _slot(p, pid=1):
     s = {k: p[k] for k in ("type", "subskill_code", "subskill") if k in p}
     if p.get("context"):
         s["context"] = p["context"]
+    if p.get("quick"):
+        s["quick"] = p["quick"]
     s["id"] = pid
     return s
 
@@ -623,7 +768,8 @@ FINDING_RE = re.compile(r'<finding\s+problem\s*=\s*"?(\d+)"?\s+verdict\s*=\s*"?(
 
 def build_review_prompt(course, std, catalog, problems):
     blocks = "\n\n".join(
-        f"[Problem {p['id']}: {p['type']}, subskill {p['subskill_code']} -- {p['subskill']}]\n{block_text(p)}"
+        f"[Problem {p['id']}: {p['type']}{', quick-answer ' + QUICK_NAMES[p['quick']] if p.get('quick') else ''}, "
+        f"subskill {p['subskill_code']} -- {p['subskill']}]\n{block_text(p)}"
         for p in problems)
     return f"""You are an independent reviewer checking problems before they go to students. You did not write them.
 
@@ -638,6 +784,8 @@ For EVERY problem, check:
 5. Wording: tasks agree with the results (for example, no "explain the negative sign" when the value is zero), no contradictions, no repeated formulas or giveaways.
 6. Common sense: estimate the everyday ballpark of every money amount and quantity yourself and compare. A value far outside what a person would expect (for example, thousands of dollars of marginal revenue for one concert ticket) is a confirmed_error, even if the algebra is right.
 7. Culturally relevant and affirming (Hartnell College Equity-Minded Rubric): the context connects to community college students' lives and is framed with assets and agency; people and names are not stereotyped or homogeneous; no deficit framing, stereotype-threat language, shaming of mistakes, or upsetting or wealth-assuming topics. Report violations as confirmed_error, saying what to change.
+8. Interpretation: the result is believable enough that a student can trust their own computation (value, sign, units, and every distractor, word, or option are realistic in the context). If the problem asks for the units or meaning of a derivative or other rate, the statement has one bold \\textbf{{...}} sentence naming the input and output quantities with their units; report a missing or wrong one as confirmed_error.
+9. Quick-answer problems: exactly one choice is correct (multiple choice), every blank has exactly one word that fits and no extra word also fits (word bank), and every item has exactly one correct option (matching). The answer matches the key. Distractors are plausible but definitely wrong. Students must work to decide; it cannot be answered by guessing or recall alone.
 
 Put all of your recomputations in ONE calculator call (one expression per line); make a second call only to confirm a suspected error. Before you call something an error, verify it with the calculator. A proposed root must be checked by substitution, and signs tested on both sides. A task can legitimately have several sign intervals. If your check shows the work is correct, report verified_correct, not an error.
 
@@ -661,7 +809,7 @@ def build_repair_prompt(course, std, catalog, problems, findings, lang, version)
     items = []
     for p in problems:
         errs = "\n".join(f"- {f['text']}" for f in findings.get(p["id"], []) if f["verdict"] == "confirmed_error")
-        items.append(f"Confirmed errors for problem {p['id']} ({p['type']}, subskill {p['subskill_code']}"
+        items.append(f"Confirmed errors for problem {p['id']} ({p['type']}{', quick-answer ' + QUICK_NAMES[p['quick']] if p.get('quick') else ''}, subskill {p['subskill_code']}"
                      f"{', context family: ' + p['context'] if p.get('context') else ''}):\n{errs}\n\n{block_text(p)}")
     return f"""An independent review found confirmed errors in these problems for {HANDOUT_PURPOSE[kind(version)]}
 
@@ -673,6 +821,7 @@ Rewrite each problem below so every confirmed error is fixed:
 - Update any wording that depends on a changed result (a sign, a zero, a maximum).
 - If an application model is unrealistic, replace the whole application, including all of its parts, graphs, and answers. Never keep an unrealistic model only because its algebra works.
 - Keep the same type and subskill. Keep everything that was already correct.
+- Keep a quick-answer problem in its same format (multiple choice, word bank, or matching) with the same tags; fix choices, words, items, and the key together.
 - Use the calculator to check every number.
 {"Write in Spanish." if lang == "es" else "Write in English."}
 
@@ -739,12 +888,20 @@ def _type_groups(items):
 def generate_version(client, course, std, catalog, version, counts, lang, report=lambda s: None, rng=random):
     """Write, review, repair, and compile-check one handout version."""
     slots = plan_problems(std, counts, rng)
-    names = pick_names(rng)
+    groups = _type_groups(slots)
+    all_names = pick_names(rng, k=max(4, 3 * len(slots)))
+    group_names, pos = {}, 0
+    for gi, g in enumerate(groups):  # disjoint name lists, so no name repeats across the handout
+        take = max(2, 3 * len(g))
+        group_names[gi] = all_names[pos:pos + take]
+        pos += take
     notes, timings = [], {}
     t0 = time.time()
     report("Writing problems")
 
-    def write(group):
+    def write(item):
+        gi, group = item
+        names = group_names[gi]
         others = [s for s in slots if s not in group]
         text, _ = call_claude(client, build_prompt(course, std, catalog, group, lang, version, others=others,
                                                    names=names))
@@ -757,7 +914,7 @@ def generate_version(client, course, std, catalog, version, counts, lang, report
         return got, missing
 
     problems, still = [], []
-    for got, missing in _parallel(write, _type_groups(slots)):
+    for got, missing in _parallel(write, list(enumerate(groups))):
         problems += got
         still += missing
     problems.sort(key=lambda p: p["id"])
@@ -779,9 +936,9 @@ def generate_version(client, course, std, catalog, version, counts, lang, report
 
 
 def _write_one(client, course, std, catalog, slot, lang, version, avoid, new_function_type=False,
-               others=None):
+               others=None, used_names=()):
     text, _ = call_claude(client, build_prompt(course, std, catalog, [slot], lang, version, avoid=avoid,
-                                               names=pick_names(), new_function_type=new_function_type,
+                                               names=pick_names(k=4, exclude=used_names), new_function_type=new_function_type,
                                                others=others),
                           max_tokens=8000)
     new, _ = parse_problems(text, [slot])
@@ -794,28 +951,30 @@ def _write_one(client, course, std, catalog, slot, lang, version, avoid, new_fun
     return p
 
 
-def regenerate_problem(client, course, std, catalog, problem, lang, version):
+def regenerate_problem(client, course, std, catalog, problem, lang, version, existing=()):
     """Replace one problem: same type and subskill, new function, numbers, and context."""
-    p = _write_one(client, course, std, catalog, _slot(problem, 1), lang, version, problem["statement"])
+    p = _write_one(client, course, std, catalog, _slot(problem, 1), lang, version, problem["statement"],
+                   used_names=names_in_use(existing))
     p["id"] = problem["id"]
     return p
 
 
-def duplicate_problem(client, course, std, catalog, problem, lang, version, new_id):
+def duplicate_problem(client, course, std, catalog, problem, lang, version, new_id, existing=()):
     """One MORE problem on the same skill and type, using a different type of function."""
     slot = _slot(problem, 1)
     if slot.get("context"):  # and a different kind of real-world setting
         others = [c for c in CONTEXT_FAMILIES if c != slot["context"]]
         slot["context"] = random.choice(others)
     p = _write_one(client, course, std, catalog, slot, lang, version, problem["statement"],
-                   new_function_type=True)
+                   new_function_type=True, used_names=names_in_use(list(existing) + [problem]))
     p["id"] = new_id
     return p
 
 
 def _new_slot(std, qtype, subskill_index=None):
     i = subskill_index if subskill_index is not None else random.randrange(len(std["subskills"]))
-    slot = {"type": qtype, "subskill_code": f"{std['code']}.{i + 1}", "subskill": std["subskills"][i], "id": 1}
+    slot = {"type": qtype, "subskill_code": f"{std['code']}.{i + 1}", "subskill": std["subskills"][i], "id": 1,
+            "function": random.choice(FUNCTION_FAMILIES)}
     if qtype == "interpretation":
         slot["context"] = random.choice(CONTEXT_FAMILIES)
     return slot
@@ -829,7 +988,7 @@ def add_problem(client, course, std, catalog, existing, qtype, lang, version, ne
     if note.strip():
         slot["note"] = note.strip()[:500]
     p = _write_one(client, course, std, catalog, slot, lang, version, None,
-                   others=[_slot(q) for q in existing])
+                   others=[_slot(q) for q in existing], used_names=names_in_use(existing))
     p.pop("note", None)
     p["id"] = new_id
     p["added"] = "claude"
@@ -1059,6 +1218,7 @@ PREAMBLE = r"""\documentclass[12pt]{exam}
 \runningfootrule
 \renewcommand{\questionlabel}{\textbf{\thequestion.}}
 \renewcommand{\partlabel}{(\thepartno)}
+\renewcommand{\choicelabel}{(\thechoice)}
 \renewcommand{\arraystretch}{1.3}
 \setlength{\parindent}{0pt}
 \newcommand{\typetag}[1]{{\setlength{\fboxsep}{1.5pt}\fbox{\footnotesize\sffamily\bfseries #1}}\hspace{0.45em}}
@@ -1069,11 +1229,44 @@ def _space(inches):
     return f"{max(inches, 0):.3f}in"
 
 
-def _question(p, q_space, part_space, tag=""):
+def _quick_tex(p, L):
+    """LaTeX for the answer area of a quick-answer problem (after its statement)."""
+    q = p.get("quick")
+    if q == "mc" and p.get("choices"):
+        env = "oneparchoices" if sum(len(c) for c in p["choices"]) <= 64 else "choices"
+        rows = "\n".join(rf"\choice {c}" for c in p["choices"])
+        return r"\par\smallskip" + "\n" + rf"\begin{{{env}}}" + "\n" + rows + "\n" + rf"\end{{{env}}}"
+    if q == "blank" and p.get("bank"):
+        words = r" \qquad ".join(p["bank"])
+        return (r"\par\smallskip\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{"
+                rf"\textbf{{{L['bank']}:}} \quad {words}}}}}")
+    if q == "match" and p.get("left"):
+        left, right = p["left"], p.get("right", [])
+        rows = []
+        for i in range(max(len(left), len(right))):
+            a = rf"\underline{{\hspace{{0.3in}}}}\,{i + 1}." if i < len(left) else ""
+            b = left[i] if i < len(left) else ""
+            c = rf"({chr(65 + i)})" if i < len(right) else ""
+            d = right[i] if i < len(right) else ""
+            rows.append(rf"{a} & {b} & {c} & {d} \\")
+        return (r"\par\smallskip\noindent\begin{tabular}{@{}l@{\hspace{0.4em}}p{0.36\linewidth}"
+                r"@{\hspace{1.5em}}l@{\hspace{0.4em}}p{0.36\linewidth}@{}}" + "\n" + "\n".join(rows)
+                + "\n" + r"\end{tabular}")
+    return ""
+
+
+def _question(p, q_space, part_space, tag="", L=None):
     label = rf"\textit{{[{esc(p['title'])}]}}\hspace{{0.12in}}" if p.get("title") else ""
     tagtex = rf"\typetag{{{tag}}}" if tag else ""
-    out = [r"\par\begin{samepage}", rf"\question {tagtex}{label}{p['statement']}"]
-    if p.get("parts"):
+    statement = p["statement"]
+    if p.get("quick") == "blank":
+        statement = statement.replace("[[blank]]", r"\underline{\hspace{0.9in}}")
+    out = [r"\par\begin{samepage}", rf"\question {tagtex}{label}{statement}"]
+    if p.get("quick"):
+        out.append(_quick_tex(p, L or LABELS["en"]))
+        if q_space > 0:
+            out.append(rf"\par\vspace*{{{_space(0.6 * q_space)}}}")
+    elif p.get("parts"):
         out.append(r"\begin{parts}")
         for part in p["parts"]:
             out.append(rf"\part {part}")
@@ -1129,7 +1322,7 @@ def build_tex(h, space_scale=1.0, include_key=True):
         for p in [p for p in h["problems"] if p["type"] == qtype]:
             num += 1
             p["num"] = num
-            body.append(_question(p, q_space, p_space, L["tag_" + qtype]))
+            body.append(_question(p, q_space, p_space, L["tag_" + qtype], L))
     body.append(r"\end{questions}")
     if version == "preparation" and include_key:  # only Preparation prints a key
         body.append(r"\newpage")

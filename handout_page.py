@@ -18,6 +18,21 @@ import handout_core as hc
 
 TYPE_LABEL = {"skill": "Skill", "conceptual": "Conceptual", "interpretation": "Interpretation"}
 VLABEL = hc.LABELS["en"]
+QUICK_TAG = {"mc": "multiple choice", "blank": "word bank", "match": "matching"}
+
+
+def _quick_md(p):
+    """Rough preview of a quick-answer problem's choices, word bank, or matching lists."""
+    q = p.get("quick")
+    if q == "mc":
+        return "\n".join(f"**({chr(65 + i)})** " + _preview_md(c) + "  " for i, c in enumerate(p.get("choices", [])))
+    if q == "blank":
+        return "**Word bank:** " + " · ".join(_preview_md(w) for w in p.get("bank", []))
+    if q == "match":
+        left = "\n".join(f"{i + 1}. " + _preview_md(x) + "  " for i, x in enumerate(p.get("left", [])))
+        right = "\n".join(f"**({chr(65 + i)})** " + _preview_md(x) + "  " for i, x in enumerate(p.get("right", [])))
+        return left + "\n\n" + right
+    return ""
 
 
 @st.cache_data
@@ -303,13 +318,17 @@ def _render_entry(client, e, catalog_for, first):
                    "skill with a different type of function, 🗑 removes one. New problems are reviewed too.")
         for p in r["problems"]:
             head = f"{p.get('num', p['id'])}. [{TYPE_LABEL[p['type']]} · {p['subskill_code']}] {p.get('title') or '(no label)'}"
+            if p.get("quick"):
+                head += f" · {QUICK_TAG[p['quick']]}"
             if p.get("added") == "instructor":
                 head += " · your question"
             warn = "  ⚠️" if p.get("warnings") else ("  🛠" if p.get("repaired_from") else "")
             with st.expander(head + warn):
                 st.caption(f"Subskill {p['subskill_code']}: {p['subskill']}"
                            + (f" · context: {p['context']}" if p.get("context") else ""))
-                st.markdown(_preview_md(p["statement"]))
+                st.markdown(_preview_md(p["statement"].replace("[[blank]]", "\\_\\_\\_\\_\\_\\_")))
+                if p.get("quick"):
+                    st.markdown(_quick_md(p))
                 for letter, part in zip("abcd", p.get("parts", [])):
                     st.markdown(f"**({letter})** " + _preview_md(part))
                 if st.toggle("Show answer and solution", key=f"hg_sol_{e['id']}_{p['id']}"):
@@ -336,9 +355,10 @@ def _render_entry(client, e, catalog_for, first):
                             args = (client, r["course"], r["std"], catalog_for(r["course"]), p, r["lang"],
                                     r["version"])
                             if regen:
-                                new = hc.regenerate_problem(*args)
+                                new = hc.regenerate_problem(*args, existing=r["problems"])
                             else:
-                                new = hc.duplicate_problem(*args, new_id=max(q["id"] for q in r["problems"]) + 1)
+                                new = hc.duplicate_problem(*args, new_id=max(q["id"] for q in r["problems"]) + 1,
+                                                   existing=r["problems"])
                         except Exception as exc:  # noqa: BLE001
                             st.error(str(exc))
                         else:

@@ -60,8 +60,8 @@ def _preview_md(text):
 ARCH_GROUPS = [
     ("student", ("preparation", "ticket"), "Preparation + Reassessment Ticket"),
     ("quest1", ("quest1",), "Quest 1"),
-    ("quest2", ("quest2",), "Quest 2"),
-    ("quest3", ("quest3",), "Quest 3"),
+    ("quest2", ("quest2",), "Quest Version 2"),
+    ("quest3", ("quest3",), "Quest Version 3"),
 ]
 ARCH_CSS = """<style>
 .ar-head{display:flex;align-items:center;gap:0.9rem;margin:0.1rem 0 0.2rem;}

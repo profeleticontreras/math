@@ -25,8 +25,8 @@ import urllib.parse
 APP_DIR = pathlib.Path(__file__).resolve().parent
 LOCAL_ROOT = APP_DIR / "handout_archive"
 VERSION_ORDER = ["preparation", "quest1", "quest2", "quest3", "ticket"]
-VERSION_LABEL = {"preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest 2",
-                 "quest3": "Quest 3", "ticket": "Reassessment Ticket"}
+VERSION_LABEL = {"preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest Version 2",
+                 "quest3": "Quest Version 3", "ticket": "Reassessment Ticket"}
 LANG_LABEL = {"en": "English", "es": "Español"}
 
 

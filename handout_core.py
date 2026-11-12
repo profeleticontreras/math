@@ -5,8 +5,8 @@ Courses: MAT 3A Calculus 1 and MAT 5 Differential Equations (course-scoped S-cod
 
 Handout versions (Standards Based Quests requirements):
   Preparation          readiness check; the ONLY version with an answer key
-  Quest 1, 2, 3        Pass/Retake row; Quest 2 and 3 add Attempt and
-                       "Ticket Reassessment Completed"
+  Quest 1, Version 2, 3  MET / NOT MET YET (circled by hand) inside the standard box;
+                       Versions 2 and 3 add Attempt and "Ticket Reassessment Completed: YES / NO"
   Reassessment Ticket  completed and brought on the day a student reassesses
 
 Every problem is skill, conceptual, or interpretation, tied to a randomly
@@ -82,8 +82,8 @@ PART_SPACE_IN = 0.5         # answer space after each lettered part (inches)
 
 LABELS = {
     "en": {
-        "preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest 2",
-        "quest3": "Quest 3", "ticket": "Reassessment Ticket",
+        "preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest Version 2",
+        "quest3": "Quest Version 3", "ticket": "Reassessment Ticket",
         "skill": "Skill", "conceptual": "Conceptual", "interpretation": "Interpretation",
         "skill_desc": "Carry out the computation or procedure.",
         "conceptual_desc": "Explain the idea behind the mathematics.",
@@ -91,14 +91,14 @@ LABELS = {
         "tag_skill": "S", "tag_conceptual": "C", "tag_interpretation": "I",
         "part": "Part", "name": "Name", "date": "Date", "section": "Section",
         "instructions": "Instructions", "page": "Page", "of": "of",
-        "pass": "Pass", "retake": "Retake", "attempt": "Attempt",
+        "pass": "MET", "retake": "NOT MET YET", "attempt": "Attempt", "yes": "YES", "no": "NO",
         "ticket_done": "Ticket Reassessment Completed",
         "key": "Answer Key", "problem": "Problem", "answer": "Answer", "sec": "Sec.",
         "bank": "Word bank",
     },
     "es": {
-        "preparation": "Preparación", "quest1": "Quest 1", "quest2": "Quest 2",
-        "quest3": "Quest 3", "ticket": "Ticket de reevaluación",
+        "preparation": "Preparación", "quest1": "Quest 1", "quest2": "Quest versión 2",
+        "quest3": "Quest versión 3", "ticket": "Ticket de reevaluación",
         "skill": "Habilidad", "conceptual": "Conceptual", "interpretation": "Interpretación",
         "skill_desc": "Realiza el cálculo o el procedimiento.",
         "conceptual_desc": "Explica la idea detrás de las matemáticas.",
@@ -106,8 +106,8 @@ LABELS = {
         "tag_skill": "H", "tag_conceptual": "C", "tag_interpretation": "I",
         "part": "Parte", "name": "Nombre", "date": "Fecha", "section": "Sección",
         "instructions": "Instrucciones", "page": "Página", "of": "de",
-        "pass": "Aprobado", "retake": "Repetir", "attempt": "Intento",
-        "ticket_done": "Ticket de reevaluación completado",
+        "pass": "LOGRADO", "retake": "AÚN NO LOGRADO", "attempt": "Intento", "yes": "SÍ", "no": "NO",
+        "ticket_done": "Ticket completado",
         "key": "Clave de respuestas", "problem": "Problema", "answer": "Respuesta", "sec": "Secc.",
         "bank": "Banco de palabras",
     },
@@ -1302,15 +1302,28 @@ def build_tex(h, space_scale=1.0, include_key=True):
                 r"\underline{\hspace{0.7in}}" + "\n\\par\\vspace{8pt}")
     # Learning-standard box (separate from the assessment ID and the Pass/Retake row)
     secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") else C["textbook"]
-    body.append(r"\noindent\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{"
-                rf"{{\fontsize{{14}}{{17}}\selectfont\textbf{{{code} --- {esc(std['title'])}}}}}\\"
-                rf"{{\small\itshape {esc(secs)}}}\\[4pt]{esc(std['description'])}}}}}")
-    if version in QUESTS:
-        row = rf"\noindent$\square$ {L['pass']}\qquad $\square$ {L['retake']}"
+    # Section: at the right end of the title line when both fit; for a long title it goes at the
+    # right end of the description's last line instead, so it never takes a line of its own.
+    body.append(r"\newsavebox\stdtitlebox\newsavebox\stdsecbox\newif\ifsecontitle"
+                rf"\sbox\stdtitlebox{{\fontsize{{14}}{{17}}\selectfont\textbf{{{code} --- {esc(std['title'])}}}}}"
+                rf"\sbox\stdsecbox{{\small\itshape {esc(secs)}}}")
+    sec_at_end = (r"{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfil"
+                  r"\usebox\stdsecbox\parfillskip=0pt\par}")
+    title_part = (r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue"
+                  r"\else\secontitlefalse\fi"
+                  r"\noindent\usebox\stdtitlebox\ifsecontitle\hfill\usebox\stdsecbox\fi\par\vspace{3pt}"
+                  rf"\noindent {esc(std['description'])}\ifsecontitle\par\else" + sec_at_end + r"\fi")
+    result_row = ""
+    if version in QUESTS:  # one line inside the box; MET / NOT MET YET are circled by hand
+        result_row = (r"\par\vspace{5pt}\hrule\vspace{5pt}\noindent{\small"
+                      rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
         if version in ("quest2", "quest3"):
-            row += (rf"\qquad {L['attempt']}: \underline{{\hspace{{0.5in}}}}\hfill "
-                    rf"{esc(L['ticket_done'])}: $\square$")
-        body.append(r"\par\vspace{6pt}" + row)
+            result_row += (rf"\hfill\mbox{{{esc(L['attempt'])}: \underline{{\hspace{{0.4in}}}}}}\hfill"
+                           rf"\mbox{{{esc(L['ticket_done'])}: $\square$ {esc(L['yes'])}\enspace "
+                           rf"$\square$ {esc(L['no'])}}}")
+        result_row += r"\par}"
+    body.append(r"\noindent\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{"
+                + title_part + result_row + "}}")
     body.append(r"\par\vspace{10pt}")  # small gap after the standard before instructions
     body.append(r"\noindent\begin{minipage}{\linewidth}" +
                 rf"\textbf{{{L['instructions']}:}} {esc(h.get('instructions') or default_instructions(lang, version))}" +

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 handout_core.py -- Canelita Handout Generator
-Courses: MAT 3A Calculus 1 and MAT 5 Differential Equations (course-scoped S-codes).
+Courses: MAT 3A Calculus 1, MAT 5 Differential Equations, MAT 3B Calculus 2, and STAT C1000 Statistics (course-scoped S-codes).
 
 Handout versions (Standards Based Quests requirements):
   Preparation          readiness check; the ONLY version with an answer key
@@ -52,11 +52,22 @@ COURSES = {
               "file": "handout_standards.json"},
     "diffeq": {"code": "MAT 5", "name": "Differential Equations", "textbook": "MyOpenMath",
                "file": "handout_standards_diffeq.json"},
+    "calc2": {"code": "MAT 3B", "name": "Calculus 2", "textbook": "Active Calculus",
+              "file": "handout_standards_calc2.json"},
+    "stats": {"code": "STAT C1000", "name": "Introduction to Statistics", "textbook": "Statway College",
+              "file": "handout_standards_stats.json", "functions": False,
+              "note": ("This is an introductory statistics course with no calculus. Build problems on realistic "
+                       "data sets, summary statistics, study descriptions, or technology output shown as a table. "
+                       "Ignore the function-mix rule and any function family. Keep algebra at the "
+                       "intermediate-algebra level, and give any critical value or P-value a student would need "
+                       "technology or a table to find.")},
 }
 # Course-specific scope reminders (on top of the general "this standard only" rule)
 SCOPE_NOTES = {
     "calc1": {n: "Do not require the chain rule (taught in S-11)." for n in range(1, 11)},
     "diffeq": {},
+    "calc2": {},
+    "stats": {},
 }
 
 
@@ -636,8 +647,10 @@ def _std_context(course, std):
     c = COURSES[course]
     subs = "\n".join(f"  {std['code']}.{i}: {s}" for i, s in enumerate(std["subskills"], 1))
     return (f"Course: {c['code']} {c['name']} (California community college; {c['textbook']}).\n"
-            f"Learning standard {std['code']} -- {std['title']} (Sec. {std['sections']})\n"
-            f"Description: {std['description']}\nSubskills:\n{subs}")
+            + (f"{c['note']}\n" if c.get("note") else "")
+            + f"Learning standard {std['code']} -- {std['title']}"
+            + (f" (Sec. {std['sections']})" if std.get("sections") else "") + "\n"
+            + f"Description: {std['description']}\nSubskills:\n{subs}")
 
 
 def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=None, names=None,
@@ -650,7 +663,7 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
         line = f'{s["id"]}. type: {s["type"].upper()}; subskill {s["subskill_code"]} -- {s["subskill"]}'
         if s.get("context"):
             line += f"; context family: {s['context']}"
-        if s.get("function"):
+        if s.get("function") and COURSES[course].get("functions", True):
             line += f"; function family: {s['function']}"
         if s.get("quick"):
             line += f"; format: QUICK-ANSWER {QUICK_NAMES[s['quick']]}"
@@ -1367,13 +1380,10 @@ PREAMBLE = r"""\documentclass[12pt]{exam}
 \pdfgentounicode=1
 \pagestyle{headandfoot}
 \firstpageheader{}{}{}
-\runningheader{\small <<STD>>}{}{\small <<VERSION>>}
-\firstpageheadrule
+\runningheader{\small <<STD>> $\cdot$ \textbf{<<VERSION>>}}{}{\small <<PAGE>> \thepage}
 \runningheadrule
-\firstpagefooter{\small <<CODE>> $\cdot$ <<VERSION>>}{}{\small <<PAGE>> \thepage\ <<OF>> \numpages}
-\runningfooter{\small <<CODE>> $\cdot$ <<VERSION>>}{}{\small <<PAGE>> \thepage\ <<OF>> \numpages}
-\firstpagefootrule
-\runningfootrule
+\firstpagefooter{}{}{}
+\runningfooter{}{}{}
 \renewcommand{\questionlabel}{\textbf{\thequestion.}}
 \renewcommand{\partlabel}{(\thepartno)}
 \renewcommand{\choicelabel}{(\thechoice)}
@@ -1453,21 +1463,23 @@ def build_tex(h, space_scale=1.0, include_key=True):
            .replace("<<PAGE>>", L["page"]).replace("<<OF>>", L["of"]))
     body = [pre, r"\begin{document}",
             r"\binoppenalty=10000 \relpenalty=10000 \tolerance=1000 \emergencystretch=4em"]
-    # Header: standard title (section reference at the right), rule, then Name / Date / Section.
-    secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") else C["textbook"]
-    if summ:
-        secs = ", ".join(esc(x) for x in std.get("codes", []))
+    # Page 1: standard (left) and handout type in a box (right), rule, Name / Date / Section, then the
+    # description with the textbook section at the end of its last line. Nothing is repeated.
+    secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") and not summ else ""
     body.append(r"\newsavebox\stdtitlebox\newsavebox\stdsecbox\newif\ifsecontitle"
                 rf"\sbox\stdtitlebox{{\fontsize{{14}}{{17}}\selectfont\textbf{{{shown_title}}}}}"
-                rf"\sbox\stdsecbox{{\small\itshape {secs if summ else esc(secs)}}}")
+                rf"\sbox\stdsecbox{{\setlength{{\fboxsep}}{{3pt}}\fbox{{\sffamily\bfseries {esc(vlabel)}}}}}")
     body.append(r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue\else\secontitlefalse\fi"
-                r"\noindent\usebox\stdtitlebox\ifsecontitle\hfill\usebox\stdsecbox\else\par\noindent\hfill\usebox\stdsecbox\fi\par"
+                r"\noindent\ifsecontitle\usebox\stdtitlebox\hfill\usebox\stdsecbox"
+                r"\else\hfill\usebox\stdsecbox\par\vspace{3pt}\noindent\usebox\stdtitlebox\fi\par"
                 r"\vspace{4pt}\hrule\vspace{8pt}")
     body.append(rf"\noindent {L['name']}: \underline{{\hspace{{2.4in}}}} \hfill {L['date']}: "
                 rf"\underline{{\hspace{{1.0in}}}} \hfill {esc(C['code'])} {L['section']}: "
                 r"\underline{\hspace{0.7in}}" + "\n\\par\\vspace{8pt}")
+    sec_at_end = (r"{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfil"
+                  rf"\hbox{{\small\itshape {esc(secs)}}}\parfillskip=0pt\par}}") if secs else r"\par"
     if std.get("description"):
-        body.append(rf"\noindent {esc(std['description'])}\par\vspace{{4pt}}")
+        body.append(rf"\noindent {esc(std['description'])}" + sec_at_end + r"\vspace{4pt}")
     if version in QUESTS:  # MET / NOT MET YET are circled by hand
         row = (r"\noindent{\small"
                rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
@@ -1504,7 +1516,7 @@ def build_tex(h, space_scale=1.0, include_key=True):
         body.append(r"\end{questions}")
     if include_key and (version == "preparation" or (version in ("quest1", SUMMATIVE) and h.get("with_key"))):  # Quest 1 key is optional
         body.append(r"\newpage")
-        body.append(rf"\begin{{center}}{{\Large\bfseries {esc(L['key'])} --- {esc(std['title']) if summ else code} {'' if summ else esc(vlabel)}}}\end{{center}}")
+        body.append(rf"\begin{{center}}{{\Large\bfseries {esc(L['key'])}}}\end{{center}}")
         for p in sorted(h["problems"], key=lambda q: q.get("num", 0)):
             body.append(r"\needspace{6\baselineskip}")
             lab = rf" \textit{{[{esc(p['title'])}]}}" if p.get("title") else ""

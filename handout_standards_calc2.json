@@ -1,0 +1,327 @@
+[
+ {
+  "code": "S-1",
+  "title": "Antiderivatives, the FTC & Substitution (Review)",
+  "sections": "5.1, 5.2, 5.3",
+  "description": "Rebuild fluency with antiderivative graphs, integral functions, and u-substitution from the end of Calculus 1.",
+  "subskills": [
+   "Sketch an antiderivative from the graph of f and a given initial value",
+   "Differentiate and analyze a function defined by an integral using the Second FTC",
+   "Evaluate indefinite integrals by u-substitution",
+   "Evaluate definite integrals by u-substitution, changing the limits"
+  ],
+  "prerequisites": "MAT 3A S-21, S-22, S-23; chain rule (MAT 3A S-11)"
+ },
+ {
+  "code": "S-2",
+  "title": "Integration by Parts",
+  "sections": "5.4",
+  "description": "Reverse the product rule to integrate products of functions.",
+  "subskills": [
+   "Choose u and dv and apply the parts formula to an indefinite integral",
+   "Apply integration by parts more than once, including integrals that cycle back",
+   "Evaluate definite integrals by parts",
+   "Decide whether substitution or parts fits a given integral and justify the choice"
+  ],
+  "prerequisites": "S-1; product rule (MAT 3A S-10)"
+ },
+ {
+  "code": "S-3",
+  "title": "Partial Fractions",
+  "sections": "5.5",
+  "description": "Integrate rational functions by decomposing them into simpler fractions.",
+  "subskills": [
+   "Decompose a rational function with distinct linear factors",
+   "Decompose with repeated linear or irreducible quadratic factors",
+   "Integrate each term of a decomposition, using long division first when needed",
+   "Evaluate definite integrals of rational functions and interpret the result"
+  ],
+  "prerequisites": "S-1; polynomial factoring and long division; ln and arctan antiderivatives (MAT 3A S-12, S-21)"
+ },
+ {
+  "code": "S-4",
+  "title": "Trigonometric Substitution & Integral Tables",
+  "sections": "5.5",
+  "description": "Use a trigonometric substitution, a table, or technology for integrals outside the basic rules.",
+  "subskills": [
+   "Choose the substitution that matches a^2 - x^2, a^2 + x^2, or x^2 - a^2",
+   "Carry out the substitution and return to the original variable with a reference triangle",
+   "Match an integral to a table entry, including after a preliminary substitution",
+   "Evaluate an integral with technology and check the result by differentiating"
+  ],
+  "prerequisites": "S-1; right-triangle trigonometry and identities; MAT 3A S-9"
+ },
+ {
+  "code": "S-5",
+  "title": "Numerical Integration",
+  "sections": "5.6",
+  "description": "Approximate definite integrals with the Midpoint, Trapezoid, and Simpson's rules and judge their accuracy.",
+  "subskills": [
+   "Compute Midpoint and Trapezoid approximations from a formula, table, or graph",
+   "Use concavity to tell whether each rule overestimates or underestimates",
+   "Compute a Simpson's rule approximation",
+   "Compare errors as n increases and choose n for a required accuracy"
+  ],
+  "prerequisites": "MAT 3A S-19 (Riemann sums), S-17 (concavity)"
+ },
+ {
+  "code": "S-6",
+  "title": "Area & Arc Length",
+  "sections": "6.1",
+  "description": "Set up and evaluate integrals for the area between curves and the length of a curve.",
+  "subskills": [
+   "Find the area between curves by integrating with respect to x",
+   "Find the area between curves by integrating with respect to y",
+   "Set up and evaluate an arc length integral",
+   "Explain how a Riemann sum of slices leads to each integral"
+  ],
+  "prerequisites": "MAT 3A S-24; S-1; S-5 when no antiderivative exists"
+ },
+ {
+  "code": "S-7",
+  "title": "Volume by Slicing & Disks",
+  "sections": "6.2",
+  "description": "Find volumes of solids with known cross-sections and solids of revolution using disks.",
+  "subskills": [
+   "Write the volume of a representative slice for a solid with known cross-sections",
+   "Set up and evaluate a disk-method integral about the x-axis",
+   "Set up and evaluate a disk-method integral about the y-axis",
+   "Sketch the region, the solid, and a representative slice"
+  ],
+  "prerequisites": "S-6; area formulas for circles, squares, triangles"
+ },
+ {
+  "code": "S-8",
+  "title": "Volume by Washers & Other Axes",
+  "sections": "6.2",
+  "description": "Find volumes of solids of revolution with holes and solids revolved about other horizontal or vertical lines.",
+  "subskills": [
+   "Identify the outer and inner radius of a representative washer",
+   "Set up and evaluate a washer-method integral about a coordinate axis",
+   "Set up and evaluate a volume integral about a line such as y = k or x = h",
+   "Choose the variable of integration that fits the region and axis"
+  ],
+  "prerequisites": "S-7"
+ },
+ {
+  "code": "S-9",
+  "title": "Density, Mass & Center of Mass",
+  "sections": "6.3",
+  "description": "Use definite integrals to find mass from a variable density and to locate a center of mass.",
+  "subskills": [
+   "Find the mass of a rod or region from a density function, with units",
+   "Compute the center of mass of a system of point masses",
+   "Set up and evaluate integrals for the center of mass of a rod with variable density",
+   "Interpret a density function and its integral in context"
+  ],
+  "prerequisites": "S-6; MAT 3A S-20 (average value)"
+ },
+ {
+  "code": "S-10",
+  "title": "Work, Force & Pressure",
+  "sections": "6.4",
+  "description": "Use definite integrals to compute work done by a variable force and force from fluid pressure.",
+  "subskills": [
+   "Compute work done by a variable force, including springs (Hooke's Law)",
+   "Set up a work integral for pumping liquid from a tank",
+   "Set up and evaluate an integral for hydrostatic force on a vertical surface",
+   "Track units and explain each factor in the integrand"
+  ],
+  "prerequisites": "S-7, S-9"
+ },
+ {
+  "code": "S-11",
+  "title": "Improper Integrals",
+  "sections": "6.5",
+  "description": "Evaluate integrals over unbounded intervals or with unbounded integrands, and decide convergence.",
+  "subskills": [
+   "Write an improper integral as a limit of proper integrals",
+   "Evaluate improper integrals over infinite intervals",
+   "Evaluate improper integrals with a vertical asymptote in the interval",
+   "Decide whether an integral converges or diverges, including the family 1/x^p"
+  ],
+  "prerequisites": "S-1 through S-3; limits at infinity and L'Hopital's Rule (MAT 3A S-2, S-15)"
+ },
+ {
+  "code": "S-12",
+  "title": "Introduction to Differential Equations",
+  "sections": "7.1",
+  "description": "Read a differential equation as a statement about a rate of change and test proposed solutions.",
+  "subskills": [
+   "Write a differential equation from a verbal description of a rate",
+   "Verify that a function is a solution",
+   "Distinguish a general solution from the solution of an initial value problem",
+   "Interpret the terms and units of a differential equation in context"
+  ],
+  "prerequisites": "MAT 3A S-4, S-8 through S-11"
+ },
+ {
+  "code": "S-13",
+  "title": "Slope Fields & Equilibrium Solutions",
+  "sections": "7.2",
+  "description": "Describe the behavior of solutions qualitatively from a slope field.",
+  "subskills": [
+   "Sketch a slope field for a given differential equation",
+   "Sketch solution curves through given initial points",
+   "Find equilibrium solutions of an autonomous equation",
+   "Classify each equilibrium as stable or unstable"
+  ],
+  "prerequisites": "S-12; MAT 3A S-3 (slope), S-17 (sign analysis)"
+ },
+ {
+  "code": "S-14",
+  "title": "Euler's Method",
+  "sections": "7.3",
+  "description": "Approximate the solution of an initial value problem numerically.",
+  "subskills": [
+   "Carry out Euler's method in a table for a given step size",
+   "Explain each step as a tangent-line approximation",
+   "Describe how the step size affects the error",
+   "Use concavity to decide whether the approximation overestimates or underestimates"
+  ],
+  "prerequisites": "S-13; MAT 3A S-7 (linear approximation)"
+ },
+ {
+  "code": "S-15",
+  "title": "Separable Differential Equations",
+  "sections": "7.4",
+  "description": "Solve separable equations and their initial value problems analytically.",
+  "subskills": [
+   "Decide whether a differential equation is separable",
+   "Separate variables and integrate to find a general solution",
+   "Apply an initial condition and solve explicitly for y when possible",
+   "Check a solution by substitution"
+  ],
+  "prerequisites": "S-1, S-12; logarithm and exponential algebra"
+ },
+ {
+  "code": "S-16",
+  "title": "Modeling with Differential Equations",
+  "sections": "7.5",
+  "description": "Build, solve, and interpret models for growth, decay, cooling, and mixing.",
+  "subskills": [
+   "Write a differential equation for a described situation",
+   "Solve exponential growth and decay models",
+   "Solve a Newton's Law of Cooling or mixing model",
+   "Interpret the solution, parameters, and long-term behavior with units"
+  ],
+  "prerequisites": "S-13, S-15"
+ },
+ {
+  "code": "S-17",
+  "title": "Population Growth & the Logistic Equation",
+  "sections": "7.6",
+  "description": "Analyze and solve the logistic model and compare it with exponential growth.",
+  "subskills": [
+   "Identify the growth rate and carrying capacity in a logistic equation",
+   "Find and classify the equilibrium solutions",
+   "Solve the logistic equation by separation of variables and partial fractions",
+   "Use the solution to predict and compare with an exponential model"
+  ],
+  "prerequisites": "S-3, S-13, S-15, S-16"
+ },
+ {
+  "code": "S-18",
+  "title": "Taylor Polynomials",
+  "sections": "8.1, 8.2",
+  "description": "Extend the tangent line approximation to higher-degree polynomial approximations.",
+  "subskills": [
+   "Find the quadratic approximation of f at x = a",
+   "Find the degree-n Taylor polynomial of f centered at a",
+   "Use a Taylor polynomial to approximate a function value",
+   "Compare approximations of different degrees graphically and numerically"
+  ],
+  "prerequisites": "MAT 3A S-5, S-7"
+ },
+ {
+  "code": "S-19",
+  "title": "Geometric Sums & Series",
+  "sections": "8.3",
+  "description": "Find finite geometric sums and decide when an infinite geometric series converges.",
+  "subskills": [
+   "Identify the first term and common ratio of a geometric sum",
+   "Compute a finite geometric sum with the closed formula",
+   "Decide whether an infinite geometric series converges and find its sum",
+   "Model a repeated-process situation with a geometric series"
+  ],
+  "prerequisites": "Limits at infinity (MAT 3A S-2); exponent rules"
+ },
+ {
+  "code": "S-20",
+  "title": "Taylor Series & Intervals of Convergence",
+  "sections": "8.4",
+  "description": "Write the Taylor series of a function and determine where it converges.",
+  "subskills": [
+   "Write the Taylor series of f centered at a in sigma notation",
+   "Apply the Ratio Test to a series",
+   "Find the radius of convergence of a power series",
+   "Find the interval of convergence, testing endpoints where the course requires"
+  ],
+  "prerequisites": "S-18, S-19"
+ },
+ {
+  "code": "S-21",
+  "title": "Finding & Using Taylor Series",
+  "sections": "8.5",
+  "description": "Build new series from known ones and use them to compute.",
+  "subskills": [
+   "Recall the Maclaurin series for e^x, sin x, cos x, and 1/(1 - x)",
+   "Find a new series by substitution or multiplication",
+   "Differentiate and integrate a power series term by term",
+   "Use a series to approximate a definite integral or evaluate a limit"
+  ],
+  "prerequisites": "S-20"
+ },
+ {
+  "code": "S-22",
+  "title": "Accuracy of Taylor Approximations",
+  "sections": "8.6",
+  "description": "Bound the error of a Taylor polynomial approximation.",
+  "subskills": [
+   "State the error bound for a degree-n Taylor polynomial",
+   "Find a bound M on the (n+1)st derivative over an interval",
+   "Bound the error of a given approximation",
+   "Find the degree needed to reach a required accuracy"
+  ],
+  "prerequisites": "S-18, S-21"
+ },
+ {
+  "code": "S-23",
+  "title": "Sequences & Convergence Tests for Series",
+  "sections": "",
+  "description": "Decide whether a sequence or series converges using an appropriate test.",
+  "subskills": [
+   "Find the limit of a sequence or show that it diverges",
+   "Apply the Divergence Test and the Integral Test (p-series)",
+   "Apply the Comparison and Limit Comparison Tests",
+   "Apply the Alternating Series Test and distinguish absolute from conditional convergence"
+  ],
+  "prerequisites": "S-11, S-19, S-20"
+ },
+ {
+  "code": "S-24",
+  "title": "Parametric Curves",
+  "sections": "",
+  "description": "Graph parametric curves and apply calculus to them.",
+  "subskills": [
+   "Sketch a parametric curve and eliminate the parameter",
+   "Find dy/dx and the tangent line at a point",
+   "Find where the tangent is horizontal or vertical",
+   "Set up and evaluate the arc length of a parametric curve"
+  ],
+  "prerequisites": "S-6; MAT 3A S-11"
+ },
+ {
+  "code": "S-25",
+  "title": "Polar Curves",
+  "sections": "",
+  "description": "Graph polar curves and apply calculus in polar coordinates.",
+  "subskills": [
+   "Convert points and equations between polar and rectangular form",
+   "Sketch a polar curve from its equation",
+   "Find the slope of a polar curve at a point",
+   "Set up and evaluate the area enclosed by a polar curve"
+  ],
+  "prerequisites": "S-24; unit-circle trigonometry"
+ }
+]

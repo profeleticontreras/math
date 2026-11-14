@@ -26,7 +26,8 @@ APP_DIR = pathlib.Path(__file__).resolve().parent
 LOCAL_ROOT = APP_DIR / "handout_archive"
 VERSION_ORDER = ["preparation", "quest1", "quest2", "quest3", "ticket"]
 VERSION_LABEL = {"preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest Version 2",
-                 "quest3": "Quest Version 3", "ticket": "Reassessment Ticket"}
+                 "quest3": "Quest Version 3", "ticket": "Reassessment Ticket",
+                 "summative": "Summative Assessment"}
 LANG_LABEL = {"en": "English", "es": "Español"}
 
 
@@ -72,6 +73,8 @@ def make_entry(result, course_code):
     std, version = result["std"], result["version"]
     code = std["code"]
     folder = f"{course_code.replace(' ', '')}/S-{std_sort_key(code):02d} {_safe(std['title'])}"
+    if version == "summative":
+        folder = f"{course_code.replace(' ', '')}/Summative - {_safe(std['title'])}"
     base = f"{now:%Y-%m-%d %H%M} {VERSION_LABEL[version]} ({LANG_LABEL.get(result['lang'], result['lang'])})"
     rv = result.get("review", {})
     return {

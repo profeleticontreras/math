@@ -73,8 +73,14 @@ def load_standards(course="calc1"):
 # Versions, labels, instructions
 # ------------------------------------------------------------------
 QUESTION_TYPES = ["skill", "conceptual", "interpretation"]
+
+
+def counts_for(n):
+    """n problems of each type, except interpretation, which gets half as many (rounded up)."""
+    return {"skill": n, "conceptual": n, "interpretation": (n + 1) // 2}
 VERSIONS = ["preparation", "quest1", "quest2", "quest3", "ticket"]
 QUESTS = ("quest1", "quest2", "quest3")
+SUMMATIVE = "summative"   # several standards in one instructor-only assessment; not in VERSIONS
 DEFAULT_COUNTS = {"preparation": 3, "quest1": 2, "quest2": 2, "quest3": 2, "ticket": 3}
 TITLE_ALIGN = {"preparation": "l", "ticket": "r"}          # Quests are centered
 QUESTION_SPACE_IN = 1.0     # answer space after a question without parts (inches)
@@ -83,7 +89,7 @@ PART_SPACE_IN = 0.5         # answer space after each lettered part (inches)
 LABELS = {
     "en": {
         "preparation": "Preparation", "quest1": "Quest 1", "quest2": "Quest Version 2",
-        "quest3": "Quest Version 3", "ticket": "Reassessment Ticket",
+        "quest3": "Quest Version 3", "ticket": "Reassessment Ticket", "summative": "Summative Assessment",
         "skill": "Skill", "conceptual": "Conceptual", "interpretation": "Interpretation",
         "skill_desc": "Carry out the computation or procedure.",
         "conceptual_desc": "Explain the idea behind the mathematics.",
@@ -98,7 +104,7 @@ LABELS = {
     },
     "es": {
         "preparation": "Preparación", "quest1": "Quest 1", "quest2": "Quest versión 2",
-        "quest3": "Quest versión 3", "ticket": "Ticket de reevaluación",
+        "quest3": "Quest versión 3", "ticket": "Ticket de reevaluación", "summative": "Evaluación sumativa",
         "skill": "Habilidad", "conceptual": "Conceptual", "interpretation": "Interpretación",
         "skill_desc": "Realiza el cálculo o el procedimiento.",
         "conceptual_desc": "Explica la idea detrás de las matemáticas.",
@@ -129,7 +135,7 @@ INSTRUCTIONS = {
 
 
 def kind(version):
-    return "quest" if version in QUESTS else version
+    return "quest" if version in QUESTS or version == SUMMATIVE else version
 
 
 def default_instructions(lang, version):
@@ -181,11 +187,11 @@ def names_in_use(problems):
 FUNCTION_FAMILIES = ["polynomial", "exponential", "trigonometric", "logarithmic"]
 
 
-def plan_problems(std, counts, rng=random):
+def plan_problems(std, counts, rng=random, graph_k=None):
     """Pick subskills at random for each question type; within a type they
     don't repeat until every subskill has been used."""
     if isinstance(counts, int):  # "n of each type"
-        counts = {t: counts for t in QUESTION_TYPES}
+        counts = counts_for(counts)
     slots, n_sub = [], len(std["subskills"])
     contexts = CONTEXT_FAMILIES[:]
     rng.shuffle(contexts)
@@ -213,6 +219,7 @@ def plan_problems(std, counts, rng=random):
     for s, f in zip(slots, fams):
         s["function"] = f
     assign_quick(slots, rng)
+    assign_graph(slots, rng, k=graph_k)
     return slots
 
 
@@ -246,6 +253,60 @@ def assign_quick(slots, rng=random, share=QUICK_SHARE):
         fmts += batch
     for sl, f in zip(chosen, fmts):
         sl["quick"] = f
+    return slots
+
+
+GRAPH_SHARE = (0.20, 0.40)    # 20-40% of the problems revolve around a graph
+GRAPH_MODES = ["build", "read", "interpret", "use", "table"]
+GRAPH_GUIDE = {
+    "build": "BUILD a graph: give labeled, scaled, blank axes (a pgfplots grid with NO curve) and the data, table, "
+             "equation, or description to graph; the student plots or sketches it. Never draw the answer.",
+    "read": "READ a graph: draw a graph and ask the student to read values, intervals, intercepts, slopes, or "
+            "features from it.",
+    "interpret": "INTERPRET a graph: draw a graph of a real situation and ask what its features (slope, "
+                 "maximum, intercept, increasing/decreasing, concavity) mean in context, with units.",
+    "table": "TABLE: give a table of values (and, where it helps, the matching graph or equation) and ask the "
+             "student to read it, complete it, connect it to a graph or formula, or use it to estimate a rate "
+             "or total.",
+    "use": "USE a graph: draw a graph and ask the student to use it to estimate, compute, compare, or decide "
+           "something (an estimated rate, a total, a best choice, a solution), showing the reasoning.",
+}
+
+
+def assign_graph(slots, rng=random, share=GRAPH_SHARE, k=None):
+    """Rule, not a category: 20-40% of the problems of ANY type, standard, and handout revolve around a
+    graph or table (build, read, interpret, or use it), spread across the types, favoring slots that are
+    not quick-answer, and mixing the modes."""
+    n = len(slots)
+    if n == 0:
+        return slots
+    if k is None:
+        lo, hi = math.ceil(n * share[0] - 1e-9), int(n * share[1] + 1e-9)
+        k = rng.randint(lo, hi) if lo <= hi else 1
+        k = max(1, k)
+    k = min(k, n)
+    if k <= 0:
+        return slots
+    by_type = {}
+    for sl in sorted(slots, key=lambda s: bool(s.get("quick"))):   # non-quick first
+        by_type.setdefault(sl["type"], []).append(sl)
+    for lst in by_type.values():
+        lst.sort(key=lambda s: (bool(s.get("quick")), rng.random()))
+    order = list(by_type)
+    rng.shuffle(order)
+    chosen, i = [], 0
+    while len(chosen) < k and any(by_type.values()):
+        t = order[i % len(order)]
+        i += 1
+        if by_type[t]:
+            chosen.append(by_type[t].pop(0))
+    modes = []
+    while len(modes) < len(chosen):
+        batch = GRAPH_MODES[:]
+        rng.shuffle(batch)
+        modes += batch
+    for sl, m in zip(chosen, modes):
+        sl["graph"] = m
     return slots
 
 
@@ -417,7 +478,7 @@ TYPE_GUIDE = {
                    "justify, find and fix an error in sample student work, compare two ideas, or "
                    "predict a result without computing. It has a clear expected answer that can "
                    "be graded. When showing a classmate's mistake, frame it respectfully as part of learning."),
-    "interpretation": ("INTERPRETATION: a realistic application. Students compute and then explain "
+    "interpretation": ("INTERPRETATION: ask for interpretation only where the subskill supports a realistic meaning (a real application or the meaning within the mathematics); never force a story or an artificial question about what a result means. Students compute and then explain "
                        "what a result means: units, the meaning of a sign or value in context, "
                        "information read from a table or graph, or whether a result is "
                        "reasonable. Ask for interpretations in complete sentences with units."),
@@ -451,7 +512,7 @@ COMMON-SENSE NUMBERS (very important)
 - A student who estimates first should be able to predict roughly what the answer will be.
 
 APPLICATIONS AND REALISM (realism is part of correctness)
-- Vary contexts. Use the context family assigned to each interpretation slot. Never use a phone-battery scenario.
+- Vary contexts. Use the context family assigned to each interpretation slot only when it makes a realistic, meaningful setting for the subskill; if it does not, choose a realistic setting that does, or ask for the meaning of the result in terms of the function itself (no forced story). Never use a phone-battery scenario.
 - Contexts are fictional. Do not claim a model describes real platform earnings, current trends, or real measurements. No real people or brand names.
 - State sensible units and a plausible working domain. Keep scenario duration, time units, and the mathematical domain consistent.
 - Check magnitudes, signs, rates, endpoints, and interior extrema. Revenue, counts, concentrations, and other nonnegative levels must stay nonnegative on the working domain. Negative rates can be valid; distinguish levels from rates, and revenue from profit or loss.
@@ -465,7 +526,7 @@ ROUNDING AND UNITS
 - Respect exact-answer requests and any precision a problem specifies.
 - Do not attach physical units to a dimensionless answer.
 
-GRAPHS (only when the standard calls for one: average velocity from a position graph, tangent lines on the same grid as the function, increasing/decreasing, concavity, extrema, slope fields, phase lines or planes)
+GRAPHS (required for slots marked GRAPH; otherwise only when the standard calls for one: average velocity from a position graph, tangent lines on the same grid as the function, increasing/decreasing, concavity, extrema, slope fields, phase lines or planes)
 - Draw the actual figure with readable scales, axis labels with units, the relevant domain endpoints, and open or closed points where needed.
 - Never pre-draw what the student is asked to construct (for example, the requested tangent line).
 - Use enough plotted points and grid bounds that include all of the curve; never cut off curve data or endpoints.
@@ -585,6 +646,8 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
             line += f"; function family: {s['function']}"
         if s.get("quick"):
             line += f"; format: QUICK-ANSWER {QUICK_NAMES[s['quick']]}"
+        if s.get("graph"):
+            line += f"; GRAPH: {s['graph'].upper()}"
         if s.get("note"):
             line += f"; the instructor asks for: {s['note']}"
         lines.append(line)
@@ -599,6 +662,16 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
                       + "\n".join("- " + QUICK_GUIDE[f] for f in quick_used)
                       + "\n\nBlock formats for quick-answer problems:\n"
                       + "\n\n".join(QUICK_BLOCKS[f] for f in quick_used) + "\n")
+    graph_text = ""
+    graph_used = [m for m in GRAPH_MODES if any(s.get("graph") == m for s in slots)]
+    if graph_used:
+        graph_text = ("\nGraph/table slots (marked GRAPH). The problem must revolve around the graph or table named "
+                      "by its mode (graphs in pgfplots, with readable scales and axis labels with units; tables in tabular), "
+                      "but ONLY when that is realistic for the subskill: the graph or table must be something a "
+                      "student would genuinely use for this skill, with plausible data. If it would be "
+                      "contrived or forced, write a regular problem for that slot with no graph or table. It still tests the slot's type "
+                      "and subskill, and it can combine with the slot's other format settings.\n"
+                      + "\n".join("- " + GRAPH_GUIDE[m] for m in graph_used) + "\n")
     avoid_text = (f"\nWrite a different problem from this earlier version (new function, numbers, and "
                   f"context):\n{avoid}\n" if avoid else "")
     if new_function_type and avoid:
@@ -619,7 +692,7 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
 
 Question types:
 {chr(10).join('- ' + TYPE_GUIDE[t] for t in types_used)}
-{quick_text}
+{quick_text}{graph_text}
 Write exactly {len(slots)} problem(s), one per slot, in this order. Each problem must assess its assigned subskill and be of its assigned type. Vary functions, numbers, and contexts so no two problems feel alike.
 {chr(10).join(lines)}
 {avoid_text}
@@ -748,6 +821,80 @@ def block_text(p, pid=None):
     return (f'<problem id="{pid or p["id"]}">\n<title>{p.get("title", "")}</title>\n'
             f'<statement>{p["statement"]}</statement>\n{parts}<answer>{p.get("answer", "")}</answer>\n'
             f'<solution>{p.get("solution", "")}</solution>\n</problem>')
+
+
+def generate_summative(client, course, picks, catalog, lang, title, on_event=None, cancel=None,
+                       on_tick=None, workers=3):
+    """One assessment over several standards. picks = [(std_code, {type: count}), ...] in print order.
+    Each standard is written, reviewed, and typeset like a Quest (in parallel), then merged.
+    on_event(label, stage) and on_tick() are called from THIS thread. Returns the merged handout dict."""
+    cancel = cancel or threading.Event()
+    guarded = _GuardedClient(client, cancel)
+    by_code = {s["code"]: s for s in catalog}
+    q = queue.Queue()
+
+    # 20-40% of ALL the problems are graph-based; spread over the standards in proportion to their size
+    sizes = [sum(int(cn.get(t, 0)) for t in QUESTION_TYPES) for _, cn in picks]
+    total = sum(sizes)
+    lo, hi = math.ceil(total * GRAPH_SHARE[0] - 1e-9), int(total * GRAPH_SHARE[1] + 1e-9)
+    want = random.randint(lo, hi) if lo <= hi else min(1, total)
+    shares = [want * s / total if total else 0 for s in sizes]
+    gk = [min(int(x), s) for x, s in zip(shares, sizes)]
+    for i in sorted(range(len(sizes)), key=lambda i: shares[i] - gk[i], reverse=True):
+        if sum(gk) >= want:
+            break
+        if gk[i] < sizes[i]:
+            gk[i] += 1
+    graph_k = {code: g for (code, _), g in zip(picks, gk)}
+
+    def work(code, counts):
+        def report(stage):
+            if cancel.is_set():
+                raise Cancelled()
+            q.put((code, stage))
+        return generate_version(guarded, course, by_code[code], catalog, "quest1", counts, lang, report,
+                                graph_k=graph_k[code])
+
+    pool = ThreadPoolExecutor(max_workers=workers)
+    futs = {pool.submit(work, code, counts): code for code, counts in picks}
+    pending, results = set(futs), {}
+    try:
+        while pending:
+            time.sleep(0.4)
+            if on_tick:
+                on_tick()
+            if cancel.is_set():
+                raise Cancelled()
+            while not q.empty():
+                code, stage = q.get()
+                if on_event:
+                    on_event(code, stage)
+            for f in [f for f in pending if f.done()]:
+                pending.discard(f)
+                results[futs[f]] = f.result()   # raises if that standard failed
+                if on_event:
+                    on_event(futs[f], "Done")
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    codes = [code for code, _ in picks]
+    problems, notes, review, timings = [], [], {"checked": 0, "fixed": 0, "unresolved": 0}, {}
+    for code in codes:
+        r = results[code]
+        for p in r["problems"]:
+            p = dict(p)
+            p["std_code"] = code
+            problems.append(p)
+        notes += [f"{code}: {n}" for n in r.get("notes", [])]
+        for k in review:
+            review[k] += r.get("review", {}).get(k, 0)
+        for k, v in r.get("timings", {}).items():
+            timings[k] = max(timings.get(k, 0), v)
+    for i, p in enumerate(problems, 1):
+        p["id"] = i
+    std = {"code": "SUM", "title": title.strip() or LABELS[lang][SUMMATIVE], "sections": "", "description": "",
+           "subskills": [], "codes": codes, "titles": {c: by_code[c]["title"] for c in codes}}
+    return {"course": course, "std": std, "version": SUMMATIVE, "lang": lang, "problems": problems,
+            "notes": notes, "review": review, "timings": timings}
 
 
 def _slot(p, pid=1):
@@ -885,9 +1032,10 @@ def _parallel(fn, items, workers=3):
 
 def _type_groups(items):
     return [g for g in ([x for x in items if x["type"] == t] for t in QUESTION_TYPES) if g]
-def generate_version(client, course, std, catalog, version, counts, lang, report=lambda s: None, rng=random):
+def generate_version(client, course, std, catalog, version, counts, lang, report=lambda s: None, rng=random,
+                     graph_k=None):
     """Write, review, repair, and compile-check one handout version."""
-    slots = plan_problems(std, counts, rng)
+    slots = plan_problems(std, counts, rng, graph_k=graph_k)
     groups = _type_groups(slots)
     all_names = pick_names(rng, k=max(4, 3 * len(slots)))
     group_names, pos = {}, 0
@@ -977,6 +1125,8 @@ def _new_slot(std, qtype, subskill_index=None):
             "function": random.choice(FUNCTION_FAMILIES)}
     if qtype == "interpretation":
         slot["context"] = random.choice(CONTEXT_FAMILIES)
+    if random.random() < 0.3:   # about 30% use a graph or table, as in new handouts
+        slot["graph"] = random.choice(GRAPH_MODES)
     return slot
 
 
@@ -1208,7 +1358,7 @@ PREAMBLE = r"""\documentclass[12pt]{exam}
 \input{glyphtounicode}
 \pdfgentounicode=1
 \pagestyle{headandfoot}
-\firstpageheader{\small <<STD>>}{}{\small <<VERSION>>}
+\firstpageheader{}{}{}
 \runningheader{\small <<STD>>}{}{\small <<VERSION>>}
 \firstpageheadrule
 \runningheadrule
@@ -1285,62 +1435,69 @@ def build_tex(h, space_scale=1.0, include_key=True):
     L, C = LABELS[lang], COURSES[course]
     vlabel = L[version]
     code = esc(std["code"])
+    summ = version == SUMMATIVE
+    shown_title = esc(std["title"]) if summ else f"{code} --- {esc(std['title'])}"
     pre = (PREAMBLE.replace("<<PDFTITLE>>", esc(f"{std['code']} {vlabel}"))
            .replace("<<COURSE>>", esc(f"{C['code']} {C['name']}"))
            .replace("<<PDFLANG>>", "es-MX" if lang == "es" else "en-US")
-           .replace("<<STD>>", esc(f"{std['code']} -- {std['title']}"))
-           .replace("<<VERSION>>", esc(vlabel)).replace("<<CODE>>", code)
+           .replace("<<STD>>", esc(std["title"] if summ else f"{std['code']} -- {std['title']}"))
+           .replace("<<VERSION>>", esc(vlabel)).replace("<<CODE>>", esc(std["title"]) if summ else code)
            .replace("<<PAGE>>", L["page"]).replace("<<OF>>", L["of"]))
     body = [pre, r"\begin{document}",
             r"\binoppenalty=10000 \relpenalty=10000 \tolerance=1000 \emergencystretch=4em"]
-    # Assessment identification above the name line: Preparation left, Quest center, Ticket right
-    align = TITLE_ALIGN.get(version, "c")
-    body.append(rf"\noindent\makebox[\linewidth][{align}]{{\Large\textbf{{{code} $\cdot$ {esc(vlabel)}}}}}"
-                r"\par\vspace{6pt}")
+    # Header: standard title (section reference at the right), rule, then Name / Date / Section.
+    secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") else C["textbook"]
+    if summ:
+        secs = ", ".join(esc(x) for x in std.get("codes", []))
+    body.append(r"\newsavebox\stdtitlebox\newsavebox\stdsecbox\newif\ifsecontitle"
+                rf"\sbox\stdtitlebox{{\fontsize{{14}}{{17}}\selectfont\textbf{{{shown_title}}}}}"
+                rf"\sbox\stdsecbox{{\small\itshape {secs if summ else esc(secs)}}}")
+    body.append(r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue\else\secontitlefalse\fi"
+                r"\noindent\usebox\stdtitlebox\ifsecontitle\hfill\usebox\stdsecbox\else\par\noindent\hfill\usebox\stdsecbox\fi\par"
+                r"\vspace{4pt}\hrule\vspace{8pt}")
     body.append(rf"\noindent {L['name']}: \underline{{\hspace{{2.4in}}}} \hfill {L['date']}: "
                 rf"\underline{{\hspace{{1.0in}}}} \hfill {esc(C['code'])} {L['section']}: "
                 r"\underline{\hspace{0.7in}}" + "\n\\par\\vspace{8pt}")
-    # Learning-standard box (separate from the assessment ID and the Pass/Retake row)
-    secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") else C["textbook"]
-    # Section: at the right end of the title line when both fit; for a long title it goes at the
-    # right end of the description's last line instead, so it never takes a line of its own.
-    body.append(r"\newsavebox\stdtitlebox\newsavebox\stdsecbox\newif\ifsecontitle"
-                rf"\sbox\stdtitlebox{{\fontsize{{14}}{{17}}\selectfont\textbf{{{code} --- {esc(std['title'])}}}}}"
-                rf"\sbox\stdsecbox{{\small\itshape {esc(secs)}}}")
-    sec_at_end = (r"{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfil"
-                  r"\usebox\stdsecbox\parfillskip=0pt\par}")
-    title_part = (r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue"
-                  r"\else\secontitlefalse\fi"
-                  r"\noindent\usebox\stdtitlebox\ifsecontitle\hfill\usebox\stdsecbox\fi\par\vspace{3pt}"
-                  rf"\noindent {esc(std['description'])}\ifsecontitle\par\else" + sec_at_end + r"\fi")
-    result_row = ""
-    if version in QUESTS:  # one line inside the box; MET / NOT MET YET are circled by hand
-        result_row = (r"\par\vspace{5pt}\hrule\vspace{5pt}\noindent{\small"
-                      rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
+    if std.get("description"):
+        body.append(rf"\noindent {esc(std['description'])}\par\vspace{{4pt}}")
+    if version in QUESTS:  # MET / NOT MET YET are circled by hand
+        row = (r"\noindent{\small"
+               rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
         if version in ("quest2", "quest3"):
-            result_row += (rf"\hfill\mbox{{{esc(L['attempt'])}: \underline{{\hspace{{0.4in}}}}}}\hfill"
-                           rf"\mbox{{{esc(L['ticket_done'])}: $\square$ {esc(L['yes'])}\enspace "
-                           rf"$\square$ {esc(L['no'])}}}")
-        result_row += r"\par}"
-    body.append(r"\noindent\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{"
-                + title_part + result_row + "}}")
+            row += (rf"\hfill\mbox{{{esc(L['attempt'])}: \underline{{\hspace{{0.4in}}}}}}\hfill"
+                    rf"\mbox{{{esc(L['ticket_done'])}: $\square$ {esc(L['yes'])}\enspace "
+                    rf"$\square$ {esc(L['no'])}}}")
+        body.append(row + r"\par}")
     body.append(r"\par\vspace{10pt}")  # small gap after the standard before instructions
     body.append(r"\noindent\begin{minipage}{\linewidth}" +
                 rf"\textbf{{{L['instructions']}:}} {esc(h.get('instructions') or default_instructions(lang, version))}" +
                 r"\par\end{minipage}\par\vspace{10pt}")
     q_space, p_space = QUESTION_SPACE_IN * space_scale, PART_SPACE_IN * space_scale
     num = 0
-    body.append(r"\begin{questions}")
-    for qtype in QUESTION_TYPES:  # every type is included; each problem carries its letter tag
+    if not summ:
+        body.append(r"\begin{questions}")
+    if summ:  # grouped by standard (in the order chosen), then by type
+        for sc in std.get("codes", []):
+            body.append(rf"\needspace{{8\baselineskip}}\par\addvspace{{6pt}}\noindent\textbf{{{esc(sc)} --- {esc(std['titles'].get(sc, ''))}}}\par\nopagebreak\vspace{{4pt}}")
+            body.append(rf"\begin{{questions}}\setcounter{{question}}{{{num}}}")
+            for qtype in QUESTION_TYPES:
+                for p in [p for p in h["problems"] if p.get("std_code") == sc and p["type"] == qtype]:
+                    num += 1
+                    p["num"] = num
+                    body.append(_question(p, q_space, p_space, L["tag_" + qtype], L))
+            body.append(r"\end{questions}")
+    else:
+      for qtype in QUESTION_TYPES:  # every type is included; each problem carries its letter tag
         for p in [p for p in h["problems"] if p["type"] == qtype]:
             num += 1
             p["num"] = num
             body.append(_question(p, q_space, p_space, L["tag_" + qtype], L))
-    body.append(r"\end{questions}")
-    if version == "preparation" and include_key:  # only Preparation prints a key
+    if not summ:
+        body.append(r"\end{questions}")
+    if include_key and (version == "preparation" or (version in ("quest1", SUMMATIVE) and h.get("with_key"))):  # Quest 1 key is optional
         body.append(r"\newpage")
-        body.append(rf"\begin{{center}}{{\Large\bfseries {esc(L['key'])} --- {code} {esc(vlabel)}}}\end{{center}}")
-        for p in h["problems"]:
+        body.append(rf"\begin{{center}}{{\Large\bfseries {esc(L['key'])} --- {esc(std['title']) if summ else code} {'' if summ else esc(vlabel)}}}\end{{center}}")
+        for p in sorted(h["problems"], key=lambda q: q.get("num", 0)):
             body.append(r"\needspace{6\baselineskip}")
             lab = rf" \textit{{[{esc(p['title'])}]}}" if p.get("title") else ""
             body.append(rf"\noindent\textbf{{{L['problem']} {p['num']}.}} \typetag{{{L['tag_' + p['type']]}}}{lab}"

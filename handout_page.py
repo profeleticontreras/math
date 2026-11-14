@@ -9,6 +9,7 @@ import datetime
 import hashlib
 import io
 import re
+import threading
 import zipfile
 
 import anthropic
@@ -62,6 +63,7 @@ ARCH_GROUPS = [
     ("quest1", ("quest1",), "Quest 1"),
     ("quest2", ("quest2",), "Quest Version 2"),
     ("quest3", ("quest3",), "Quest Version 3"),
+    ("summative", ("summative",), "Summative assessment (instructor only)"),
 ]
 ARCH_CSS = """<style>
 .ar-head{display:flex;align-items:center;gap:0.9rem;margin:0.1rem 0 0.2rem;}
@@ -118,6 +120,8 @@ def _library():
 
 def _add_to_library(result, instructions):
     result["instructions"] = instructions
+    result["with_key"] = ((result.get("version") == "quest1" and bool(st.session_state.get("hg_q1_key")))
+                          or (result.get("version") == "summative" and bool(st.session_state.get("hg_sum_key"))))
     entry = {"id": f"h{len(_library()) + 1}_{datetime.datetime.now().strftime('%H%M%S')}",
              "made": datetime.datetime.now().strftime("%I:%M %p").lstrip("0"),
              "result": result}
@@ -129,6 +133,9 @@ def _add_to_library(result, instructions):
 def _entry_title(e):
     r = e["result"]
     lang = "English" if r["lang"] == "en" else "Español"
+    if r["version"] == "summative":
+        return (f"{r['std']['title']} · {VLABEL['summative']} ({', '.join(r['std']['codes'])}) — "
+                f"{hc.COURSES[r['course']]['code']}, {'English' if r['lang'] == 'en' else 'Español'} · made {e['made']}")
     return (f"{r['std']['code']} · {VLABEL[r['version']]} — {hc.COURSES[r['course']]['code']}, "
             f"{lang} · made {e['made']}")
 
@@ -173,22 +180,26 @@ def _render_make(client):
     with st.expander("Problem counts and instructions"):
         a, b = st.columns(2)
         n_pt = a.number_input("Preparation & Reassessment Ticket — problems of each type "
-                              "(skill, conceptual, interpretation)", 1, 4, 3, key="hg_n_pt")
+                              "(skill, conceptual; interpretation gets half as many)", 1, 4, 3, key="hg_n_pt")
         n_q = b.number_input("Quests — problems of each type", 1, 4, 2, key="hg_n_q")
         st.caption("Answer space: 1 in after each question, 0.5 in after each lettered part. "
                    "Preparation's space is fitted so the questions fill two pages and the answer key "
                    "starts on page 3. Print stays 12 pt.")
+        st.checkbox("Quest 1: include an answer key with detailed worked solutions (printed after the questions)",
+                    key="hg_q1_key")
         instr = {}
         for v in versions:
             instr[v] = st.text_area(f"Instructions — {VLABEL[v]}", hc.default_instructions(lang, v),
                                     key=f"hg_instr_{v}_{lang}", height=110)
 
     counts = {v: (n_q if v in hc.QUESTS else n_pt) for v in versions}
-    n_total = sum(counts[v] * 3 for v in versions)
+    n_total = sum(sum(hc.counts_for(counts[v]).values()) for v in versions)
     label = (f"Generate {VLABEL[versions[0]]}" if len(versions) == 1 else f"Generate {len(versions)} versions") \
         if versions else "Choose a handout version"
     go = st.button(f"{label}  ({n_total} problems)" if versions else label, type="primary",
                    disabled=not versions, key="hg_go")
+
+    _render_summative(client, course, lang, catalog, by_code)
 
     if st.session_state.pop("hg_cancel_requested", False):
         st.info("Handout request cancelled. Nothing was saved. Any Claude call already in progress "
@@ -294,6 +305,85 @@ def _selection_bar(e, r):
                 st.rerun()
 
 
+def _render_summative(client, course, lang, catalog, by_code):
+    """Summative assessment: choose several standards and how many problems of each type for each."""
+    with st.expander("Summative assessment — several learning standards"):
+        title = st.text_input("Assessment title", key="hg_sum_title",
+                              placeholder="For example: Midterm 1" if lang == "en" else "Por ejemplo: Examen parcial 1")
+        chosen = st.multiselect("Learning standards (printed in the order you choose)", list(by_code),
+                                key=f"hg_sum_stds_{course}",
+                                format_func=lambda c: f"{c} — {by_code[c]['title']}")
+        picks = []
+        if chosen:
+            h = st.columns([3, 1, 1, 1])
+            for col, t in zip(h[1:], hc.QUESTION_TYPES):
+                col.markdown(f"**{TYPE_LABEL[t]}**")
+            for c in chosen:
+                row = st.columns([3, 1, 1, 1])
+                row[0].markdown(f"**{c}** — {by_code[c]['title']}")
+                counts = {t: int(col.number_input(f"{c} {TYPE_LABEL[t]}", 0, 4, {"skill": 2, "conceptual": 2, "interpretation": 1}[t],
+                                                  key=f"hg_sum_{course}_{c}_{t}",
+                                                  label_visibility="collapsed"))
+                          for col, t in zip(row[1:], hc.QUESTION_TYPES)}
+                picks.append((c, counts))
+        st.checkbox("Include an answer key with detailed worked solutions", key="hg_sum_key")
+        instr = st.text_area("Instructions", hc.default_instructions(lang, "summative"),
+                             key=f"hg_instr_summative_{lang}", height=110)
+        total = sum(sum(cn.values()) for _, cn in picks)
+        ready = bool(picks) and total > 0 and bool(title.strip())
+        if chosen and not title.strip():
+            st.caption("Type a title to continue.")
+        go = st.button(f"Generate summative assessment  ({total} problems)" if picks else "Choose standards",
+                       type="primary", disabled=not ready, key="hg_sum_go")
+        if not go:
+            return
+        picks = [(c, cn) for c, cn in picks if sum(cn.values()) > 0]
+        with st.status(f"Making the summative assessment: {len(picks)} standards, {total} problems… "
+                       "usually several minutes.", expanded=True) as status:
+            cancel = threading.Event()
+            st.caption("To stop, use the app's Stop button (top right).")
+            lines = {c: st.empty() for c, _ in picks}
+            stages, t0 = {c: "Waiting" for c, _ in picks}, datetime.datetime.now()
+
+            def draw(c):
+                secs = int((datetime.datetime.now() - t0).total_seconds())
+                icon = "✅" if stages[c] == "Done" else "⏳"
+                lines[c].markdown(f"{icon} **{c} — {by_code[c]['title']}** — {stages[c]}  ·  {secs // 60}:{secs % 60:02d}")
+
+            def on_event(c, stage):
+                stages[c] = stage
+                draw(c)
+
+            def on_tick():
+                for c in stages:
+                    if stages[c] != "Done":
+                        draw(c)
+
+            for c in stages:
+                draw(c)
+            try:
+                result = hc.generate_summative(client, course, picks, catalog, lang, title, on_event,
+                                               cancel=cancel, on_tick=on_tick)
+            except hc.Cancelled:
+                status.update(label="Cancelled. Nothing was saved.", state="error")
+                return
+            except Exception as exc:  # noqa: BLE001
+                status.update(label="The summative assessment couldn't be generated.", state="error")
+                st.error(f"{exc}. Nothing was saved.")
+                return
+            status.update(label="Typesetting the PDF…")
+            _add_to_library(result, instr)
+            status.update(label="Finished: the summative assessment is ready below.", state="complete",
+                          expanded=False)
+
+
+def _std_for(r, p, catalog_for):
+    """The learning standard a problem belongs to (the summative covers several)."""
+    if r["version"] != "summative":
+        return r["std"]
+    return next(s for s in catalog_for(r["course"]) if s["code"] == p.get("std_code"))
+
+
 def _render_entry(client, e, catalog_for, first):
     r, out = e["result"], e["out"]
     rv = r.get("review", {})
@@ -383,8 +473,8 @@ def _render_entry(client, e, catalog_for, first):
                     if regen or dup:
                         with st.spinner("Writing and reviewing a new problem…"):
                             try:
-                                args = (client, r["course"], r["std"], catalog_for(r["course"]), p, r["lang"],
-                                        r["version"])
+                                args = (client, r["course"], _std_for(r, p, catalog_for), catalog_for(r["course"]),
+                                        p, r["lang"], "quest1" if r["version"] == "summative" else r["version"])
                                 if regen:
                                     new = hc.regenerate_problem(*args, existing=r["problems"])
                                 else:
@@ -393,6 +483,8 @@ def _render_entry(client, e, catalog_for, first):
                             except Exception as exc:  # noqa: BLE001
                                 st.error(str(exc))
                             else:
+                                if r["version"] == "summative":
+                                    new["std_code"] = p.get("std_code")
                                 i = r["problems"].index(p)
                                 if regen:
                                     r["problems"][i] = new
@@ -411,7 +503,8 @@ def _render_entry(client, e, catalog_for, first):
                             _archive_save(e)
                             st.rerun()
 
-        _render_add_question(client, e, catalog_for)
+        if r["version"] != "summative":
+            _render_add_question(client, e, catalog_for)
 
         with st.expander("✏️ Edit the LaTeX and recompile (optional)"):
             tex_name = out["base"] + ".tex"

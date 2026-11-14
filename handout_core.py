@@ -75,13 +75,22 @@ def load_standards(course="calc1"):
 QUESTION_TYPES = ["skill", "conceptual", "interpretation"]
 
 
+QUEST_COUNTS = {"skill": 3, "conceptual": 2, "interpretation": 1}          # Quests
+DOUBLE_COUNTS = {t: 2 * n for t, n in QUEST_COUNTS.items()}                # Preparation, Reassessment Ticket
+
+
 def counts_for(n):
-    """n problems of each type, except interpretation, which gets half as many (rounded up)."""
-    return {"skill": n, "conceptual": n, "interpretation": (n + 1) // 2}
+    """Default problem counts per type. n may be a version name, a dict (returned as is), or a multiple
+    of the Quest mix (1 = Quest: 3 skill, 2 conceptual, 1 interpretation; 2 = Preparation / Ticket)."""
+    if isinstance(n, dict):
+        return n
+    if isinstance(n, str):
+        n = 1 if n in QUESTS or n == SUMMATIVE else 2
+    return {t: k * int(n) for t, k in QUEST_COUNTS.items()}
 VERSIONS = ["preparation", "quest1", "quest2", "quest3", "ticket"]
 QUESTS = ("quest1", "quest2", "quest3")
 SUMMATIVE = "summative"   # several standards in one instructor-only assessment; not in VERSIONS
-DEFAULT_COUNTS = {"preparation": 3, "quest1": 2, "quest2": 2, "quest3": 2, "ticket": 3}
+DEFAULT_COUNTS = {"preparation": 2, "quest1": 1, "quest2": 1, "quest3": 1, "ticket": 2}   # multiples of QUEST_COUNTS
 TITLE_ALIGN = {"preparation": "l", "ticket": "r"}          # Quests are centered
 QUESTION_SPACE_IN = 1.0     # answer space after a question without parts (inches)
 PART_SPACE_IN = 0.5         # answer space after each lettered part (inches)
@@ -190,8 +199,7 @@ FUNCTION_FAMILIES = ["polynomial", "exponential", "trigonometric", "logarithmic"
 def plan_problems(std, counts, rng=random, graph_k=None):
     """Pick subskills at random for each question type; within a type they
     don't repeat until every subskill has been used."""
-    if isinstance(counts, int):  # "n of each type"
-        counts = counts_for(counts)
+    counts = counts_for(counts)
     slots, n_sub = [], len(std["subskills"])
     contexts = CONTEXT_FAMILIES[:]
     rng.shuffle(contexts)

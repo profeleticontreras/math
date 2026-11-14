@@ -178,10 +178,14 @@ def _render_make(client):
         help="Pick one. Add more versions to make a batch for this standard.")
 
     with st.expander("Problem counts and instructions"):
-        a, b = st.columns(2)
-        n_pt = a.number_input("Preparation & Reassessment Ticket — problems of each type "
-                              "(skill, conceptual; interpretation gets half as many)", 1, 4, 3, key="hg_n_pt")
-        n_q = b.number_input("Quests — problems of each type", 1, 4, 2, key="hg_n_q")
+        st.markdown("**Quests** — problems of each type")
+        qc = st.columns(3)
+        q_counts = {t: int(col.number_input(TYPE_LABEL[t], 0, 6, hc.QUEST_COUNTS[t], key=f"hg_nq_{t}"))
+                    for col, t in zip(qc, hc.QUESTION_TYPES)}
+        st.markdown("**Preparation & Reassessment Ticket** — problems of each type (double the Quest by default)")
+        pc = st.columns(3)
+        pt_counts = {t: int(col.number_input(TYPE_LABEL[t], 0, 12, hc.DOUBLE_COUNTS[t], key=f"hg_npt_{t}"))
+                     for col, t in zip(pc, hc.QUESTION_TYPES)}
         st.caption("Answer space: 1 in after each question, 0.5 in after each lettered part. "
                    "Preparation's space is fitted so the questions fill two pages and the answer key "
                    "starts on page 3. Print stays 12 pt.")
@@ -192,12 +196,12 @@ def _render_make(client):
             instr[v] = st.text_area(f"Instructions — {VLABEL[v]}", hc.default_instructions(lang, v),
                                     key=f"hg_instr_{v}_{lang}", height=110)
 
-    counts = {v: (n_q if v in hc.QUESTS else n_pt) for v in versions}
-    n_total = sum(sum(hc.counts_for(counts[v]).values()) for v in versions)
+    counts = {v: (q_counts if v in hc.QUESTS else pt_counts) for v in versions}
+    n_total = sum(sum(counts[v].values()) for v in versions)
     label = (f"Generate {VLABEL[versions[0]]}" if len(versions) == 1 else f"Generate {len(versions)} versions") \
         if versions else "Choose a handout version"
     go = st.button(f"{label}  ({n_total} problems)" if versions else label, type="primary",
-                   disabled=not versions, key="hg_go")
+                   disabled=not versions or n_total == 0, key="hg_go")
 
     _render_summative(client, course, lang, catalog, by_code)
 
@@ -321,7 +325,7 @@ def _render_summative(client, course, lang, catalog, by_code):
             for c in chosen:
                 row = st.columns([3, 1, 1, 1])
                 row[0].markdown(f"**{c}** — {by_code[c]['title']}")
-                counts = {t: int(col.number_input(f"{c} {TYPE_LABEL[t]}", 0, 4, {"skill": 2, "conceptual": 2, "interpretation": 1}[t],
+                counts = {t: int(col.number_input(f"{c} {TYPE_LABEL[t]}", 0, 6, hc.QUEST_COUNTS[t],
                                                   key=f"hg_sum_{course}_{c}_{t}",
                                                   label_visibility="collapsed"))
                           for col, t in zip(row[1:], hc.QUESTION_TYPES)}

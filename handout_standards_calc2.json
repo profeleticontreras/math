@@ -10,7 +10,8 @@
    "Evaluate indefinite integrals by u-substitution",
    "Evaluate definite integrals by u-substitution, changing the limits"
   ],
-  "prerequisites": "MAT 3A S-21, S-22, S-23; chain rule (MAT 3A S-11)"
+  "prerequisites": "MAT 3A S-21, S-22, S-23; chain rule (MAT 3A S-11)",
+  "group": "Chapter 5: Evaluating Integrals"
  },
  {
   "code": "S-2",
@@ -23,7 +24,8 @@
    "Evaluate definite integrals by parts",
    "Decide whether substitution or parts fits a given integral and justify the choice"
   ],
-  "prerequisites": "S-1; product rule (MAT 3A S-10)"
+  "prerequisites": "S-1; product rule (MAT 3A S-10)",
+  "group": "Chapter 5: Evaluating Integrals"
  },
  {
   "code": "S-3",
@@ -36,7 +38,8 @@
    "Integrate each term of a decomposition, using long division first when needed",
    "Evaluate definite integrals of rational functions and interpret the result"
   ],
-  "prerequisites": "S-1; polynomial factoring and long division; ln and arctan antiderivatives (MAT 3A S-12, S-21)"
+  "prerequisites": "S-1; polynomial factoring and long division; ln and arctan antiderivatives (MAT 3A S-12, S-21)",
+  "group": "Chapter 5: Evaluating Integrals"
  },
  {
   "code": "S-4",
@@ -49,7 +52,8 @@
    "Match an integral to a table entry, including after a preliminary substitution",
    "Evaluate an integral with technology and check the result by differentiating"
   ],
-  "prerequisites": "S-1; right-triangle trigonometry and identities; MAT 3A S-9"
+  "prerequisites": "S-1; right-triangle trigonometry and identities; MAT 3A S-9",
+  "group": "Chapter 5: Evaluating Integrals"
  },
  {
   "code": "S-5",
@@ -62,7 +66,8 @@
    "Compute a Simpson's rule approximation",
    "Compare errors as n increases and choose n for a required accuracy"
   ],
-  "prerequisites": "MAT 3A S-19 (Riemann sums), S-17 (concavity)"
+  "prerequisites": "MAT 3A S-19 (Riemann sums), S-17 (concavity)",
+  "group": "Chapter 5: Evaluating Integrals"
  },
  {
   "code": "S-6",
@@ -75,7 +80,8 @@
    "Set up and evaluate an arc length integral",
    "Explain how a Riemann sum of slices leads to each integral"
   ],
-  "prerequisites": "MAT 3A S-24; S-1; S-5 when no antiderivative exists"
+  "prerequisites": "MAT 3A S-24; S-1; S-5 when no antiderivative exists",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-7",
@@ -88,7 +94,8 @@
    "Set up and evaluate a disk-method integral about the y-axis",
    "Sketch the region, the solid, and a representative slice"
   ],
-  "prerequisites": "S-6; area formulas for circles, squares, triangles"
+  "prerequisites": "S-6; area formulas for circles, squares, triangles",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-8",
@@ -101,7 +108,8 @@
    "Set up and evaluate a volume integral about a line such as y = k or x = h",
    "Choose the variable of integration that fits the region and axis"
   ],
-  "prerequisites": "S-7"
+  "prerequisites": "S-7",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-9",
@@ -114,7 +122,8 @@
    "Set up and evaluate integrals for the center of mass of a rod with variable density",
    "Interpret a density function and its integral in context"
   ],
-  "prerequisites": "S-6; MAT 3A S-20 (average value)"
+  "prerequisites": "S-6; MAT 3A S-20 (average value)",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-10",
@@ -127,7 +136,8 @@
    "Set up and evaluate an integral for hydrostatic force on a vertical surface",
    "Track units and explain each factor in the integrand"
   ],
-  "prerequisites": "S-7, S-9"
+  "prerequisites": "S-7, S-9",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-11",
@@ -140,7 +150,8 @@
    "Evaluate improper integrals with a vertical asymptote in the interval",
    "Decide whether an integral converges or diverges, including the family 1/x^p"
   ],
-  "prerequisites": "S-1 through S-3; limits at infinity and L'Hopital's Rule (MAT 3A S-2, S-15)"
+  "prerequisites": "S-1 through S-3; limits at infinity and L'Hopital's Rule (MAT 3A S-2, S-15)",
+  "group": "Chapter 6: Using Definite Integrals"
  },
  {
   "code": "S-12",
@@ -153,7 +164,8 @@
    "Distinguish a general solution from the solution of an initial value problem",
    "Interpret the terms and units of a differential equation in context"
   ],
-  "prerequisites": "MAT 3A S-4, S-8 through S-11"
+  "prerequisites": "MAT 3A S-4, S-8 through S-11",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-13",
@@ -166,7 +178,8 @@
    "Find equilibrium solutions of an autonomous equation",
    "Classify each equilibrium as stable or unstable"
   ],
-  "prerequisites": "S-12; MAT 3A S-3 (slope), S-17 (sign analysis)"
+  "prerequisites": "S-12; MAT 3A S-3 (slope), S-17 (sign analysis)",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-14",
@@ -179,7 +192,8 @@
    "Describe how the step size affects the error",
    "Use concavity to decide whether the approximation overestimates or underestimates"
   ],
-  "prerequisites": "S-13; MAT 3A S-7 (linear approximation)"
+  "prerequisites": "S-13; MAT 3A S-7 (linear approximation)",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-15",
@@ -192,7 +206,8 @@
    "Apply an initial condition and solve explicitly for y when possible",
    "Check a solution by substitution"
   ],
-  "prerequisites": "S-1, S-12; logarithm and exponential algebra"
+  "prerequisites": "S-1, S-12; logarithm and exponential algebra",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-16",
@@ -205,7 +220,8 @@
    "Solve a Newton's Law of Cooling or mixing model",
    "Interpret the solution, parameters, and long-term behavior with units"
   ],
-  "prerequisites": "S-13, S-15"
+  "prerequisites": "S-13, S-15",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-17",
@@ -218,7 +234,8 @@
    "Solve the logistic equation by separation of variables and partial fractions",
    "Use the solution to predict and compare with an exponential model"
   ],
-  "prerequisites": "S-3, S-13, S-15, S-16"
+  "prerequisites": "S-3, S-13, S-15, S-16",
+  "group": "Chapter 7: Differential Equations"
  },
  {
   "code": "S-18",
@@ -231,7 +248,8 @@
    "Use a Taylor polynomial to approximate a function value",
    "Compare approximations of different degrees graphically and numerically"
   ],
-  "prerequisites": "MAT 3A S-5, S-7"
+  "prerequisites": "MAT 3A S-5, S-7",
+  "group": "Chapter 8: Taylor Polynomials and Taylor Series"
  },
  {
   "code": "S-19",
@@ -244,7 +262,8 @@
    "Decide whether an infinite geometric series converges and find its sum",
    "Model a repeated-process situation with a geometric series"
   ],
-  "prerequisites": "Limits at infinity (MAT 3A S-2); exponent rules"
+  "prerequisites": "Limits at infinity (MAT 3A S-2); exponent rules",
+  "group": "Chapter 8: Taylor Polynomials and Taylor Series"
  },
  {
   "code": "S-20",
@@ -257,7 +276,8 @@
    "Find the radius of convergence of a power series",
    "Find the interval of convergence, testing endpoints where the course requires"
   ],
-  "prerequisites": "S-18, S-19"
+  "prerequisites": "S-18, S-19",
+  "group": "Chapter 8: Taylor Polynomials and Taylor Series"
  },
  {
   "code": "S-21",
@@ -270,7 +290,8 @@
    "Differentiate and integrate a power series term by term",
    "Use a series to approximate a definite integral or evaluate a limit"
   ],
-  "prerequisites": "S-20"
+  "prerequisites": "S-20",
+  "group": "Chapter 8: Taylor Polynomials and Taylor Series"
  },
  {
   "code": "S-22",
@@ -283,7 +304,8 @@
    "Bound the error of a given approximation",
    "Find the degree needed to reach a required accuracy"
   ],
-  "prerequisites": "S-18, S-21"
+  "prerequisites": "S-18, S-21",
+  "group": "Chapter 8: Taylor Polynomials and Taylor Series"
  },
  {
   "code": "S-23",
@@ -296,7 +318,8 @@
    "Apply the Comparison and Limit Comparison Tests",
    "Apply the Alternating Series Test and distinguish absolute from conditional convergence"
   ],
-  "prerequisites": "S-11, S-19, S-20"
+  "prerequisites": "S-11, S-19, S-20",
+  "group": "Supplement (C-ID MATH 220, outside Active Calculus)"
  },
  {
   "code": "S-24",
@@ -309,7 +332,8 @@
    "Find where the tangent is horizontal or vertical",
    "Set up and evaluate the arc length of a parametric curve"
   ],
-  "prerequisites": "S-6; MAT 3A S-11"
+  "prerequisites": "S-6; MAT 3A S-11",
+  "group": "Supplement (C-ID MATH 220, outside Active Calculus)"
  },
  {
   "code": "S-25",
@@ -322,6 +346,7 @@
    "Find the slope of a polar curve at a point",
    "Set up and evaluate the area enclosed by a polar curve"
   ],
-  "prerequisites": "S-24; unit-circle trigonometry"
+  "prerequisites": "S-24; unit-circle trigonometry",
+  "group": "Supplement (C-ID MATH 220, outside Active Calculus)"
  }
 ]

@@ -10,7 +10,8 @@
    "Distinguish an observational study from an experiment",
    "State what kind of conclusion each study type supports"
   ],
-  "prerequisites": "Reading percentages and tables"
+  "prerequisites": "Reading percentages and tables",
+  "group": "Module 1: Statistical Studies and Describing Data"
  },
  {
   "code": "S-2",
@@ -23,7 +24,8 @@
    "Explain the roles of random assignment, control groups, and blinding",
    "Decide whether results generalize to a population or support cause and effect"
   ],
-  "prerequisites": "S-1"
+  "prerequisites": "S-1",
+  "group": "Module 1: Statistical Studies and Describing Data"
  },
  {
   "code": "S-3",
@@ -36,7 +38,8 @@
    "Read counts and percentages from a graph",
    "Compare two distributions in context"
   ],
-  "prerequisites": "S-1; fractions, decimals, percents"
+  "prerequisites": "S-1; fractions, decimals, percents",
+  "group": "Module 1: Statistical Studies and Describing Data"
  },
  {
   "code": "S-4",
@@ -49,7 +52,8 @@
    "Calculate and interpret the standard deviation",
    "Choose measures of center and spread for a distribution and compare groups in context"
   ],
-  "prerequisites": "S-3; order of operations, square roots"
+  "prerequisites": "S-3; order of operations, square roots",
+  "group": "Module 1: Statistical Studies and Describing Data"
  },
  {
   "code": "S-5",
@@ -62,7 +66,8 @@
    "Apply the complement and addition rules",
    "Find conditional probabilities from a two-way table and check independence"
   ],
-  "prerequisites": "S-1; fractions and proportions"
+  "prerequisites": "S-1; fractions and proportions",
+  "group": "Module 2: Probability and Probability Distributions"
  },
  {
   "code": "S-6",
@@ -75,7 +80,8 @@
    "Calculate the mean (expected value) and standard deviation",
    "Interpret an expected value in context"
   ],
-  "prerequisites": "S-4, S-5"
+  "prerequisites": "S-4, S-5",
+  "group": "Module 2: Probability and Probability Distributions"
  },
  {
   "code": "S-7",
@@ -88,7 +94,8 @@
    "Find the mean and standard deviation of a binomial variable",
    "Use a binomial probability to judge whether an outcome is unusual"
   ],
-  "prerequisites": "S-5, S-6"
+  "prerequisites": "S-5, S-6",
+  "group": "Module 2: Probability and Probability Distributions"
  },
  {
   "code": "S-8",
@@ -101,7 +108,8 @@
    "Find a normal probability with technology or the Empirical Rule",
    "Find the value that corresponds to a given percentile"
   ],
-  "prerequisites": "S-4, S-6"
+  "prerequisites": "S-4, S-6",
+  "group": "Module 2: Probability and Probability Distributions"
  },
  {
   "code": "S-9",
@@ -114,7 +122,8 @@
    "Check the conditions for a normal model",
    "Find the probability of a sample proportion in a given range"
   ],
-  "prerequisites": "S-2, S-8"
+  "prerequisites": "S-2, S-8",
+  "group": "Module 3: Inference for One Proportion"
  },
  {
   "code": "S-10",
@@ -127,7 +136,8 @@
    "Interpret the interval and the confidence level in context",
    "Explain how sample size and confidence level change the width"
   ],
-  "prerequisites": "S-9"
+  "prerequisites": "S-9",
+  "group": "Module 3: Inference for One Proportion"
  },
  {
   "code": "S-11",
@@ -140,7 +150,8 @@
    "Make a decision at a significance level and state the conclusion in context",
    "Describe Type I and Type II errors and their consequences"
   ],
-  "prerequisites": "S-9, S-10"
+  "prerequisites": "S-9, S-10",
+  "group": "Module 3: Inference for One Proportion"
  },
  {
   "code": "S-12",
@@ -153,7 +164,8 @@
    "Apply the Central Limit Theorem to decide when a normal model fits",
    "Find the probability of a sample mean in a given range"
   ],
-  "prerequisites": "S-8, S-9"
+  "prerequisites": "S-8, S-9",
+  "group": "Module 4: Inference for One Mean"
  },
  {
   "code": "S-13",
@@ -166,7 +178,8 @@
    "Calculate and interpret the interval in context",
    "Read a confidence interval from technology output"
   ],
-  "prerequisites": "S-10, S-12"
+  "prerequisites": "S-10, S-12",
+  "group": "Module 4: Inference for One Mean"
  },
  {
   "code": "S-14",
@@ -179,7 +192,8 @@
    "State the conclusion in context",
    "Distinguish statistical significance from practical importance"
   ],
-  "prerequisites": "S-11, S-13"
+  "prerequisites": "S-11, S-13",
+  "group": "Module 4: Inference for One Mean"
  },
  {
   "code": "S-15",
@@ -192,7 +206,8 @@
    "Carry out a paired t-test",
    "Explain why pairing changes the analysis"
   ],
-  "prerequisites": "S-13, S-14"
+  "prerequisites": "S-13, S-14",
+  "group": "Module 5: Comparing Groups"
  },
  {
   "code": "S-16",
@@ -205,7 +220,8 @@
    "Calculate the test statistic and P-value, or the interval",
    "Interpret the result in context"
   ],
-  "prerequisites": "S-10, S-11"
+  "prerequisites": "S-10, S-11",
+  "group": "Module 5: Comparing Groups"
  },
  {
   "code": "S-17",
@@ -218,7 +234,8 @@
    "Interpret the result and technology output in context",
    "Select the interval or test that fits the variable type and number of groups, and list its conditions"
   ],
-  "prerequisites": "S-14, S-15, S-16"
+  "prerequisites": "S-14, S-15, S-16",
+  "group": "Module 5: Comparing Groups"
  },
  {
   "code": "S-18",
@@ -231,7 +248,8 @@
    "Read an ANOVA table or technology output to find F and the P-value",
    "State the conclusion in context and what it does not show"
   ],
-  "prerequisites": "S-4, S-17"
+  "prerequisites": "S-4, S-17",
+  "group": "Module 5: Comparing Groups"
  },
  {
   "code": "S-19",
@@ -244,7 +262,8 @@
    "Interpret the correlation coefficient r",
    "Explain why correlation does not establish causation"
   ],
-  "prerequisites": "S-3; plotting points"
+  "prerequisites": "S-3; plotting points",
+  "group": "Module 6: Relationships Between Quantitative Variables"
  },
  {
   "code": "S-20",
@@ -257,7 +276,8 @@
    "Test whether a linear correlation is significant using the P-value from technology",
    "Recognize a nonlinear pattern and fit an exponential model with technology"
   ],
-  "prerequisites": "S-11, S-19; slope-intercept form of a line"
+  "prerequisites": "S-11, S-19; slope-intercept form of a line",
+  "group": "Module 6: Relationships Between Quantitative Variables"
  },
  {
   "code": "S-21",
@@ -270,6 +290,7 @@
    "Distinguish independence from homogeneity and calculate expected counts for a two-way table",
    "State the conclusion of a chi-square test in context"
   ],
-  "prerequisites": "S-5, S-11"
+  "prerequisites": "S-5, S-11",
+  "group": "Module 7: Chi-Square Tests"
  }
 ]

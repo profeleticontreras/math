@@ -1463,31 +1463,33 @@ def build_tex(h, space_scale=1.0, include_key=True):
            .replace("<<PAGE>>", L["page"]).replace("<<OF>>", L["of"]))
     body = [pre, r"\begin{document}",
             r"\binoppenalty=10000 \relpenalty=10000 \tolerance=1000 \emergencystretch=4em"]
-    # Page 1: standard (left) and handout type in a box (right), rule, Name / Date / Section, then the
-    # description with the textbook section at the end of its last line. Nothing is repeated.
+    # Page 1: one bordered box holds the standard title (handout type at the right), its description
+    # with the textbook section at the end, and for Quests the MET / NOT MET YET row. Name line follows.
     secs = f"{C['textbook']}, {L['sec']} {std['sections']}" if std.get("sections") and not summ else ""
     body.append(r"\newsavebox\stdtitlebox\newsavebox\stdsecbox\newif\ifsecontitle"
                 rf"\sbox\stdtitlebox{{\fontsize{{14}}{{17}}\selectfont\textbf{{{shown_title}}}}}"
-                rf"\sbox\stdsecbox{{\setlength{{\fboxsep}}{{3pt}}\fbox{{\sffamily\bfseries {esc(vlabel)}}}}}")
-    body.append(r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue\else\secontitlefalse\fi"
-                r"\noindent\ifsecontitle\usebox\stdtitlebox\hfill\usebox\stdsecbox"
-                r"\else\hfill\usebox\stdsecbox\par\vspace{3pt}\noindent\usebox\stdtitlebox\fi\par"
-                r"\vspace{4pt}\hrule\vspace{8pt}")
-    body.append(rf"\noindent {L['name']}: \underline{{\hspace{{2.4in}}}} \hfill {L['date']}: "
-                rf"\underline{{\hspace{{1.0in}}}} \hfill {esc(C['code'])} {L['section']}: "
-                r"\underline{\hspace{0.7in}}" + "\n\\par\\vspace{8pt}")
+                rf"\sbox\stdsecbox{{\sffamily\bfseries {esc(vlabel)}}}")
+    inner = (r"\ifdim\dimexpr\wd\stdtitlebox+\wd\stdsecbox+1.5em\relax<\linewidth\secontitletrue\else\secontitlefalse\fi"
+             r"\noindent\ifsecontitle\usebox\stdtitlebox\hfill\usebox\stdsecbox"
+             r"\else\hfill\usebox\stdsecbox\par\vspace{2pt}\noindent{\raggedright\fontsize{14}{17}\selectfont"
+             rf"\bfseries {shown_title}\par}}\fi\par")
     sec_at_end = (r"{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfil"
                   rf"\hbox{{\small\itshape {esc(secs)}}}\parfillskip=0pt\par}}") if secs else r"\par"
     if std.get("description"):
-        body.append(rf"\noindent {esc(std['description'])}" + sec_at_end + r"\vspace{4pt}")
+        inner += rf"\vspace{{3pt}}\noindent {esc(std['description'])}" + sec_at_end
     if version in QUESTS:  # MET / NOT MET YET are circled by hand
-        row = (r"\noindent{\small"
-               rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
+        inner += (r"\vspace{5pt}\hrule\vspace{5pt}\noindent{\small"
+                  rf"\mbox{{\textbf{{{esc(L['pass'])}}}}}\hspace{{2.5em}}\mbox{{\textbf{{{esc(L['retake'])}}}}}")
         if version in ("quest2", "quest3"):
-            row += (rf"\hfill\mbox{{{esc(L['attempt'])}: \underline{{\hspace{{0.4in}}}}}}\hfill"
-                    rf"\mbox{{{esc(L['ticket_done'])}: $\square$ {esc(L['yes'])}\enspace "
-                    rf"$\square$ {esc(L['no'])}}}")
-        body.append(row + r"\par}")
+            inner += (rf"\hfill\mbox{{{esc(L['attempt'])}: \underline{{\hspace{{0.4in}}}}}}\hfill"
+                      rf"\mbox{{{esc(L['ticket_done'])}: $\square$ {esc(L['yes'])}\enspace "
+                      rf"$\square$ {esc(L['no'])}}}")
+        inner += r"\par}"
+    body.append(r"\noindent{\setlength{\fboxsep}{6pt}\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{"
+                + inner + r"}}}\par\vspace{10pt}")
+    body.append(rf"\noindent {L['name']}: \underline{{\hspace{{2.4in}}}} \hfill {L['date']}: "
+                rf"\underline{{\hspace{{1.0in}}}} \hfill {esc(C['code'])} {L['section']}: "
+                r"\underline{\hspace{0.7in}}" + "\n\\par")
     body.append(r"\par\vspace{10pt}")  # small gap after the standard before instructions
     body.append(r"\noindent\begin{minipage}{\linewidth}" +
                 rf"\textbf{{{L['instructions']}:}} {esc(h.get('instructions') or default_instructions(lang, version))}" +

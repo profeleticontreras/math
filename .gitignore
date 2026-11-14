@@ -4,3 +4,5 @@ __pycache__/
 student_usage.json
 .streamlit/secrets.toml
 handout_archive/
+
+_preview/

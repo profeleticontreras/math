@@ -2778,6 +2778,167 @@ def build_standards_checklist_html(student_name, std_progress, language="en"):
     return html
 
 
+# ── Tutor chat for the other courses (Calculus 2, Differential Equations, Statistics) ──
+# Calculus 1 keeps its own standards map, Challenge mode, and checklist. The other courses
+# read the handout generator's standards files and get tutor chat + posted handouts.
+COURSE_TUTOR_NOTES = {
+    "calc2": ("This is Calculus 2 (MAT 3B). Students have finished Calculus 1: limits, derivatives, "
+              "basic antiderivatives, the Fundamental Theorem of Calculus, and u-substitution. "
+              "Do not use multivariable calculus or linear algebra."),
+    "diffeq": ("This is a first course in ordinary differential equations (MAT 5). Students have "
+               "finished Calculus 1 and 2. Keep to the methods of the course's learning standards."),
+    "stats": ("This is Introduction to Statistics (STAT C1000), taught with Statway College. It uses no "
+              "calculus; keep algebra at the intermediate-algebra level. For calculations and graphs, "
+              "students use the Statway online data analysis tools and Desmos. Describe steps in those "
+              "tools and show technology output as a small table. Do not give TI-calculator keystrokes "
+              "or spreadsheet formulas unless the student asks. Emphasize interpreting results in context."),
+}
+
+
+def course_catalog(course):
+    import handout_core as _hc
+    return _hc.load_standards(course)
+
+
+def course_standard(course, code):
+    if not code:
+        return None
+    return next((s for s in course_catalog(course) if s["code"] == code), None)
+
+
+def course_system_prompt(course):
+    import handout_core as _hc
+    C = _hc.COURSES[course]
+    base = CULTURAL_SYSTEM_PROMPT.split("COURSE SCOPE (STRICT):")[0]
+    base = (base.replace("Calculus 1 tutor", f"{C['name']} tutor")
+                .replace("Connect calculus to", "Connect the mathematics to")
+                .replace("Before diving into calculus", "Before diving into new material"))
+    return (base + "COURSE SCOPE (STRICT):\n" + COURSE_TUTOR_NOTES.get(course, "")
+            + "\nStay within this course's learning standards. If a question belongs to another "
+              "course, answer briefly and bring the student back to this course.\n")
+
+
+def get_course_chat_response(user_input, course, std_code=None, language="en", history=None):
+    """Tutor reply for a course other than Calculus 1, scoped to the chosen learning standard."""
+    import handout_core as _hc
+    C = _hc.COURSES[course]
+    catalog = course_catalog(course)
+    std = course_standard(course, std_code)
+    lang_word = "Spanish" if language == "es" else "English"
+    if std:
+        codes = [s["code"] for s in catalog]
+        later = "; ".join(f"{s['code']} {s['title']}" for s in catalog[codes.index(std["code"]) + 1:])
+        subs = "\n".join(f"  {std['code']}.{i}: {s}" for i, s in enumerate(std["subskills"], 1))
+        focus = (f"The student chose learning standard {std['code']} -- {std['title']}"
+                 + (f" ({C['textbook']}, Sec. {std['sections']})" if std.get("sections") else "") + ".\n"
+                 f"Description: {std['description']}\nSubskills:\n{subs}\n"
+                 + (f"Prerequisites: {std['prerequisites']}\n" if std.get("prerequisites") else "")
+                 + f"Later standards, not yet covered (do not rely on them): {later or 'none'}.\n"
+                 "Answer what the student asks. If the question is about another standard of this "
+                 "course, answer it and say which standard it belongs to.")
+    else:
+        focus = ("The student did not choose a learning standard. The course's standards are:\n"
+                 + "\n".join(f"  {s['code']} {s['title']}" for s in catalog))
+    prompt = (
+        f"Course: {C['code']} {C['name']} (textbook: {C['textbook']}). Respond entirely in {lang_word}.\n\n"
+        f"{focus}\n\n"
+        f"Student message: \"{user_input}\"\n\n"
+        "Give a clear explanation in everyday language first, then the formal notation. Include one "
+        "short worked example when it helps, in numbered steps. Use LaTeX $...$ for math. Keep the "
+        "reply focused: about 4 to 8 sentences plus the example. Practice rounds with scoring are not "
+        "available for this course yet; if the student asks for practice, pose one question in the "
+        "chat and discuss their answer when they reply. End with one authentic encouragement."
+    )
+    api_messages = []
+    for h in (history or [])[-6:]:
+        content = h.get("content", "")
+        if isinstance(content, str) and content.strip():
+            api_messages.append({"role": h.get("role", "user"), "content": content[:800]})
+    api_messages.append({"role": "user", "content": prompt})
+    response = client.messages.create(model=SONNET_MODEL, max_tokens=900,
+                                      system=course_system_prompt(course), messages=api_messages)
+    return response.content[0].text.strip()
+
+
+def render_course_welcome(course, tl, lang_top):
+    """Student home for a course other than Calculus 1: pick a standard, then chat or get a handout."""
+    import handout_core as _hc
+    C = _hc.COURSES[course]
+    catalog = course_catalog(course)
+    by_code = {s["code"]: s for s in catalog}
+    st.markdown(
+        '<div style="margin:0.4rem 0 0.8rem;padding:0.7rem 1rem;border-radius:10px;'
+        'background:rgba(0,121,107,0.08);border-left:5px solid #00796b;font-size:0.92rem;line-height:1.55;">'
+        + tl(f"<strong>{C['name']} ({C['code']}).</strong> Choose a learning standard, then start a tutor "
+             "chat or see the handouts posted for this course. Challenge mode is available for Calculus 1.",
+             f"<strong>{C['name']} ({C['code']}).</strong> Elige un estándar de aprendizaje y empieza un chat "
+             "con el tutor o mira las hojas publicadas para este curso. El modo reto está disponible para Cálculo 1.")
+        + '</div>', unsafe_allow_html=True)
+    code = st.selectbox(
+        tl("Learning standard", "Estándar de aprendizaje"), [None] + list(by_code),
+        format_func=lambda k: tl("Any topic in this course", "Cualquier tema de este curso") if k is None
+        else f"{k} · {by_code[k]['title']}",
+        key=f"course_std_{course}")
+    b1, b2 = st.columns(2, gap="medium")
+    go_chat = b1.button(tl("Chat: start a tutor chat", "Chat: empieza un chat con el tutor"),
+                        type="primary", use_container_width=True, key=f"course_chat_{course}")
+    if b2.button(tl("Print a handout: see posted handouts", "Imprime una hoja: ver hojas publicadas"),
+                 use_container_width=True, key=f"course_handout_{course}"):
+        st.session_state.show_handouts = True
+    st.caption(tl("No sign-in needed. Nothing is saved after you leave.",
+                  "No necesitas iniciar sesión. Nada se guarda al salir."))
+
+    if st.session_state.get("show_handouts") and not go_chat:
+        with st.container(border=True):
+            st.markdown(f'**{tl("Handouts posted by Profe Contreras", "Hojas publicadas por Profe Contreras")}**')
+            from handout_page import render_student_handouts
+            render_student_handouts(tl, code, course=course)
+            if st.button(tl("Close", "Cerrar"), key=f"course_close_handouts_{course}"):
+                st.session_state.show_handouts = False
+                st.rerun()
+
+    if go_chat:
+        lang = "es" if lang_top == "Español" else "en"
+        std = by_code.get(code)
+        topic = (f"**{std['code']}: {std['title']}**" if std else f"**{C['name']}**")
+        st.session_state.show_handouts = False
+        st.session_state.student_id = "Student"
+        st.session_state.is_guest = True
+        st.session_state.language = "es" if lang == "es" else "auto"
+        st.session_state.num_questions = 0
+        st.session_state.session_start = time.time()
+        st.session_state.current_lang = lang
+        st.session_state.course = course
+        st.session_state.course_standard = code
+        st.session_state.selected_standard = None
+        st.session_state.selected_skill = None
+        st.session_state.quiz_state = None
+        st.session_state.messages.append({
+            "role": "assistant", "type": "chat",
+            "content": (f"Hi! Ask me anything about {topic}: a concept, a worked example, or a homework "
+                        "question you want to talk through. What would you like to start with?"
+                        if lang == "en" else
+                        f"¡Hola! Pregúntame lo que quieras sobre {topic}: un concepto, un ejemplo resuelto "
+                        "o una pregunta de tarea. ¿Con qué quieres empezar?")})
+        st.session_state.screen = "chat"
+        st.rerun()
+
+    st.markdown(f'<p class="section-label">{tl("Learning standards", "Estándares de aprendizaje")}</p>',
+                unsafe_allow_html=True)
+    group = None
+    for s in catalog:
+        if s.get("group") and s["group"] != group:
+            group = s["group"]
+            st.markdown(f"**{group}**")
+        sec = f"  ({tl('Sec.', 'Secc.')} {s['sections']})" if s.get("sections") else ""
+        with st.expander(f"{s['code']} · {s['title']}{sec}"):
+            st.write(s["description"])
+            for i, sub in enumerate(s["subskills"], 1):
+                st.markdown(f"- **{s['code']}.{i}** {sub}")
+            if s.get("prerequisites"):
+                st.caption(tl("Prerequisites: ", "Requisitos previos: ") + s["prerequisites"])
+
+
 def init_session_state():
     """Initialize all Streamlit session state variables on first load."""
     defaults = {
@@ -3023,7 +3184,7 @@ if st.session_state.screen == "professor":
                 unsafe_allow_html=True)
     st.markdown(
         '<p class="app-sub">Canelita con Profe Contreras &nbsp;·&nbsp; '
-        'MAT 3A</p>',
+        'MAT 3A &nbsp;·&nbsp; MAT 3B &nbsp;·&nbsp; MAT 5 &nbsp;·&nbsp; STAT C1000</p>',
         unsafe_allow_html=True
     )
 
@@ -3034,8 +3195,9 @@ if st.session_state.screen == "professor":
         '<div style="font-size:1.35rem;font-weight:700;color:#00695c;line-height:1.25;">'
         'Handout Generator</div>'
         '<div style="font-size:0.98rem;color:#1f2937;margin-top:0.35rem;line-height:1.55;">'
-        'Make a Preparation, Quest 1&ndash;3, or Reassessment Ticket for any learning standard in '
-        'MAT 3A or MAT 5: skill, conceptual, and interpretation problems as PDF and LaTeX. '
+        'Make a Preparation, Quest 1&ndash;3, Reassessment Ticket, or summative assessment for any '
+        'learning standard in Calculus 1 (MAT 3A), Calculus 2 (MAT 3B), Differential Equations (MAT 5), '
+        'or Statistics (STAT C1000): skill, conceptual, and interpretation problems as PDF and LaTeX. '
         'Every handout is checked and saved to your archive.</div></div>',
         unsafe_allow_html=True
     )
@@ -3146,6 +3308,15 @@ elif st.session_state.screen == "welcome":
                 f'<div class="cf-head"><span class="cf-icon" style="background:{color};">{icon}</span>'
                 f'<div><div class="cf-title">{title}</div><div class="cf-how" style="color:{color};">{how}</div></div></div>'
                 f'<p class="cf-body">{body}</p></div>')
+    # ── Course picker: Calculus 1 keeps the full page; other courses get chat + handouts ──
+    import handout_core as _hc
+    _courses = [c for c in _hc.COURSES if _hc.course_available(c)]
+    _course = st.radio(_tl("Course", "Curso"), _courses, horizontal=True, key="welcome_course",
+                       format_func=lambda c: f"{_hc.COURSES[c]['name']} ({_hc.COURSES[c]['code']})")
+    if _course != "calc1":
+        render_course_welcome(_course, _tl, lang_top)
+        st.stop()
+
     st.markdown(
         '<style>'
         '.cf-card{background:rgba(0,121,107,0.06);border:1px solid rgba(0,121,107,0.22);border-top:6px solid;'
@@ -3750,46 +3921,47 @@ elif st.session_state.screen == "chat":
         if st.session_state.session_standards:
             st.caption("Standards: " + ", ".join(st.session_state.session_standards))
 
-        # ── Standards mastery tracker ──────────────────────────────────────
-        st.divider()
-        all_usage_sb  = st.session_state.get("all_usage", {})
-        sid_sb        = st.session_state.get("student_id", "")
-        std_prog      = all_usage_sb.get(f"{sid_sb}_standards", {})
-        total_stds    = len(STANDARDS_MAP)
-        mastered_n    = sum(1 for v in std_prog.values() if v.get("best_score",0) == 3)
-        attempted_n   = len(std_prog)
+        if st.session_state.get("course", "calc1") == "calc1":
+            # ── Standards mastery tracker ──────────────────────────────────────
+            st.divider()
+            all_usage_sb  = st.session_state.get("all_usage", {})
+            sid_sb        = st.session_state.get("student_id", "")
+            std_prog      = all_usage_sb.get(f"{sid_sb}_standards", {})
+            total_stds    = len(STANDARDS_MAP)
+            mastered_n    = sum(1 for v in std_prog.values() if v.get("best_score",0) == 3)
+            attempted_n   = len(std_prog)
 
-        st.caption(f"📊 {mastered_n}/{total_stds} standards mastered")
-        st.progress(mastered_n / total_stds if total_stds else 0)
+            st.caption(f"📊 {mastered_n}/{total_stds} standards mastered")
+            st.progress(mastered_n / total_stds if total_stds else 0)
 
-        dot_html = '<div style="display:flex;flex-wrap:wrap;gap:3px;margin:0.3rem 0;">'
-        for code in STANDARDS_MAP.keys():
-            entry = std_prog.get(code, {})
-            best  = entry.get("best_score", -1)
-            if best == 3:
-                color, title = "#00796b", f"{code} ✓"
-            elif best >= 1:
-                color, title = "#F59E0B", f"{code} in progress"
-            else:
-                color, title = "#e5e7eb", f"{code}"
-            dot_html += (f'<div title="{title}" style="width:10px;height:10px;' +
-                          f'border-radius:2px;background:{color};flex-shrink:0;"></div>')
-        dot_html += ('</div><div style="font-size:0.62rem;color:inherit;opacity:0.5;margin-top:0.1rem;">' +
-                      '<span style="color:#00796b;">■</span> mastered &nbsp;' +
-                      '<span style="color:#F59E0B;">■</span> in progress &nbsp;' +
-                      '<span style="color:#e5e7eb;">■</span> not yet</div>')
-        st.markdown(dot_html, unsafe_allow_html=True)
+            dot_html = '<div style="display:flex;flex-wrap:wrap;gap:3px;margin:0.3rem 0;">'
+            for code in STANDARDS_MAP.keys():
+                entry = std_prog.get(code, {})
+                best  = entry.get("best_score", -1)
+                if best == 3:
+                    color, title = "#00796b", f"{code} ✓"
+                elif best >= 1:
+                    color, title = "#F59E0B", f"{code} in progress"
+                else:
+                    color, title = "#e5e7eb", f"{code}"
+                dot_html += (f'<div title="{title}" style="width:10px;height:10px;' +
+                              f'border-radius:2px;background:{color};flex-shrink:0;"></div>')
+            dot_html += ('</div><div style="font-size:0.62rem;color:inherit;opacity:0.5;margin-top:0.1rem;">' +
+                          '<span style="color:#00796b;">■</span> mastered &nbsp;' +
+                          '<span style="color:#F59E0B;">■</span> in progress &nbsp;' +
+                          '<span style="color:#e5e7eb;">■</span> not yet</div>')
+            st.markdown(dot_html, unsafe_allow_html=True)
 
-        if std_prog:
-            lang_cb = st.session_state.get("current_lang","en")
-            st.download_button(
-                label="📋 My standards checklist",
-                data=build_standards_checklist_html(sid_sb, std_prog, lang_cb),
-                file_name=f"standards_checklist_{sid_sb}.html",
-                mime="text/html",
-                key="checklist_dl",
-                use_container_width=True
-            )
+            if std_prog:
+                lang_cb = st.session_state.get("current_lang","en")
+                st.download_button(
+                    label="📋 My standards checklist",
+                    data=build_standards_checklist_html(sid_sb, std_prog, lang_cb),
+                    file_name=f"standards_checklist_{sid_sb}.html",
+                    mime="text/html",
+                    key="checklist_dl",
+                    use_container_width=True
+                )
 
         st.divider()
         st.caption("Settings")
@@ -3891,6 +4063,12 @@ elif st.session_state.screen == "chat":
     std_now   = st.session_state.get("selected_standard")
     std_label = (f" · **{std_now}: {STANDARDS_MAP[std_now]['topic']}**"
                  if std_now and std_now in STANDARDS_MAP else "")
+    _course_now = st.session_state.get("course", "calc1")
+    if _course_now != "calc1":
+        import handout_core as _hc
+        _cs = course_standard(_course_now, st.session_state.get("course_standard"))
+        std_label = (f" · **{_hc.COURSES[_course_now]['code']}"
+                     + (f" · {_cs['code']}: {_cs['title']}" if _cs else "") + "**")
     semilla_open = (
         f"🌱 Try each question, right or wrong. Your answer shows us where to start."
         f"{std_label}"
@@ -4399,6 +4577,15 @@ elif st.session_state.screen == "chat":
                         )
                     })
                     st.session_state.session_ended = True
+
+                elif st.session_state.get("course", "calc1") != "calc1":
+                    response = get_course_chat_response(
+                        user_input, st.session_state.course, st.session_state.get("course_standard"),
+                        lang, history=st.session_state.messages)
+                    st.session_state.session_calls += 1
+                    st.session_state.messages.append({
+                        "role":"assistant", "type":"chat", "content": response
+                    })
 
                 elif intent_tag == "challenge_request":
                     topic = extract_topic_from_input(user_input)

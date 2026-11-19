@@ -63,8 +63,13 @@ COURSES = {
                        "technology or a table to find.")},
 }
 # Course-specific scope reminders (on top of the general "this standard only" rule)
+GEOMETRY_NOTE = ("Find areas and integrals with known geometric shapes: rectangles, triangles, trapezoids, circles, "
+                 "semicircles, and quarter circles, on graphs and for formulas such as linear functions and "
+                 "sqrt(r^2 - x^2). Count regions below the x-axis as negative. Do not require antiderivatives or "
+                 "the Fundamental Theorem to evaluate an integral.")
 SCOPE_NOTES = {
-    "calc1": {n: "Do not require the chain rule (taught in S-11)." for n in range(1, 11)},
+    "calc1": {**{n: "Do not require the chain rule (taught in S-11)." for n in range(1, 11)},
+              19: GEOMETRY_NOTE, 20: GEOMETRY_NOTE},
     "diffeq": {},
     "calc2": {},
     "stats": {},
@@ -207,7 +212,7 @@ def names_in_use(problems):
 FUNCTION_FAMILIES = ["polynomial", "exponential", "trigonometric", "logarithmic"]
 
 
-def plan_problems(std, counts, rng=random, graph_k=None):
+def plan_problems(std, counts, rng=random, graph_k=None, course=None):
     """Pick subskills at random for each question type; within a type they
     don't repeat until every subskill has been used."""
     counts = counts_for(counts)
@@ -238,7 +243,10 @@ def plan_problems(std, counts, rng=random, graph_k=None):
     for s, f in zip(slots, fams):
         s["function"] = f
     assign_quick(slots, rng)
-    assign_graph(slots, rng, k=graph_k)
+    if is_accumulation(course, std):
+        assign_graph(slots, rng, k=math.ceil(len(slots) * ACCUMULATION_SHARE), modes_list=ACCUMULATION_MODES)
+    else:
+        assign_graph(slots, rng, k=graph_k)
     return slots
 
 
@@ -276,8 +284,26 @@ def assign_quick(slots, rng=random, share=QUICK_SHARE):
 
 
 GRAPH_SHARE = (0.20, 0.40)    # 20-40% of the problems revolve around a graph
-GRAPH_MODES = ["build", "read", "interpret", "use", "table"]
+GRAPH_MODES = ["build", "read", "interpret", "use", "table", "accumulate"]
+# Accumulation standards (Calculus 1): about half the problems use a graph or table, and most of those ask
+# the student to estimate an area or the value of an antiderivative from it; the rest use function notation.
+ACCUMULATION = {"calc1": {"S-19", "S-20", "S-21"}}
+ACCUMULATION_SHARE = 0.5
+ACCUMULATION_MODES = ["accumulate", "accumulate", "table", "use", "accumulate", "read"]
+
+
+def is_accumulation(course, std):
+    return bool(course) and std.get("code") in ACCUMULATION.get(course, ())
+
+
 GRAPH_GUIDE = {
+    "accumulate": "ACCUMULATE from a graph or table: draw a graph of f like those in a textbook (straight segments "
+                  "with integer corner points, plus a semicircle or quarter circle, with the regions above and "
+                  "below the x-axis) or give a table of realistic data with units (a rate such as gallons per "
+                  "minute or tons per week at evenly spaced times), and ask the student to estimate or find an "
+                  "area, an integral, or the value of an antiderivative F(x) = the integral of f from a to x "
+                  "(by geometry, counting squares, or a Riemann sum). Choose coordinates so that every area "
+                  "can be found exactly or estimated with a stated tolerance.",
     "build": "BUILD a graph: give labeled, scaled, blank axes (a pgfplots grid with NO curve) and the data, table, "
              "equation, or description to graph; the student plots or sketches it. Never draw the answer.",
     "read": "READ a graph: draw a graph and ask the student to read values, intervals, intercepts, slopes, or "
@@ -292,7 +318,7 @@ GRAPH_GUIDE = {
 }
 
 
-def assign_graph(slots, rng=random, share=GRAPH_SHARE, k=None):
+def assign_graph(slots, rng=random, share=GRAPH_SHARE, k=None, modes_list=None):
     """Rule, not a category: 20-40% of the problems of ANY type, standard, and handout revolve around a
     graph or table (build, read, interpret, or use it), spread across the types, favoring slots that are
     not quick-answer, and mixing the modes."""
@@ -321,7 +347,7 @@ def assign_graph(slots, rng=random, share=GRAPH_SHARE, k=None):
             chosen.append(by_type[t].pop(0))
     modes = []
     while len(modes) < len(chosen):
-        batch = GRAPH_MODES[:]
+        batch = (modes_list or [m for m in GRAPH_MODES if m != "accumulate"])[:]
         rng.shuffle(batch)
         modes += batch
     for sl, m in zip(chosen, modes):
@@ -693,6 +719,10 @@ def build_prompt(course, std, catalog, slots, lang, version, avoid=None, others=
                       "contrived or forced, write a regular problem for that slot with no graph or table. It still tests the slot's type "
                       "and subskill, and it can combine with the slot's other format settings.\n"
                       + "\n".join("- " + GRAPH_GUIDE[m] for m in graph_used) + "\n")
+    if is_accumulation(course, std):
+        graph_text += ("\nAccumulation standard: the problems NOT marked GRAPH use traditional function notation "
+                       "(formulas such as f(x) = 3 - x^2, with integrals and average values computed from the "
+                       "formula). Mix both kinds across the handout.\n")
     avoid_text = (f"\nWrite a different problem from this earlier version (new function, numbers, and "
                   f"context):\n{avoid}\n" if avoid else "")
     if new_function_type and avoid:
@@ -1056,7 +1086,7 @@ def _type_groups(items):
 def generate_version(client, course, std, catalog, version, counts, lang, report=lambda s: None, rng=random,
                      graph_k=None):
     """Write, review, repair, and compile-check one handout version."""
-    slots = plan_problems(std, counts, rng, graph_k=graph_k)
+    slots = plan_problems(std, counts, rng, graph_k=graph_k, course=course)
     groups = _type_groups(slots)
     all_names = pick_names(rng, k=max(4, 3 * len(slots)))
     group_names, pos = {}, 0
@@ -1147,7 +1177,7 @@ def _new_slot(std, qtype, subskill_index=None):
     if qtype == "interpretation":
         slot["context"] = random.choice(CONTEXT_FAMILIES)
     if random.random() < 0.3:   # about 30% use a graph or table, as in new handouts
-        slot["graph"] = random.choice(GRAPH_MODES)
+        slot["graph"] = random.choice([m for m in GRAPH_MODES if m != "accumulate"])
     return slot
 
 
@@ -1454,11 +1484,12 @@ def build_tex(h, space_scale=1.0, include_key=True):
     vlabel = L[version]
     code = esc(std["code"])
     summ = version == SUMMATIVE
-    shown_title = esc(std["title"]) if summ else f"{code} --- {esc(std['title'])}"
-    pre = (PREAMBLE.replace("<<PDFTITLE>>", esc(f"{std['code']} {vlabel}"))
+    ccode = esc(C["code"])   # the class name starts every handout title (MAT 3A, MAT 5, ...)
+    shown_title = f"{ccode} --- {esc(std['title'])}" if summ else f"{ccode} {code} --- {esc(std['title'])}"
+    pre = (PREAMBLE.replace("<<PDFTITLE>>", esc(f"{C['code']} {std['code']} {vlabel}"))
            .replace("<<COURSE>>", esc(f"{C['code']} {C['name']}"))
            .replace("<<PDFLANG>>", "es-MX" if lang == "es" else "en-US")
-           .replace("<<STD>>", esc(std["title"] if summ else f"{std['code']} -- {std['title']}"))
+           .replace("<<STD>>", esc(f"{C['code']} -- {std['title']}" if summ else f"{C['code']} {std['code']} -- {std['title']}"))
            .replace("<<VERSION>>", esc(vlabel)).replace("<<CODE>>", esc(std["title"]) if summ else code)
            .replace("<<PAGE>>", L["page"]).replace("<<OF>>", L["of"]))
     body = [pre, r"\begin{document}",
@@ -1488,7 +1519,7 @@ def build_tex(h, space_scale=1.0, include_key=True):
     body.append(r"\noindent{\setlength{\fboxsep}{6pt}\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule}{"
                 + inner + r"}}}\par\vspace{10pt}")
     body.append(rf"\noindent {L['name']}: \underline{{\hspace{{2.4in}}}} \hfill {L['date']}: "
-                rf"\underline{{\hspace{{1.0in}}}} \hfill {esc(C['code'])} {L['section']}: "
+                rf"\underline{{\hspace{{1.0in}}}} \hfill {L['section']}: "
                 r"\underline{\hspace{0.7in}}" + "\n\\par")
     body.append(r"\par\vspace{10pt}")  # small gap after the standard before instructions
     body.append(r"\noindent\begin{minipage}{\linewidth}" +

@@ -9,7 +9,8 @@
    "Interpret average velocity as the slope of a secant line on a position graph",
    "Estimate instantaneous velocity by computing average velocities over progressively smaller intervals",
    "Interpret the sign of velocity as direction of motion and relate it to the slope of the tangent line"
-  ]
+  ],
+  "prerequisites": "Function notation; slope of a line"
  },
  {
   "code": "S-2",
@@ -21,7 +22,8 @@
    "Evaluate limits by direct substitution",
    "Resolve indeterminate forms 0/0 by factoring or rationalizing the numerator or denominator",
    "Connect the limiting process to how average velocity over shrinking time intervals approaches instantaneous velocity (S-1)"
-  ]
+  ],
+  "prerequisites": "S-1"
  },
  {
   "code": "S-3",
@@ -33,7 +35,8 @@
    "Interpret f'(a) as the slope of the tangent line and instantaneous rate of change, and distinguish the value f'(a) from the function f'(x)",
    "Estimate derivative values from graphs or tables of values",
    "Sketch the graph of f' from the graph of f and determine where f is differentiable"
-  ]
+  ],
+  "prerequisites": "S-1, S-2"
  },
  {
   "code": "S-4",
@@ -45,7 +48,8 @@
    "Determine the units of f'(x) as (units of f) per (unit of x)",
    "Estimate f'(x) from tabular data using average rates of change / central differences",
    "Use f'(x) to predict how f will change for a one-unit change in x"
-  ]
+  ],
+  "prerequisites": "S-3"
  },
  {
   "code": "S-5",
@@ -57,7 +61,8 @@
    "Interpret f''(x) as acceleration in motion problems",
    "Determine concavity from the sign of f''(x)",
    "Use Leibniz notation for higher-order derivatives: d2y/dx2"
-  ]
+  ],
+  "prerequisites": "S-3"
  },
  {
   "code": "S-6",
@@ -69,7 +74,8 @@
    "State and apply the three conditions for continuity at a point",
    "Identify removable, jump, and infinite discontinuities and determine intervals of continuity for composite and piecewise functions",
    "Apply the Intermediate Value Theorem (IVT)"
-  ]
+  ],
+  "prerequisites": "S-2"
  },
  {
   "code": "S-7",
@@ -81,7 +87,8 @@
    "Use the tangent line as a local linear approximation",
    "Compute differentials: dy = f'(x)dx",
    "Estimate function values using linearization"
-  ]
+  ],
+  "prerequisites": "S-3"
  },
  {
   "code": "S-8",
@@ -93,7 +100,8 @@
    "Differentiate sums, differences, and constant multiples",
    "Differentiate polynomial functions efficiently",
    "Differentiate rational functions using algebra + power rule"
-  ]
+  ],
+  "prerequisites": "S-3"
  },
  {
   "code": "S-9",
@@ -105,7 +113,8 @@
    "Differentiate tan x and the reciprocal trigonometric functions",
    "Differentiate the natural exponential function e^x",
    "Differentiate exponential functions a^x and use the required factor ln(a)"
-  ]
+  ],
+  "prerequisites": "S-3, S-8"
  },
  {
   "code": "S-10",
@@ -117,7 +126,8 @@
    "State and apply the quotient rule: (f/g)' = (f'g - fg')/g^2",
    "Differentiate products and quotients involving polynomial and rational functions",
    "Differentiate and simplify products and quotients involving trigonometric and exponential functions"
-  ]
+  ],
+  "prerequisites": "S-8, S-9"
  },
  {
   "code": "S-11",
@@ -129,7 +139,8 @@
    "Apply the chain rule: d/dx[f(g(x))] = f'(g(x)) * g'(x)",
    "Differentiate functions like sin(x^2), e^(3x), (x^2+1)^5",
    "Apply chain rule repeatedly for nested compositions"
-  ]
+  ],
+  "prerequisites": "S-8, S-9"
  },
  {
   "code": "S-12",
@@ -141,7 +152,8 @@
    "Derive and use derivatives of ln x and log_a x from inverse and change-of-base relationships",
    "Differentiate the inverse trigonometric functions arcsin x, arccos x, and arctan x",
    "Differentiate compositions involving inverse functions using the chain rule (e.g., arctan(3x), ln(x^2+1))"
-  ]
+  ],
+  "prerequisites": "S-9, S-11"
  },
  {
   "code": "S-13",
@@ -153,7 +165,8 @@
    "Solve for dy/dx after differentiating",
    "Find the slope of a tangent line to an implicit curve at a point",
    "Apply implicit differentiation to relations like x^2 + y^2 = r^2"
-  ]
+  ],
+  "prerequisites": "S-8 to S-11"
  },
  {
   "code": "S-14",
@@ -165,7 +178,8 @@
    "Write an equation relating the quantities",
    "Differentiate implicitly with respect to t",
    "Substitute known values to find the unknown rate"
-  ]
+  ],
+  "prerequisites": "S-11, S-13"
  },
  {
   "code": "S-15",
@@ -177,7 +191,8 @@
    "Apply L'Hopital's Rule correctly (differentiate numerator and denominator separately)",
    "Apply the rule repeatedly when needed",
    "Rewrite indeterminate products and differences before applying the rule"
-  ]
+  ],
+  "prerequisites": "S-2, S-8 to S-12"
  },
  {
   "code": "S-16",
@@ -189,7 +204,8 @@
    "Find values of c satisfying the MVT on a given interval",
    "Apply Rolle's Theorem as a special case of MVT",
    "Use MVT to argue about function behavior (e.g., uniqueness of zeros)"
-  ]
+  ],
+  "prerequisites": "S-3, S-6"
  },
  {
   "code": "S-17",
@@ -201,7 +217,8 @@
    "Apply the First and Second Derivative Tests to identify and classify local extrema",
    "Determine concavity and find inflection points where f'' changes sign",
    "Sketch curves using information from f, f', and f''"
-  ]
+  ],
+  "prerequisites": "S-5, S-8 to S-11, S-16"
  },
  {
   "code": "S-18",
@@ -213,31 +230,33 @@
    "Use constraint equations to reduce to one variable",
    "Find critical points on a closed interval using the Closed Interval Method",
    "Verify that the critical point is a maximum or minimum"
-  ]
+  ],
+  "prerequisites": "S-8 to S-11, S-17"
  },
  {
   "code": "S-19",
   "title": "Riemann Sums & Definite Integrals",
   "sections": "4.1, 4.2",
-  "description": "Define the definite integral as a limit of Riemann sums and interpret it geometrically as signed area under a curve.",
+  "description": "Estimate areas and total change with Riemann sums, and interpret the definite integral as signed area and as accumulated change.",
   "subskills": [
-   "Write left, right, and midpoint Riemann sum approximations",
-   "Express the definite integral as the limit as n -> infinity of the sum of f(xi*) * delta-x",
-   "Interpret the definite integral as net area under a curve",
-   "Use basic properties of definite integrals (linearity, interval splitting)"
-  ]
+   "Estimate an area or a total change from a graph or table using left, right, and midpoint Riemann sums",
+   "Find net area from a graph using rectangles, triangles, trapezoids, and circles, counting regions below the x-axis as negative",
+   "Interpret a definite integral as accumulated change in context, with units"
+  ],
+  "prerequisites": "S-1 (velocity and distance), S-2 (limits), S-4 (units of a rate)"
  },
  {
   "code": "S-20",
-  "title": "Average Value of a Function",
+  "title": "Integral Properties & Average Value",
   "sections": "4.3",
-  "description": "Compute the average value of a function on an interval using the Mean Value Theorem for Integrals.",
+  "description": "Use the properties of definite integrals to combine integrals from graphs and formulas, and find and interpret the average value of a function.",
   "subskills": [
-   "Apply the average value formula: f_avg = (1/(b-a)) times the integral from a to b of f(x) dx",
-   "State and apply the Mean Value Theorem for Integrals",
-   "Interpret average value in applied contexts (e.g., average temperature, velocity)",
-   "Find the value(s) of c where f(c) equals the average value"
-  ]
+   "Evaluate integrals of sums, differences, and constant multiples from graphs, using linearity",
+   "Combine integrals over adjacent intervals, including reversed limits, using given or graphed signed areas",
+   "Distinguish the integral of f (net signed area) from the integral of |f| (total area)",
+   "Find the average value of f on [a, b] from a graph or formula, find the constant c whose integral over [a, b] equals the integral of f, and interpret c in context"
+  ],
+  "prerequisites": "S-19; areas by geometry only, no antiderivatives"
  },
  {
   "code": "S-21",
@@ -245,11 +264,12 @@
   "sections": "4.4, 5.1",
   "description": "Find antiderivatives using basic integration rules, and apply the Fundamental Theorem of Calculus to evaluate definite integrals using antiderivatives.",
   "subskills": [
-   "Reverse the power rule and integrate basic trig, exponential, and 1/x functions to find antiderivatives",
-   "Write the general antiderivative F(x) + C, and find a particular antiderivative using an initial condition",
-   "State the Fundamental Theorem of Calculus: the integral from a to b of f(x) dx = F(b) - F(a), where F is any antiderivative of f",
-   "Evaluate definite integrals using antiderivatives"
-  ]
+   "Find antiderivatives of power, sine, cosine, exponential, and 1/x functions, including sums and constant multiples, by reversing derivative rules",
+   "Write the general antiderivative F(x) + C, and find the particular antiderivative that satisfies an initial condition",
+   "State the Fundamental Theorem and use it to evaluate definite integrals with F(b) - F(a)",
+   "Find the exact net change of a quantity from its rate formula, with units"
+  ],
+  "prerequisites": "S-8 and S-9 (derivative rules), S-19, S-20; no chain-rule forms, since substitution is S-23"
  },
  {
   "code": "S-22",
@@ -257,11 +277,12 @@
   "sections": "5.2",
   "description": "Construct accumulation functions A(x) = the integral from a to x of f(t) dt and apply the Second Fundamental Theorem of Calculus to differentiate them, connecting properties of f to properties of A.",
   "subskills": [
-   "Construct an accumulation function A(x) = the integral from a to x of f(t) dt from a given function f",
+   "Construct an accumulation function A(x), the integral of f from a to x, from the graph of f, and evaluate A at given points",
    "Apply the Second FTC to differentiate accumulation functions: A'(x) = f(x)",
-   "Relate properties of f -- sign, increasing/decreasing, concavity -- to corresponding properties of A",
-   "Explain how the Second FTC and evaluation via antiderivatives (S-21) both express the inverse relationship between differentiation and integration"
-  ]
+   "Relate the sign, increasing or decreasing behavior, and concavity of f to the corresponding features of A",
+   "Explain how the two Fundamental Theorems show that differentiation and integration undo each other"
+  ],
+  "prerequisites": "S-3, S-17 (increasing and concavity), S-19 to S-21"
  },
  {
   "code": "S-23",
@@ -273,7 +294,8 @@
    "Rewrite the integral entirely in terms of u",
    "Apply substitution to both indefinite and definite integrals",
    "Handle limits of integration correctly when substituting in definite integrals"
-  ]
+  ],
+  "prerequisites": "S-11 (chain rule), S-21"
  },
  {
   "code": "S-24",
@@ -285,6 +307,7 @@
    "Set up the integral of [f(x) - g(x)] dx for area between curves",
    "Handle cases where curves switch which is on top",
    "Compute area using vertical or horizontal slicing as appropriate"
-  ]
+  ],
+  "prerequisites": "S-20, S-21"
  }
 ]

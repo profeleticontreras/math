@@ -525,10 +525,9 @@ STANDARDS_MAP = {
         "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
         "topic": 'Riemann Sums & Definite Integrals',
         "skills": [
-                   'Write left, right, and midpoint Riemann sum approximations',
-                   'Express the definite integral as lim(n->inf) sum f(x_i*)dx',
-                   'Interpret the definite integral as net area under a curve',
-                   'Use basic properties of definite integrals (linearity, interval splitting)',
+                   'Estimate an area or a total change from a graph or table using left, right, and midpoint Riemann sums',
+                   'Find net area from a graph using rectangles, triangles, trapezoids, and circles, counting regions below the x-axis as negative',
+                   'Interpret a definite integral as accumulated change in context, with units',
                   ],
         "algebra_prereqs": ['summation notation', 'area of rectangles', 'evaluating functions at points'],
         "field_connections": {
@@ -544,12 +543,12 @@ STANDARDS_MAP = {
     },
     "S-20": {
         "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
-        "topic": 'Average Value of a Function',
+        "topic": 'Integral Properties & Average Value',
         "skills": [
-                   'Apply the average value formula: f_avg = (1/(b-a)) integral of f(x) dx',
-                   'State and apply the Mean Value Theorem for Integrals',
-                   'Interpret average value in applied contexts (average temperature, velocity)',
-                   'Find the value(s) of c where f(c) equals the average value',
+                   'Evaluate integrals of sums, differences, and constant multiples from graphs, using linearity',
+                   'Combine integrals over adjacent intervals, including reversed limits, using given or graphed signed areas',
+                   'Distinguish the integral of f (net signed area) from the integral of |f| (total area)',
+                   'Find the average value of f on [a, b] from a graph or formula, find the constant c whose integral over [a, b] equals the integral of f, and interpret c in context',
                   ],
         "algebra_prereqs": ['evaluating definite integrals', 'dividing by an interval length', 'solving f(c) = constant'],
         "field_connections": {
@@ -567,10 +566,10 @@ STANDARDS_MAP = {
         "intent_tag": 'integrals', "unit": 4, "unit_name": 'The Definite Integral',
         "topic": 'Antiderivatives & the Fundamental Theorem of Calculus',
         "skills": [
-                   'Reverse the power rule and integrate basic trig, exponential, and 1/x functions',
-                   'Write the general antiderivative F(x)+C and find a particular one from an initial condition',
-                   'State the FTC: integral from a to b of f(x) dx = F(b) - F(a)',
-                   'Evaluate definite integrals using antiderivatives',
+                   'Find antiderivatives of power, sine, cosine, exponential, and 1/x functions, including sums and constant multiples, by reversing derivative rules',
+                   'Write the general antiderivative F(x) + C, and find the particular antiderivative that satisfies an initial condition',
+                   'State the Fundamental Theorem and use it to evaluate definite integrals with F(b) - F(a)',
+                   'Find the exact net change of a quantity from its rate formula, with units',
                   ],
         "algebra_prereqs": ['power rule in reverse', 'exponent rules', 'evaluating expressions at bounds'],
         "field_connections": {
@@ -588,10 +587,10 @@ STANDARDS_MAP = {
         "intent_tag": 'integrals', "unit": 5, "unit_name": 'Evaluating Integrals',
         "topic": 'The Second Fundamental Theorem of Calculus',
         "skills": [
-                   'Construct an accumulation function A(x) = integral from a to x of f(t) dt',
+                   'Construct an accumulation function A(x), the integral of f from a to x, from the graph of f, and evaluate A at given points',
                    "Apply the Second FTC to differentiate accumulation functions: A'(x) = f(x)",
-                   'Relate properties of f (sign, increasing/decreasing, concavity) to properties of A',
-                   'Explain how the Second FTC and antiderivative evaluation both express the inverse of differentiation and integration',
+                   'Relate the sign, increasing or decreasing behavior, and concavity of f to the corresponding features of A',
+                   'Explain how the two Fundamental Theorems show that differentiation and integration undo each other',
                   ],
         "algebra_prereqs": ['definite integrals as accumulation', 'the first FTC', 'reading rate-vs-accumulation graphs'],
         "field_connections": {
@@ -794,8 +793,8 @@ METHOD_BOUNDARIES = {
     "S-16": 'Use the Mean Value Theorem: verify hypotheses, find c. Keep to MVT/Rolle reasoning.',
     "S-17": 'Use the first and second derivative tests, sign analysis, concavity, and inflection points.',
     "S-18": 'Set up an objective function, reduce with a constraint, and use the Closed Interval Method. Keep to Calculus 1 optimization.',
-    "S-19": 'Use Riemann sums and the definite integral as net area / a limit of sums. Do NOT require the Fundamental Theorem to evaluate -- this standard is about the sum/area concept.',
-    "S-20": 'Use the average value formula (1/(b-a)) * integral, and the Mean Value Theorem for Integrals.',
+    "S-19": 'Use Riemann sums and the definite integral as net area and accumulated change. Do NOT require the Fundamental Theorem to evaluate -- this standard is about the sum/area concept. Find areas with rectangles, triangles, trapezoids, and circles.',
+    "S-20": 'Use the properties of definite integrals (sums, constant multiples, adjacent intervals, reversed limits), net area versus total area with |f|, and the average value formula (1/(b-a)) * integral. Find areas with rectangles, triangles, trapezoids, and circles. Graphs are piecewise linear with a semicircle or quarter circle; tables use realistic data with units.',
     "S-21": 'Use antiderivatives and the FTC (Part 2): evaluate F(b)-F(a). Keep antiderivatives to Calculus 1 forms (power rule in reverse, e^x, sin, cos, 1/x). Do NOT require integration by parts or trig substitution.',
     "S-22": "Use the Second FTC: differentiate an accumulation function A(x)=integral from a to x of f(t)dt to get A'(x)=f(x). Focus on the accumulation-derivative relationship.",
     "S-23": 'Use u-substitution only. Choose u so the integral becomes a basic antiderivative. Do NOT create integrals that then need integration by parts.',
